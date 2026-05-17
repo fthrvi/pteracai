@@ -476,3 +476,51 @@ function redact(str, secret) {
   if (!secret || secret.length < 8) return str;
   return str.split(secret).join('[REDACTED-KEY]');
 }
+
+// Save an AI-generated follow-up question to the community bank (Supabase).
+// Fire-and-forget — caller should .catch() any rejection. Anonymous, deduped
+// by content hash. Silently no-ops if Supabase isn't configured.
+async function saveToCommunityBank(payload, question) {
+  // Accept any of the standard Supabase env var names. Vercel's official
+  // Supabase integration adds SERVICE_ROLE_KEY; new Supabase dashboards add
+  // SECRET_KEY; some setups use plain SERVICE_KEY.
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_KEY;
+  if (!supabaseUrl || !supabaseKey) return;
+  if (!question || typeof question !== 'object') return;
+
+  // Which test does this belong to? Heuristic: original question id prefix.
+  const test = (payload.original_question?.id || '').startsWith('i-') ? 'ielts' : 'pte';
+  const section = question.section || payload.section || 'reading';
+  const type = question.type || payload.type || 'mcq_single';
+  const topic = question.topic || payload.topic || '';
+
+  // Canonical content hash for dedup — same content saved once across all users.
+  const canonical = JSON.stringify({
+    passage: question.passage || '',
+    question: question.question || '',
+    options: question.options || [],
+    prompt: question.prompt || '',
+    paragraphs: question.paragraphs || [],
+    text_parts: question.text_parts || [],
+    audio_text: question.audio_text || '',
+    statement: question.statement || '',
+    headings: question.headings || [],
+  });
+  const content_hash = createHash('sha256').update(canonical).digest('hex');
+
+  const url = `${supabaseUrl}/rest/v1/community_questions?on_conflict=content_hash`;
+  await fetch(url, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=ignore-duplicates,return=minimal',
+    },
+    body: JSON.stringify({ test, section, type, topic, data: question, content_hash }),
+  });
+}
