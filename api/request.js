@@ -228,30 +228,55 @@ const DEFAULT_MODELS = {
   openrouter: 'anthropic/claude-sonnet-4',
 };
 
+// Free-tier model cascade: OpenRouter falls back automatically if the
+// first is rate-limited. All marked :free, no token cost.
+const FREE_TIER_MODELS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'google/gemma-2-9b-it:free',
+  'mistralai/mistral-7b-instruct:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+  'microsoft/phi-3-medium-128k-instruct:free',
+];
+
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     return res.status(200).json({
       ok: true,
-      msg: 'PteracAI LLM endpoint. POST with headers x-provider, x-api-key, x-model.',
+      msg: 'PteracAI LLM endpoint. POST with headers x-provider, x-api-key, x-model. Or POST with no key headers to use the shared free tier (when configured).',
       providers: Object.keys(DEFAULT_MODELS),
+      free_tier_available: Boolean(process.env.OPENROUTER_FREE_KEY),
     });
   }
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'method not allowed' });
   }
 
-  const provider = (req.headers['x-provider'] || '').toString().toLowerCase();
-  const apiKey = (req.headers['x-api-key'] || '').toString();
-  const model = (req.headers['x-model'] || '').toString() || DEFAULT_MODELS[provider];
+  let provider = (req.headers['x-provider'] || '').toString().toLowerCase();
+  let apiKey = (req.headers['x-api-key'] || '').toString();
+  let model = (req.headers['x-model'] || '').toString();
+  let usedFreeTier = false;
 
-  if (!provider || !DEFAULT_MODELS[provider]) {
+  // Free-tier fallback: if the visitor sent no API key but the server
+  // has OPENROUTER_FREE_KEY configured, route to the shared free key.
+  if (!apiKey && process.env.OPENROUTER_FREE_KEY) {
+    apiKey = process.env.OPENROUTER_FREE_KEY;
+    provider = 'openrouter_free';
+    model = ''; // free tier uses cascade, not a single model
+    usedFreeTier = true;
+  }
+
+  if (!usedFreeTier && (!provider || !DEFAULT_MODELS[provider])) {
     return res.status(400).json({
       error: `missing or unsupported x-provider header. Use one of: ${Object.keys(DEFAULT_MODELS).join(', ')}`,
     });
   }
   if (!apiKey) {
-    return res.status(401).json({ error: 'missing x-api-key header. Configure your key in Settings.' });
+    return res.status(401).json({
+      error: 'No AI key configured. Add your own key in Settings, or contact the site owner to enable free tier.',
+      free_tier_available: false,
+    });
   }
+  if (!usedFreeTier && !model) model = DEFAULT_MODELS[provider];
 
   let payload;
   try {
@@ -345,6 +370,34 @@ function buildCoachUserMsg(payload) {
 }
 
 async function callLLM({ provider, apiKey, model, system, userMsg }) {
+  if (provider === 'openrouter_free') {
+    // OpenRouter with a model cascade — falls back automatically on rate-limit.
+    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://pteracai.vercel.app',
+        'X-Title': 'PteracAI (free tier)',
+      },
+      body: JSON.stringify({
+        model: FREE_TIER_MODELS[0],
+        models: FREE_TIER_MODELS, // OpenRouter cascade
+        max_tokens: 2000,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: userMsg },
+        ],
+      }),
+    });
+    if (!resp.ok) {
+      const errText = await resp.text();
+      throw new Error(`openrouter free tier ${resp.status}: ${errText.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    return data.choices?.[0]?.message?.content || '';
+  }
+
   if (provider === 'anthropic') {
     const client = new Anthropic({ apiKey });
     const resp = await client.messages.create({

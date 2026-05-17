@@ -159,6 +159,21 @@ html, body {
 .section-btn:hover { background: var(--accent-soft); color: var(--ink); }
 .section-btn.active { background: var(--accent); color: white; }
 
+.free-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.free-tier-badge.low { background: var(--gold-soft); border-color: var(--gold-border); color: var(--gold); }
+.free-tier-badge.empty { background: #fbeeec; border-color: #e8c0b8; color: var(--wrong); }
+
 .streak-chip {
   display: inline-flex;
   align-items: center;

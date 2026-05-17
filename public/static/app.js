@@ -43,8 +43,57 @@ const state = {
   pollTimer: null,
   inflightById: new Map(),
   pendingCoaching: null,
-  keyHandler: null, // current keyboard handler for the active card
+  keyHandler: null,
+  freeTierAvailable: false, // discovered via GET /api/request
 };
+
+const FREE_TIER_QUOTA = 20; // requests per day per visitor
+const FREE_TIER_USAGE_KEY = "pteracai_free_tier_usage_v1";
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+function getFreeTierUsageToday() {
+  try {
+    const data = JSON.parse(localStorage.getItem(FREE_TIER_USAGE_KEY) || "{}");
+    return data.date === todayKey() ? (data.count || 0) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function incrementFreeTierUsage() {
+  const count = getFreeTierUsageToday() + 1;
+  localStorage.setItem(FREE_TIER_USAGE_KEY, JSON.stringify({ date: todayKey(), count }));
+  return count;
+}
+
+function freeTierRemaining() {
+  return Math.max(0, FREE_TIER_QUOTA - getFreeTierUsageToday());
+}
+
+function freeTierUsable() {
+  return state.freeTierAvailable && freeTierRemaining() > 0;
+}
+
+// AI is "available" if user has own key OR free tier is usable.
+// Use this for gating LLM-dependent UI features.
+function aiAvailable() {
+  return loadSettings() != null || freeTierUsable();
+}
+
+function updateFreeTierBadge() {
+  const badge = $("#free-tier-badge");
+  if (!badge) return;
+  const visible = state.freeTierAvailable && !loadSettings();
+  badge.classList.toggle("hidden", !visible);
+  if (!visible) return;
+  const left = freeTierRemaining();
+  $("#free-tier-remaining").textContent = `${left}/${FREE_TIER_QUOTA}`;
+  badge.classList.toggle("low", left > 0 && left <= 5);
+  badge.classList.toggle("empty", left === 0);
+}
 
 // Single global keyboard listener that delegates to state.keyHandler
 window.addEventListener("keydown", (e) => {
@@ -92,12 +141,17 @@ function currentTips() { return currentBank().tips || {}; }
 async function boot() {
   const res = await fetch("/data/bank.json");
   state.bank = await res.json();
+  // Probe the API endpoint to learn whether the shared free tier is configured.
+  try {
+    const probe = await fetch("/api/request").then((r) => r.json()).catch(() => null);
+    if (probe?.free_tier_available) state.freeTierAvailable = true;
+  } catch (_) {
+    /* offline / local dev — no problem */
+  }
   bindSectionButtons();
   bindLanding();
   startPolling();
   initSync();
-  // Decide initial view: landing if sync configured and not yet signed in,
-  // otherwise jump straight into the practice app.
   showAppropriateInitialView();
 }
 
@@ -157,6 +211,7 @@ function showMainApp() {
   $("#landing-view").classList.add("hidden");
   $("#main-header").classList.remove("hidden");
   $("#main-content").classList.remove("hidden");
+  updateFreeTierBadge();
   renderPicker();
 }
 
@@ -638,7 +693,7 @@ function renderTips(type) {
   clear(list);
 
   // 1. Tailored-for-this-question section at the TOP (if API key set)
-  if (state.currentQ && loadSettings()) {
+  if (state.currentQ && aiAvailable()) {
     const tailoredBox = el("div", { class: "tailored-tips-box", id: "tailored-tips-box" });
     tailoredBox.appendChild(el("div", { class: "cat-label tailored-label" }, "For this question"));
     const cached = getCachedTailoredTips(state.currentQ.id);
@@ -655,7 +710,7 @@ function renderTips(type) {
   }
 
   // 2. Static task-type tips
-  const staticLabel = loadSettings()
+  const staticLabel = aiAvailable()
     ? el("div", { class: "cat-label static-tips-divider" }, "General strategy")
     : null;
   if (staticLabel) list.appendChild(staticLabel);
@@ -1497,7 +1552,7 @@ function recordAttempt(q, userAnswer, correct) {
   }).catch(() => {});
 
   // Adaptive coaching trigger: 3+ consecutive wrong on same task type+topic
-  if (!correct && streakInfo.wrong_in_a_row >= 3 && loadSettings()) {
+  if (!correct && streakInfo.wrong_in_a_row >= 3 && aiAvailable()) {
     state.pendingCoaching = { question: q, streak: streakInfo.wrong_in_a_row };
   }
 }
@@ -1538,7 +1593,7 @@ function showFeedback(q, userAnswer, correct) {
   const llmGradedTypes = new Set(["swt", "essay", "task1", "lst_summary",
     "read_aloud", "repeat_sentence", "describe_image", "retell_lecture",
     "answer_short", "ielts_part1", "ielts_part2", "ielts_part3"]);
-  if (!correct && loadSettings() && !llmGradedTypes.has(q.type)) {
+  if (!correct && aiAvailable() && !llmGradedTypes.has(q.type)) {
     const analyzeBox = el("div", { class: "feedback-analyze" },
       el("div", { class: "feedback-label" }, "AI analysis of your answer"),
       el("div", { class: "analyze-status" },
@@ -1564,7 +1619,7 @@ function showFeedback(q, userAnswer, correct) {
       { class: "primary", onclick: () => requestFollowup(q) },
       "Get a similar question (mastery check)"
     ));
-    if (state.pendingCoaching && loadSettings()) {
+    if (state.pendingCoaching && aiAvailable()) {
       actions.appendChild(el(
         "button",
         {
@@ -1784,26 +1839,38 @@ function showLLMGrading(q, userAnswer, g) {
 }
 
 async function postRequest(request, handler) {
-  // BYOK mode (Vercel): include the visitor's stored API key headers.
-  // If no key is configured, prompt to set one before making the call.
   const settings = loadSettings();
   const headers = { "Content-Type": "application/json" };
+  let usingFreeTier = false;
+
   if (settings) {
+    // User has their own key configured.
     headers["x-provider"] = settings.provider;
     headers["x-api-key"] = settings.apiKey;
     if (settings.model) headers["x-model"] = settings.model;
+  } else if (freeTierUsable()) {
+    // Use the shared free tier — send no key headers, server falls back to OPENROUTER_FREE_KEY.
+    usingFreeTier = true;
+    incrementFreeTierUsage();
+    updateFreeTierBadge();
+  } else if (state.freeTierAvailable && freeTierRemaining() === 0) {
+    // Free tier exists but visitor exhausted today's quota.
+    const wantsKey = confirm(
+      `You've used today's free AI quota (${FREE_TIER_QUOTA} requests).\n\n` +
+      "Add your own API key for unlimited use? You can use Anthropic, OpenAI, or OpenRouter — most have free signup credits.\n\n" +
+      "Click OK to open Settings."
+    );
+    if (wantsKey) $("#settings-nav").click();
+    return;
   } else {
-    // Allow local file-bridge mode without key (Claude Code in terminal handles it).
-    // But on the deployed site without a key, surface a friendly prompt.
+    // No free tier configured AND no user key. Local dev or owner hasn't set up free tier.
     const wantsConfig = confirm(
       "This action needs an AI provider key.\n\n" +
       "If you're running PteracAI locally with Claude Code in your terminal, you can ignore this.\n\n" +
-      "Otherwise click OK to open Settings and configure your key (Anthropic / OpenAI / OpenRouter)."
+      "Otherwise click OK to open Settings and add your key (Anthropic / OpenAI / OpenRouter — free signup available)."
     );
-    if (wantsConfig) {
-      $("#settings-nav").click();
-      return;
-    }
+    if (wantsConfig) $("#settings-nav").click();
+    return;
   }
 
   showBridgeStatus(true);
@@ -1910,6 +1977,30 @@ function renderSettingsView() {
     { class: "subtitle" },
     "PteracAI is free to use. You bring your own API key from the provider of your choice. Your key is stored only in this browser and is never logged on the server."
   ));
+
+  // Free tier status banner (shown when free tier is available)
+  if (state.freeTierAvailable) {
+    const left = freeTierRemaining();
+    const usingFree = !loadSettings();
+    const banner = el("div", {
+      class: "settings-status show " + (left === 0 ? "err" : (usingFree ? "ok" : "info")),
+      style: "margin-bottom: 24px;",
+    });
+    if (usingFree && left > 0) {
+      banner.appendChild(document.createTextNode(
+        `You're using the shared free AI tier (${left}/${FREE_TIER_QUOTA} requests left today). Models cascade across free Llama/Gemma/Mistral. Add your own key below for unlimited use and higher-quality models.`
+      ));
+    } else if (usingFree && left === 0) {
+      banner.appendChild(document.createTextNode(
+        `You've used all ${FREE_TIER_QUOTA} free AI requests for today. Quota resets at midnight UTC. To keep going now, add your own key below — most providers offer free signup credits.`
+      ));
+    } else {
+      banner.appendChild(document.createTextNode(
+        `A shared free AI tier is available (${FREE_TIER_QUOTA} requests/day). It's currently disabled because you have your own key configured below. To use the free tier, clear your stored key.`
+      ));
+    }
+    view.appendChild(banner);
+  }
 
   const current = loadSettings();
   const initialProvider = current?.provider || "anthropic";
