@@ -397,6 +397,55 @@ button.ghost {
   background: white;
 }
 
+/* Speaking UI */
+.speak-wrap {
+  margin: 18px 0 8px;
+}
+.speak-status {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.speak-transcript {
+  min-height: 80px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+.speak-transcript:empty::before {
+  content: "Your transcribed speech will appear here as you talk.";
+  color: var(--muted);
+  font-style: italic;
+}
+.speak-mic {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.speak-mic-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: white;
+  display: inline-block;
+}
+.speak-mic.recording {
+  background: var(--wrong);
+}
+.speak-mic.recording .speak-mic-dot {
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
 .options { display: flex; flex-direction: column; gap: 8px; }
 .option {
   border: 1px solid var(--border);

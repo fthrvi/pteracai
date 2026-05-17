@@ -480,6 +480,16 @@ const TYPE_NAMES = {
   tfng: ["True / False / Not Given", "Decide if a statement matches the passage"],
   task1: ["Writing Task 1", "150-word description of a chart, graph, or process"],
   matching_headings: ["Matching Headings", "Match each paragraph to the best heading"],
+  // PTE Speaking
+  read_aloud: ["Read Aloud", "Read the passage aloud — natural pace, clear pronunciation"],
+  repeat_sentence: ["Repeat Sentence", "Listen and repeat the sentence exactly"],
+  describe_image: ["Describe Image", "Speak for 25 seconds about the prompt"],
+  retell_lecture: ["Re-tell Lecture", "Listen to a mini-lecture, then re-tell it in 40 seconds"],
+  answer_short: ["Answer Short Question", "One-word or short-phrase answer"],
+  // IELTS Speaking
+  ielts_part1: ["IELTS Part 1 — Familiar Topic", "Answer in 2-3 sentences with a personal example"],
+  ielts_part2: ["IELTS Part 2 — Cue Card", "1 min prep, then 1-2 min monologue covering all bullets"],
+  ielts_part3: ["IELTS Part 3 — Discussion", "Abstract question, give opinion + example + nuance"],
 };
 
 function renderPicker() {
@@ -656,7 +666,15 @@ const TIPS_SECTION_META = {
   writing_swt: { title: "Writing — Summarize Written Text", subtitle: "One-sentence summaries: templates, grammar structures, and PTE rubric breakdown." },
   writing_task1: { title: "Writing — Task 1 (Chart Description)", subtitle: "Describe a chart, graph, map, or process in 150+ words. The overview paragraph is critical." },
   writing_essay: { title: "Writing — Essay", subtitle: "5-paragraph templates, question-type identification, and connector rotation." },
-  speaking_general: { title: "Speaking — All Tasks (Real Exam)", subtitle: "Not yet practiced here — strategy reference for live exam day. Read Aloud, Repeat Sentence, Describe Image, Re-tell Lecture, Answer Short Question." },
+  speaking_general: { title: "Speaking — Setup & Caveats", subtitle: "How speech recognition works here vs the real exam: what's graded, what isn't, and why." },
+  speaking_read_aloud: { title: "Speaking — Read Aloud (PTE)", subtitle: "Read provided text aloud. Dual-scores Reading + Speaking — high leverage." },
+  speaking_repeat_sentence: { title: "Speaking — Repeat Sentence (PTE)", subtitle: "Hear a sentence, repeat exactly. Dual-scores Listening + Speaking." },
+  speaking_describe_image: { title: "Speaking — Describe Image (PTE)", subtitle: "25 seconds to describe a chart, map, or process. Templates beat improvisation." },
+  speaking_retell_lecture: { title: "Speaking — Re-tell Lecture (PTE)", subtitle: "Hear/read a mini-lecture, re-tell in 40 seconds. Dual-scores Listening + Speaking." },
+  speaking_answer_short: { title: "Speaking — Answer Short Question (PTE)", subtitle: "One-word answer, no elaboration. Speed > deliberation." },
+  speaking_ielts_part1: { title: "Speaking — IELTS Part 1 (Familiar Topics)", subtitle: "2-3 sentence answers about your life, hobbies, and routine." },
+  speaking_ielts_part2: { title: "Speaking — IELTS Part 2 (Cue Card)", subtitle: "1 min prep, 1-2 min monologue. Cover all bullets, don't trail off early." },
+  speaking_ielts_part3: { title: "Speaking — IELTS Part 3 (Discussion)", subtitle: "Abstract questions. Position + example + nuance + hedged language." },
 };
 
 const TIPS_ORDER = [
@@ -673,6 +691,14 @@ const TIPS_ORDER = [
   "writing_task1",
   "writing_essay",
   "speaking_general",
+  "speaking_read_aloud",
+  "speaking_repeat_sentence",
+  "speaking_describe_image",
+  "speaking_retell_lecture",
+  "speaking_answer_short",
+  "speaking_ielts_part1",
+  "speaking_ielts_part2",
+  "speaking_ielts_part3",
 ];
 
 function renderTipsView() {
@@ -939,6 +965,126 @@ const RENDERERS = {
     }));
   },
 
+  // ------------------- Speaking renderers -------------------
+
+  read_aloud(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Read the passage aloud:"));
+    card.appendChild(el("div", { class: "passage" }, q.passage));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "Click 'Start recording' when you're ready. Read at a natural pace, with intonation matching the punctuation.",
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself reading first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
+  repeat_sentence(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen, then repeat the sentence exactly:"));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "The sentence plays automatically. Click 'Play sentence' to hear it again. Then click 'Start recording' and repeat.",
+      allowAudioReplay: true,
+      audioText: q.audio_text,
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself repeating first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
+  describe_image(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, q.prompt));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "Speak for ~25 seconds. Use the template: intro, main feature, specific detail, overall conclusion.",
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself describing first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
+  retell_lecture(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen (or read), then re-tell the lecture in your own words:"));
+    card.appendChild(el("div", { class: "passage" }, q.passage));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "Click 'Start recording' when ready. Use template: 'The lecturer discussed... He/She explained... Furthermore... To conclude...'",
+      allowAudioReplay: true,
+      audioText: q.passage,
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself re-telling first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
+  answer_short(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, q.question));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "Answer in one word or a short phrase. Respond immediately — hesitation costs.",
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself answering first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
+  ielts_part1(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, q.question));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "2-3 sentence answer with a personal example. Match the question's tense.",
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself answering first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
+  ielts_part2(card, q) {
+    card.appendChild(el("div", { class: "qprompt", style: "white-space: pre-wrap;" }, q.prompt));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "Take a moment to plan (4 keywords, one per bullet). Then record a 1-2 minute monologue covering all bullets.",
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself speaking first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
+  ielts_part3(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, q.question));
+    const ui = buildSpeakingUI({
+      card,
+      hintText: "3-4 sentences. Position + example + nuance. Use 'arguably' / 'it seems' for hedging.",
+    });
+    card.appendChild(ui.wrap);
+    card.appendChild(actionsBar(() => {
+      const t = ui.getTranscript();
+      if (!t) return alert("Record yourself answering first.");
+      submitForLLMGrading(q, t);
+    }));
+  },
+
   // IELTS Writing Task 1 — same UX as essay but lower word floor
   task1(card, q) {
     card.appendChild(el("div", { class: "qprompt" }, q.prompt));
@@ -969,6 +1115,105 @@ function actionsBar(onSubmit) {
 
 function countWords(s) {
   return (s.trim().match(/\S+/g) || []).length;
+}
+
+// ---------- Web Speech recognition wrapper ----------
+function createSpeechRecognizer() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const r = new SR();
+  r.continuous = true;
+  r.interimResults = true;
+  r.lang = "en-US";
+  return r;
+}
+
+function buildSpeakingUI({ card, onTranscript, hintText, allowAudioReplay, audioText }) {
+  const wrap = el("div", { class: "speak-wrap" });
+
+  if (hintText) {
+    wrap.appendChild(el("div", { class: "tfng-hint" }, hintText));
+  }
+
+  if (allowAudioReplay && audioText) {
+    const audioBtn = el("button", {
+      class: "ghost",
+      style: "margin-bottom: 14px;",
+      onclick: () => speak(audioText),
+    }, "▶  Play sentence");
+    wrap.appendChild(audioBtn);
+    setTimeout(() => speak(audioText), 300);
+  }
+
+  const status = el("div", { class: "speak-status" }, "Ready when you are.");
+  wrap.appendChild(status);
+
+  const transcript = el("div", { class: "speak-transcript", "aria-live": "polite" });
+  wrap.appendChild(transcript);
+
+  let recognizer = createSpeechRecognizer();
+  let recording = false;
+  let finalText = "";
+
+  if (!recognizer) {
+    status.textContent = "Speech recognition isn't supported in this browser. Try Chrome on desktop. You can still type your response below.";
+    const fallback = el("textarea", { class: "wfd-input", placeholder: "Type your response..." });
+    wrap.appendChild(fallback);
+    return { wrap, getTranscript: () => fallback.value };
+  }
+
+  const micBtn = el("button", { class: "primary speak-mic" });
+
+  function renderMic() {
+    clear(micBtn);
+    micBtn.appendChild(el("span", { class: "speak-mic-dot" }));
+    micBtn.appendChild(document.createTextNode(recording ? "  Stop" : "  Start recording"));
+    micBtn.classList.toggle("recording", recording);
+  }
+  renderMic();
+
+  micBtn.addEventListener("click", () => {
+    if (recording) {
+      recognizer.stop();
+    } else {
+      finalText = "";
+      transcript.textContent = "";
+      try {
+        recognizer.start();
+      } catch (e) {
+        status.textContent = "Couldn't start recording: " + e.message;
+      }
+    }
+  });
+  wrap.appendChild(micBtn);
+
+  recognizer.onstart = () => {
+    recording = true;
+    status.textContent = "Listening… speak naturally.";
+    renderMic();
+  };
+  recognizer.onerror = (e) => {
+    status.textContent = "Recognition error: " + e.error + (e.error === "not-allowed" ? " (microphone permission denied)" : "");
+    recording = false;
+    renderMic();
+  };
+  recognizer.onend = () => {
+    recording = false;
+    status.textContent = finalText ? "Recording stopped. Submit when ready." : "Recording stopped — nothing captured.";
+    renderMic();
+    onTranscript?.(finalText);
+  };
+  recognizer.onresult = (e) => {
+    let interim = "";
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) finalText += r[0].transcript + " ";
+      else interim += r[0].transcript;
+    }
+    transcript.textContent = (finalText + interim).trim();
+  };
+
+  return { wrap, getTranscript: () => finalText.trim() };
 }
 
 function speak(text, rate = 0.95) {
