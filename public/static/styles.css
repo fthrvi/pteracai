@@ -1117,6 +1117,99 @@ button.ghost {
   margin-bottom: 16px;
 }
 
+.dash-mock {
+  background: linear-gradient(135deg, white 0%, #fbeeec 100%);
+  border-color: #e8c0b8;
+}
+.dash-mock-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.dash-mock-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+@media (max-width: 600px) {
+  .dash-mock-btns { grid-template-columns: repeat(2, 1fr); }
+}
+.dash-mock-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  text-align: left;
+}
+.dash-mock-btn-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+.dash-mock-btn-meta {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.dash-mock-btn:hover .dash-mock-btn-title { color: var(--accent); }
+
+/* Mock exam in-progress banner inside the question card */
+.mock-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: -28px -28px 22px;
+  padding: 12px 28px;
+  background: linear-gradient(90deg, var(--wrong), #8a2c20);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  font-size: 13px;
+}
+.mock-banner-left { display: flex; align-items: center; gap: 12px; }
+.mock-pill {
+  background: rgba(255,255,255,0.18);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.mock-progress { font-weight: 500; opacity: 0.95; }
+.mock-timer {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.mock-timer.urgent { animation: pulse-timer 0.8s ease-in-out infinite; }
+@keyframes pulse-timer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Mock result per-question grid */
+.mock-result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 6px;
+}
+.mock-result-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.mock-result-cell.correct { background: var(--right); color: white; }
+.mock-result-cell.wrong { background: var(--wrong); color: white; }
+.mock-result-cell.skipped { background: rgba(0,0,0,0.08); color: var(--muted); }
+
 /* ---------- landing gate ---------- */
 .landing-view {
   min-height: 100vh;

@@ -44,7 +44,25 @@ const state = {
   inflightById: new Map(),
   pendingCoaching: null,
   keyHandler: null,
-  freeTierAvailable: false, // discovered via GET /api/request
+  freeTierAvailable: false,
+  mockExam: null, // {active, test, section, queue, index, startTs, durationSec, results}
+};
+
+// Mock exam configurations — section, item count, total duration. Reflects
+// official PTE/IELTS section timings (approximated for the local question set).
+const MOCK_CONFIGS = {
+  pte: {
+    reading: { label: "Reading", durationSec: 30 * 60, count: 12 },
+    listening: { label: "Listening", durationSec: 35 * 60, count: 10 },
+    writing: { label: "Writing", durationSec: 25 * 60, count: 2 },
+    speaking: { label: "Speaking", durationSec: 30 * 60, count: 8 },
+  },
+  ielts: {
+    reading: { label: "Reading", durationSec: 60 * 60, count: 15 },
+    listening: { label: "Listening", durationSec: 30 * 60, count: 10 },
+    writing: { label: "Writing", durationSec: 60 * 60, count: 2 },
+    speaking: { label: "Speaking", durationSec: 14 * 60, count: 5 },
+  },
 };
 
 const FREE_TIER_QUOTA = 20; // requests per day per visitor
@@ -743,6 +761,12 @@ function renderTips(type) {
   }
   const list = $("#tips-list");
   clear(list);
+
+  // No tips during mock exam — emulate real test experience
+  if (state.mockExam?.active) {
+    aside.classList.add("hidden");
+    return;
+  }
 
   // 1. Tailored-for-this-question section at the TOP (if API key set)
   if (state.currentQ && aiAvailable()) {
@@ -1716,12 +1740,29 @@ function showInlineFeedback(card, q, userAnswer, correct) {
   // Remove the original actions bar
   card.querySelectorAll('.actions').forEach((a) => a.remove());
 
+  const inMock = state.mockExam?.active;
   const fb = el('div', { class: 'inline-feedback' });
   fb.appendChild(el(
     'div',
     { class: 'inline-verdict ' + (correct ? 'correct' : 'wrong') },
     correct ? '✓ Correct' : '✗ Not quite'
   ));
+
+  // In mock mode, suppress detailed teaching feedback — emulate the real test
+  // experience where you don't get explanations between questions. User sees
+  // just the verdict, then advances. Full breakdown comes at the end.
+  if (inMock) {
+    const actions = el('div', { class: 'actions' });
+    const isLast = state.mockExam.index >= state.mockExam.queue.length - 1;
+    actions.appendChild(el('button', {
+      class: 'primary',
+      onclick: () => advanceMock(),
+    }, isLast ? 'Finish mock' : 'Next question →'));
+    actions.appendChild(el('button', { class: 'ghost', onclick: () => finishMockExam() }, 'End mock early'));
+    fb.appendChild(actions);
+    card.appendChild(fb);
+    return;
+  }
 
   // Bank explanation (always shown — it's the "why" reference)
   if (q.explanation) {
@@ -1810,16 +1851,19 @@ function recordAttempt(q, userAnswer, correct) {
   $("#stat-streak").textContent = state.streak;
   bumpStreakChip();
 
-  // Local + Drive-synced persistence
+  // Local + Drive-synced persistence — tag with the active test so the
+  // dashboard can filter per-test stats accurately.
   const streakInfo = appendAttempt({
     ts: Date.now(),
     qid: q.id,
+    test: state.test,
     section: q.section,
     type: q.type,
     topic: q.topic,
     correct,
     user_answer: userAnswer,
     is_followup_of: state.currentFollowupOf,
+    mock: state.mockExam?.active || false,
   });
 
   // Local file-bridge logging (no-op on Vercel — endpoint returns nothing)
@@ -2652,6 +2696,32 @@ function renderDashboardView() {
     view.appendChild(actions);
   }
 
+  // ---- Mock Exam card ----
+  const mockCard = el("div", { class: "dash-card dash-mock" });
+  mockCard.appendChild(el("div", { class: "dash-card-label" }, "Mock exam"));
+  mockCard.appendChild(el("div", { class: "dash-mock-text" },
+    `Take a timed simulation of one section. No AI hints, no tips — just you and the clock, like the real ${TEST_LABELS[state.test]?.short || "PTE"}.`
+  ));
+  const mockBtns = el("div", { class: "dash-mock-btns" });
+  const cfg = MOCK_CONFIGS[state.test] || {};
+  for (const [section, sectionCfg] of Object.entries(cfg)) {
+    const mins = Math.round(sectionCfg.durationSec / 60);
+    const btn = el("button", {
+      class: "ghost dash-mock-btn",
+      onclick: () => {
+        if (confirm(`Start ${TEST_LABELS[state.test]?.short || "PTE"} ${sectionCfg.label} mock?\n\n• ${sectionCfg.count} questions\n• ${mins} minute time limit\n• No tips or AI hints during the test\n• Score breakdown at the end`)) {
+          startMockExam(state.test, section);
+        }
+      },
+    },
+      el("div", { class: "dash-mock-btn-title" }, sectionCfg.label),
+      el("div", { class: "dash-mock-btn-meta" }, `${sectionCfg.count} Qs · ${mins} min`),
+    );
+    mockBtns.appendChild(btn);
+  }
+  mockCard.appendChild(mockBtns);
+  view.appendChild(mockCard);
+
   // ---- Two-column grid: section accuracy + activity heatmap ----
   const cols = el("div", { class: "dash-cols" });
 
@@ -2765,7 +2835,12 @@ function makeHeatmap(dailyCounts) {
 
 function computeStats() {
   const p = loadProgress();
-  const attempts = p.attempts || [];
+  // Filter to current test only. For historical attempts without a test
+  // field, infer from qid prefix ('i-' = ielts, otherwise pte).
+  const attempts = (p.attempts || []).filter((a) => {
+    const t = a.test || (String(a.qid || "").startsWith("i-") ? "ielts" : "pte");
+    return t === state.test;
+  });
   const today = new Date().toISOString().slice(0, 10);
 
   const stats = {
@@ -2851,6 +2926,181 @@ function computeStats() {
   stats.dueCount = dueQuestionIds().length;
 
   return stats;
+}
+
+// ============================================================================
+// MOCK EXAM MODE — timed sequence of questions, no AI hints during the test
+// ============================================================================
+function startMockExam(test, section) {
+  const cfg = MOCK_CONFIGS[test]?.[section];
+  if (!cfg) return alert("Mock exam not configured for that section yet.");
+  const pool = currentQuestions().filter((q) => q.section === section);
+  if (pool.length === 0) return alert(`No ${section} questions available for this test.`);
+  // Shuffle and take up to count
+  const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+  const queue = shuffled.slice(0, Math.min(cfg.count, pool.length));
+  state.mockExam = {
+    active: true,
+    test,
+    section,
+    label: cfg.label,
+    queue,
+    index: 0,
+    startTs: Date.now(),
+    durationSec: cfg.durationSec,
+    results: [],
+    timerInterval: null,
+  };
+  nextMockQuestion();
+}
+
+function nextMockQuestion() {
+  const m = state.mockExam;
+  if (!m) return;
+  if (m.index >= m.queue.length) {
+    return finishMockExam();
+  }
+  const q = m.queue[m.index];
+  // Capture the BEFORE attempts count so we can know per-question outcome
+  m._beforeAttempts = (loadProgress().attempts || []).length;
+  renderQuestion(q);
+  // Add a banner on the card showing mock progress + timer
+  setTimeout(() => decorateMockBanner(), 0);
+  startMockTimer();
+}
+
+function decorateMockBanner() {
+  const m = state.mockExam;
+  if (!m) return;
+  const card = $("#card");
+  if (!card) return;
+  // Remove any prior mock banner
+  card.querySelectorAll(".mock-banner").forEach((b) => b.remove());
+  const banner = el("div", { class: "mock-banner" },
+    el("div", { class: "mock-banner-left" },
+      el("span", { class: "mock-pill" }, `MOCK EXAM · ${m.label.toUpperCase()}`),
+      el("span", { class: "mock-progress" }, `Question ${m.index + 1} of ${m.queue.length}`),
+    ),
+    el("div", { class: "mock-timer", id: "mock-timer" }, "—:—"),
+  );
+  card.insertBefore(banner, card.firstChild);
+  updateMockTimerDisplay();
+}
+
+function startMockTimer() {
+  const m = state.mockExam;
+  if (!m) return;
+  if (m.timerInterval) clearInterval(m.timerInterval);
+  m.timerInterval = setInterval(() => {
+    const remain = m.durationSec - Math.floor((Date.now() - m.startTs) / 1000);
+    if (remain <= 0) {
+      clearInterval(m.timerInterval);
+      m.timerInterval = null;
+      finishMockExam(/*timeout=*/ true);
+      return;
+    }
+    updateMockTimerDisplay();
+  }, 1000);
+}
+
+function updateMockTimerDisplay() {
+  const m = state.mockExam;
+  const t = document.getElementById("mock-timer");
+  if (!m || !t) return;
+  const remain = Math.max(0, m.durationSec - Math.floor((Date.now() - m.startTs) / 1000));
+  const mm = Math.floor(remain / 60);
+  const ss = remain % 60;
+  t.textContent = `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
+  t.classList.toggle("urgent", remain <= 60);
+}
+
+function advanceMock() {
+  // Called by mock-aware feedback's Next button
+  const m = state.mockExam;
+  if (!m) return;
+  const after = loadProgress().attempts || [];
+  const justAttempted = after.slice(m._beforeAttempts || after.length);
+  // Record per-question result
+  if (justAttempted.length) {
+    const last = justAttempted[justAttempted.length - 1];
+    m.results.push({ qid: last.qid, correct: last.correct, topic: last.topic, type: last.type });
+  } else {
+    m.results.push({ qid: m.queue[m.index].id, correct: false, type: m.queue[m.index].type });
+  }
+  m.index += 1;
+  nextMockQuestion();
+}
+
+function finishMockExam(timeout = false) {
+  const m = state.mockExam;
+  if (!m) return;
+  if (m.timerInterval) clearInterval(m.timerInterval);
+  // Pull any final attempt we may have missed
+  const after = loadProgress().attempts || [];
+  const justAttempted = after.slice(m._beforeAttempts || after.length);
+  if (justAttempted.length && (!m.results.length || m.results[m.results.length - 1]?.qid !== justAttempted[justAttempted.length - 1].qid)) {
+    const last = justAttempted[justAttempted.length - 1];
+    m.results.push({ qid: last.qid, correct: last.correct, topic: last.topic, type: last.type });
+  }
+  state.mockExam = null;
+  renderMockResults(m, timeout);
+}
+
+function renderMockResults(m, timeout) {
+  $("#picker").classList.add("hidden");
+  $("#card").classList.add("hidden");
+  $("#feedback").classList.add("hidden");
+  $("#tips").classList.add("hidden");
+  $("#tips-view").classList.add("hidden");
+  $("#settings-view").classList.add("hidden");
+  $("#dashboard-view").classList.remove("hidden");
+  const view = $("#dashboard-view");
+  clear(view);
+
+  const correct = m.results.filter((r) => r.correct).length;
+  const total = m.queue.length;
+  const accuracy = total > 0 ? Math.round((correct / m.results.length || 1) * 100) : 0;
+  const elapsedSec = Math.min(m.durationSec, Math.floor((Date.now() - m.startTs) / 1000));
+  const mins = Math.floor(elapsedSec / 60);
+
+  view.appendChild(el("div", { class: "dash-hero" },
+    el("h1", { class: "dash-greeting" }, timeout ? "Time's up" : "Mock complete"),
+    el("div", { class: "dash-subtext" },
+      `${m.label} mock — ${m.results.length}/${total} questions in ${mins} min · ${accuracy}% accuracy`),
+  ));
+
+  const summary = el("div", { class: "dash-card dash-today" });
+  summary.appendChild(el("div", { class: "dash-card-label" }, "Result"));
+  const grid = el("div", { class: "dash-today-grid" });
+  grid.appendChild(makeStat(correct, "correct", "dash-stat-primary"));
+  grid.appendChild(makeStat(m.results.length - correct, "wrong"));
+  grid.appendChild(makeStat(total - m.results.length, "unanswered"));
+  grid.appendChild(makeStat(`${mins}m`, "elapsed"));
+  summary.appendChild(grid);
+  view.appendChild(summary);
+
+  // Per-question breakdown
+  const breakdownCard = el("div", { class: "dash-card" });
+  breakdownCard.appendChild(el("div", { class: "dash-card-label" }, "Per-question result"));
+  const grid2 = el("div", { class: "mock-result-grid" });
+  m.queue.forEach((q, i) => {
+    const r = m.results[i];
+    const status = r ? (r.correct ? "correct" : "wrong") : "skipped";
+    const cell = el("div", { class: `mock-result-cell ${status}`, title: q.topic || "" },
+      String(i + 1));
+    grid2.appendChild(cell);
+  });
+  breakdownCard.appendChild(grid2);
+  view.appendChild(breakdownCard);
+
+  // Actions
+  const actions = el("div", { class: "dash-actions-row" });
+  actions.appendChild(el("button", { class: "primary", onclick: () => renderDashboardView() }, "Back to dashboard"));
+  actions.appendChild(el("button", {
+    class: "ghost",
+    onclick: () => startMockExam(m.test, m.section),
+  }, "Try another mock"));
+  view.appendChild(actions);
 }
 
 function practiceDue() {
