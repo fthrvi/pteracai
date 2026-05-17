@@ -18,9 +18,15 @@ export default async function handler(req, res) {
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
-  // For reads we can use either the anon key OR the service key — anon is enough
-  // since RLS allows SELECT on hidden=false rows.
-  const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_KEY;
+  // For reads we can use either the anon/publishable key OR the secret key — anon
+  // is enough since RLS allows SELECT on hidden=false rows. Accept multiple naming
+  // conventions (Supabase-Vercel integration adds different sets of vars).
+  const supabaseKey =
+    process.env.SUPABASE_ANON_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return res.status(200).json({ count: 0, questions: [], reason: 'community bank not configured' });
