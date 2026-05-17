@@ -132,6 +132,30 @@ Improvements must be SPECIFIC. BAD: "Improve vocabulary." GOOD: "Replace 'good' 
 
 Output ONLY the JSON object.`;
 
+const COACH_SYSTEM = `You are an expert PTE Academic coach. The user has missed 3+ questions in a row on the SAME task type and topic. Your job: diagnose WHY they're failing, then give them targeted, surgical guidance.
+
+You receive: the task type, the topic, and 3+ recent attempts (each with the original question and the user's wrong answer).
+
+Diagnose:
+- What specific cognitive pattern is failing? (e.g., "anchoring on passage wording without checking meaning", "confusing 'inference' with 'paraphrase'", "missing the caveat in summarize-written-text", "ignoring connector words in reorder")
+- Is this a knowledge gap (don't know the rule) or a habit gap (knows the rule, fails to apply under pressure)?
+
+Output a single JSON object — NO markdown, NO commentary:
+
+{
+  "diagnosis": "<1-2 sentence summary of the specific failure pattern, referencing what you saw in their wrong answers>",
+  "micro_tips": [
+    "<actionable tip targeting the pattern — quote a specific wrong answer of theirs if relevant>",
+    "<another tip>",
+    "<another tip — max 4 total>"
+  ],
+  "drill_focus": "<one short sentence describing what kind of question they should try next to break the pattern, e.g., 'try a re-order paragraph where the topic sentence uses no time markers — force pronoun-tracking instead'>"
+}
+
+Be SPECIFIC. BAD: "Read the passage more carefully." GOOD: "In question 2 you picked option C because it used the word 'rapid' from the passage — but the passage said 'rapid decline' while option C said 'rapid growth'. You're matching on words, not meaning. Before picking, restate the option's claim in your own words and re-check against the passage."
+
+Output ONLY the JSON object.`;
+
 const DEFAULT_MODELS = {
   anthropic: 'claude-sonnet-4-6',
   openai: 'gpt-4o-mini',
@@ -185,6 +209,11 @@ export default async function handler(req, res) {
       const text = await callLLM({ provider, apiKey, model, system: GRADE_SYSTEM, userMsg });
       return res.status(200).json({ ok: true, grading: parseJSON(text) });
     }
+    if (kind === 'coach') {
+      const userMsg = buildCoachUserMsg(payload);
+      const text = await callLLM({ provider, apiKey, model, system: COACH_SYSTEM, userMsg });
+      return res.status(200).json({ ok: true, coaching: parseJSON(text) });
+    }
     return res.status(400).json({ error: `unknown kind: ${kind}` });
   } catch (err) {
     // Never leak the key. Sanitize messages.
@@ -212,6 +241,18 @@ function buildGradeUserMsg(payload) {
     user_answer: payload.user_answer,
     instruction:
       'Grade strictly per PTE rubric for this type. Return ONLY the grading JSON object.',
+  });
+}
+
+function buildCoachUserMsg(payload) {
+  return JSON.stringify({
+    section: payload.section,
+    type: payload.type,
+    topic: payload.topic,
+    consecutive_wrong: payload.consecutive_wrong,
+    recent_attempts: payload.recent_attempts, // [{question, user_answer, correct_answer}]
+    instruction:
+      'Diagnose the user\'s specific failure pattern across these attempts. Return ONLY the coaching JSON.',
   });
 }
 

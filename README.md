@@ -89,6 +89,44 @@ If you don't trust the hosted demo, **self-host**: fork the repo,
 deploy to your own Vercel account, only you (or whoever you share the
 URL with) ever interacts with it.
 
+## Cross-device sync (optional)
+
+Sign in with Google to sync your settings, attempt history, and
+spaced-repetition queue across devices. Data is stored in a hidden folder
+in **your own Google Drive** (`appDataFolder` scope) — the app owner
+never sees it.
+
+The deployed site needs a Google OAuth Client ID. Without one, the app
+falls back to localStorage-only (still fully functional, just no sync).
+
+### Google Sign-In setup
+
+One-time, takes about 3 minutes:
+
+1. Go to https://console.cloud.google.com/ and create a project (or pick an existing one).
+2. Enable the **Google Drive API**: APIs & Services → Library → search "Google Drive API" → Enable.
+3. Configure the **OAuth consent screen**: APIs & Services → OAuth consent screen → External → fill in app name ("PteracAI"), support email, your email. Add scopes: `userinfo.email`, `userinfo.profile`, and `https://www.googleapis.com/auth/drive.appdata`. Save.
+4. Create credentials: APIs & Services → Credentials → Create Credentials → OAuth Client ID → **Web application**. Add your deployed URL(s) under **Authorized JavaScript origins** (e.g. `https://pteracai.vercel.app` and `http://localhost:5173`). Save.
+5. Copy the Client ID (looks like `123456789-abc...xyz.apps.googleusercontent.com`).
+6. Add a `<script>` tag in `public/index.html` BEFORE `sync.js`:
+   ```html
+   <script>window.PTERACAI_GOOGLE_CLIENT_ID = "YOUR_CLIENT_ID_HERE";</script>
+   ```
+7. Commit, push, Vercel auto-deploys. Sync option will appear in Settings.
+
+## Adaptive coaching
+
+After 3 consecutive wrong answers on the same task type + topic, a
+**Coach Mode** button appears. Clicking it sends the recent attempts
+(question + your wrong answer) to your LLM, which:
+
+1. Diagnoses the specific failure pattern (e.g. "you keep matching on
+   keywords without checking meaning")
+2. Gives targeted micro-tips that quote your actual wrong answers
+3. Recommends a drill focus to break the pattern
+
+Uses your existing API key — no extra setup.
+
 ## What's in the bank
 
 | Section | Type | Count |

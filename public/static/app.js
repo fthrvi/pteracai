@@ -4,6 +4,14 @@
 // LLM-grading and follow-up requests to the local server, then polls
 // /api/responses for Claude Code's reply.
 
+// ---------- BUILD CONFIG ----------
+// To enable Google Drive sync (cross-device progress), create an OAuth
+// 2.0 Client ID in Google Cloud Console with the
+// https://www.googleapis.com/auth/drive.appdata scope, then paste it here
+// or set it on window.PTERACAI_GOOGLE_CLIENT_ID before this script loads.
+// See README → "Google Sign-In setup" for the 3-minute walkthrough.
+const GOOGLE_CLIENT_ID = window.PTERACAI_GOOGLE_CLIENT_ID || "";
+
 const state = {
   bank: null,
   section: "reading",
@@ -15,6 +23,7 @@ const state = {
   responseSeq: 0,
   pollTimer: null,
   inflightById: new Map(),
+  pendingCoaching: null, // {question, streak} set when 3+ consecutive wrong on same topic
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -49,6 +58,26 @@ async function boot() {
   bindSectionButtons();
   renderPicker();
   startPolling();
+  initSync();
+}
+
+function initSync() {
+  if (!window.PteracaiSync) return;
+  PteracaiSync.init({
+    clientId: GOOGLE_CLIENT_ID,
+    onSignInChange: async ({ signedIn, user, source }) => {
+      // Re-render Settings if it's currently visible
+      if (!$("#settings-view").classList.contains("hidden")) {
+        renderSettingsView();
+      }
+      if (signedIn) {
+        await pullAndMerge();
+        if (!$("#settings-view").classList.contains("hidden")) {
+          renderSettingsView();
+        }
+      }
+    },
+  });
 }
 
 function bindSectionButtons() {
@@ -127,6 +156,8 @@ function loadSettings() {
 
 function saveSettings(s) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  localStorage.setItem("pteracai_settings_updated", String(Date.now()));
+  scheduleSyncPush();
 }
 
 function clearSettings() {
@@ -135,6 +166,140 @@ function clearSettings() {
 
 function hasUsableSettings() {
   return loadSettings() != null;
+}
+
+// ---------- progress (attempts + spaced repetition) ----------
+const PROGRESS_KEY = "pteracai_progress_v1";
+const MAX_ATTEMPTS_RETAINED = 1000;
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return defaultProgress();
+    const p = JSON.parse(raw);
+    return { ...defaultProgress(), ...p };
+  } catch (e) {
+    return defaultProgress();
+  }
+}
+
+function defaultProgress() {
+  return {
+    schema_version: 1,
+    attempts: [],
+    attempts_updated: 0,
+    spaced_rep: {},
+    spaced_rep_updated: 0,
+    streaks: {}, // {topicKey: {wrong_in_a_row, last_ts}}
+    streaks_updated: 0,
+  };
+}
+
+function saveProgress(p) {
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+  scheduleSyncPush();
+}
+
+function appendAttempt(attempt) {
+  const p = loadProgress();
+  p.attempts.push(attempt);
+  // sliding window
+  if (p.attempts.length > MAX_ATTEMPTS_RETAINED) {
+    p.attempts = p.attempts.slice(-MAX_ATTEMPTS_RETAINED);
+  }
+  p.attempts_updated = Date.now();
+  // update streak for this topic
+  const key = `${attempt.section}:${attempt.type}:${attempt.topic || ''}`;
+  const cur = p.streaks[key] || { wrong_in_a_row: 0, last_ts: 0 };
+  if (attempt.correct) {
+    cur.wrong_in_a_row = 0;
+  } else {
+    cur.wrong_in_a_row += 1;
+  }
+  cur.last_ts = attempt.ts;
+  p.streaks[key] = cur;
+  p.streaks_updated = Date.now();
+  // spaced repetition: only mark new entries; details handled elsewhere
+  if (!attempt.correct) {
+    p.spaced_rep[attempt.qid] = scheduleSR(p.spaced_rep[attempt.qid], false);
+  } else if (p.spaced_rep[attempt.qid]) {
+    p.spaced_rep[attempt.qid] = scheduleSR(p.spaced_rep[attempt.qid], true);
+  }
+  p.spaced_rep_updated = Date.now();
+  saveProgress(p);
+  return cur;
+}
+
+// SM-2-lite: intervals double on correct, reset on wrong
+function scheduleSR(prev, correct) {
+  const now = Date.now();
+  const day = 24 * 3600 * 1000;
+  if (!prev) {
+    return { interval_days: 1, next_due_ts: now + day, repetitions: correct ? 1 : 0, ease: 2.5 };
+  }
+  if (correct) {
+    const newInt = Math.round(prev.interval_days * prev.ease);
+    return { interval_days: newInt, next_due_ts: now + newInt * day, repetitions: prev.repetitions + 1, ease: prev.ease };
+  }
+  return { interval_days: 1, next_due_ts: now + day, repetitions: 0, ease: Math.max(1.3, prev.ease - 0.2) };
+}
+
+function dueQuestionIds() {
+  const p = loadProgress();
+  const now = Date.now();
+  return Object.entries(p.spaced_rep)
+    .filter(([_, sr]) => sr.next_due_ts <= now)
+    .map(([qid, _]) => qid);
+}
+
+// ---------- sync (Google Drive) ----------
+function scheduleSyncPush() {
+  if (!window.PteracaiSync?.signedIn?.()) return;
+  PteracaiSync.schedulePush(() => ({
+    schema_version: 1,
+    settings: loadSettings(),
+    settings_updated: Number(localStorage.getItem("pteracai_settings_updated") || 0),
+    progress: loadProgress(),
+  }));
+}
+
+async function pullAndMerge() {
+  if (!window.PteracaiSync?.signedIn?.()) return;
+  try {
+    const remote = await PteracaiSync.pull();
+    if (!remote) return; // no remote file yet, nothing to merge
+    // Merge settings: take most recent by timestamp
+    const localSettingsUpdated = Number(localStorage.getItem("pteracai_settings_updated") || 0);
+    if (remote.settings && (remote.settings_updated || 0) > localSettingsUpdated) {
+      saveSettings(remote.settings);
+      localStorage.setItem("pteracai_settings_updated", String(remote.settings_updated));
+    }
+    // Merge progress: per-section most-recent wins; attempts merged by ts (union)
+    if (remote.progress) {
+      const local = loadProgress();
+      const merged = { ...local };
+      if ((remote.progress.attempts_updated || 0) > local.attempts_updated) {
+        // union attempts by ts+qid
+        const seen = new Set(local.attempts.map((a) => `${a.ts}:${a.qid}`));
+        const incoming = (remote.progress.attempts || []).filter((a) => !seen.has(`${a.ts}:${a.qid}`));
+        merged.attempts = [...local.attempts, ...incoming]
+          .sort((a, b) => a.ts - b.ts)
+          .slice(-MAX_ATTEMPTS_RETAINED);
+        merged.attempts_updated = remote.progress.attempts_updated;
+      }
+      if ((remote.progress.spaced_rep_updated || 0) > local.spaced_rep_updated) {
+        merged.spaced_rep = { ...local.spaced_rep, ...remote.progress.spaced_rep };
+        merged.spaced_rep_updated = remote.progress.spaced_rep_updated;
+      }
+      if ((remote.progress.streaks_updated || 0) > local.streaks_updated) {
+        merged.streaks = { ...local.streaks, ...remote.progress.streaks };
+        merged.streaks_updated = remote.progress.streaks_updated;
+      }
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(merged));
+    }
+  } catch (e) {
+    console.warn("[sync] pull failed:", e.message);
+  }
 }
 
 // ---------- picker ----------
@@ -538,6 +703,20 @@ function recordAttempt(q, userAnswer, correct) {
   $("#stat-attempted").textContent = state.attempted;
   $("#stat-correct").textContent = state.correct;
   $("#stat-streak").textContent = state.streak;
+
+  // Local + Drive-synced persistence
+  const streakInfo = appendAttempt({
+    ts: Date.now(),
+    qid: q.id,
+    section: q.section,
+    type: q.type,
+    topic: q.topic,
+    correct,
+    user_answer: userAnswer,
+    is_followup_of: state.currentFollowupOf,
+  });
+
+  // Local file-bridge logging (no-op on Vercel — endpoint returns nothing)
   fetch("/api/attempt", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -550,7 +729,12 @@ function recordAttempt(q, userAnswer, correct) {
       user_answer: userAnswer,
       is_followup_of: state.currentFollowupOf,
     }),
-  });
+  }).catch(() => {});
+
+  // Adaptive coaching trigger: 3+ consecutive wrong on same task type+topic
+  if (!correct && streakInfo.wrong_in_a_row >= 3 && loadSettings()) {
+    state.pendingCoaching = { question: q, streak: streakInfo.wrong_in_a_row };
+  }
 }
 
 // ---------- feedback ----------
@@ -597,9 +781,74 @@ function showFeedback(q, userAnswer, correct) {
       { class: "primary", onclick: () => requestFollowup(q) },
       "Get a similar question (mastery check)"
     ));
+    if (state.pendingCoaching && loadSettings()) {
+      actions.appendChild(el(
+        "button",
+        {
+          class: "primary",
+          style: "background: #d4a017;",
+          onclick: () => requestCoaching(q, state.pendingCoaching.streak),
+        },
+        `Coach Mode (${state.pendingCoaching.streak} in a row)`
+      ));
+    }
     actions.appendChild(el("button", { class: "ghost", onclick: () => pickByType(q.type) }, "Skip, new question"));
     actions.appendChild(el("button", { class: "ghost", onclick: () => renderPicker() }, "Back to picker"));
   }
+  fb.appendChild(actions);
+}
+
+function requestCoaching(q, streak) {
+  const p = loadProgress();
+  const recent = p.attempts
+    .filter((a) => a.section === q.section && a.type === q.type && a.topic === q.topic)
+    .slice(-5);
+  const recentWithQ = recent.map((a) => {
+    const fullQ = state.bank.questions.find((x) => x.id === a.qid) || { id: a.qid };
+    return { question: fullQ, user_answer: a.user_answer, correct: a.correct };
+  });
+  postRequest(
+    {
+      kind: "coach",
+      section: q.section,
+      type: q.type,
+      topic: q.topic,
+      consecutive_wrong: streak,
+      recent_attempts: recentWithQ,
+    },
+    (resp) => {
+      if (resp.coaching) {
+        showCoaching(q, resp.coaching);
+        state.pendingCoaching = null;
+      } else if (resp.error) {
+        alert("Coaching failed: " + resp.error);
+      }
+    }
+  );
+}
+
+function showCoaching(q, coaching) {
+  const fb = $("#feedback");
+  clear(fb);
+  fb.classList.remove("hidden");
+  fb.appendChild(el("div", { class: "feedback-verdict", style: "color: #8a6f1e;" }, "Coach Mode"));
+  if (coaching.diagnosis) {
+    fb.appendChild(el("div", { class: "feedback-label" }, "What's going wrong"));
+    fb.appendChild(el("div", { class: "feedback-explanation" }, coaching.diagnosis));
+  }
+  if (Array.isArray(coaching.micro_tips) && coaching.micro_tips.length) {
+    fb.appendChild(el("div", { class: "feedback-label" }, "Targeted fixes"));
+    const ul = el("ul", null);
+    coaching.micro_tips.forEach((t) => ul.appendChild(el("li", null, t)));
+    fb.appendChild(ul);
+  }
+  if (coaching.drill_focus) {
+    fb.appendChild(el("div", { class: "feedback-label" }, "Drill recommendation"));
+    fb.appendChild(el("div", { class: "feedback-explanation" }, coaching.drill_focus));
+  }
+  const actions = el("div", { class: "actions" });
+  actions.appendChild(el("button", { class: "primary", onclick: () => requestFollowup(q) }, "Try a fresh drill on this skill"));
+  actions.appendChild(el("button", { class: "ghost", onclick: () => renderPicker() }, "Back to picker"));
   fb.appendChild(actions);
 }
 
@@ -979,6 +1228,99 @@ function renderSettingsView() {
   sourceLink.appendChild(el("a", { href: REPO_URL + "/blob/main/api/request.js", target: "_blank", rel: "noopener" }, "api/request.js"));
   privacy.appendChild(sourceLink);
   view.appendChild(privacy);
+
+  // --- Google Drive sync section ---
+  view.appendChild(el("h2", { style: "margin-top: 36px;" }, "Cross-device sync"));
+  view.appendChild(el(
+    "div",
+    { class: "subtitle" },
+    "Sign in with Google to sync your settings, attempt history, and spaced-repetition queue across devices. Data is stored in a hidden folder in YOUR Google Drive — the app owner never sees it."
+  ));
+  renderSyncSection(view);
+}
+
+function renderSyncSection(view) {
+  const wrap = el("div", null);
+
+  if (!window.PteracaiSync || !PteracaiSync.configured()) {
+    const note = el("div", { class: "settings-status show info" });
+    note.appendChild(document.createTextNode(
+      "Google sync is not configured on this deployment. To enable: the site owner creates a Google OAuth Client ID and sets window.PTERACAI_GOOGLE_CLIENT_ID. See "
+    ));
+    note.appendChild(el("a", { href: REPO_URL + "#google-sign-in-setup", target: "_blank", rel: "noopener" }, "README"));
+    note.appendChild(document.createTextNode(" for the 3-minute walkthrough."));
+    wrap.appendChild(note);
+    view.appendChild(wrap);
+    return;
+  }
+
+  const isIn = PteracaiSync.signedIn();
+  const u = PteracaiSync.user();
+
+  if (isIn && u) {
+    const status = el("div", { class: "settings-status show ok" });
+    status.appendChild(document.createTextNode(`Signed in as ${u.name || u.email}. Your progress is syncing to your Google Drive.`));
+    wrap.appendChild(status);
+
+    const actions = el("div", { class: "settings-actions" });
+    const syncNowBtn = el("button", { class: "ghost" }, "Sync now");
+    syncNowBtn.addEventListener("click", async () => {
+      syncNowBtn.disabled = true;
+      syncNowBtn.textContent = "Syncing...";
+      try {
+        await pullAndMerge();
+        await PteracaiSync.push({
+          schema_version: 1,
+          settings: loadSettings(),
+          settings_updated: Number(localStorage.getItem("pteracai_settings_updated") || 0),
+          progress: loadProgress(),
+        });
+        syncNowBtn.textContent = "Synced ✓";
+      } catch (e) {
+        syncNowBtn.textContent = "Sync failed";
+        console.warn(e);
+      }
+      setTimeout(() => {
+        syncNowBtn.disabled = false;
+        syncNowBtn.textContent = "Sync now";
+      }, 1500);
+    });
+    const signOutBtn = el("button", { class: "ghost" }, "Sign out");
+    signOutBtn.addEventListener("click", () => {
+      PteracaiSync.signOut();
+      renderSettingsView();
+    });
+    actions.appendChild(syncNowBtn);
+    actions.appendChild(signOutBtn);
+    wrap.appendChild(actions);
+  } else {
+    const signInBtn = el("button", { class: "primary" }, "Sign in with Google");
+    signInBtn.addEventListener("click", async () => {
+      try {
+        await PteracaiSync.signIn();
+      } catch (e) {
+        alert("Google sign-in failed: " + e.message);
+      }
+    });
+    wrap.appendChild(signInBtn);
+  }
+
+  // Privacy disclosure for sync
+  const syncPrivacy = el("div", { class: "settings-privacy", style: "margin-top: 18px;" });
+  syncPrivacy.appendChild(el("h4", null, "What gets synced"));
+  const ul = el("ul", null);
+  ul.appendChild(el("li", null, "Settings — provider, API key, model"));
+  ul.appendChild(el("li", null, "Practice attempts — what you answered and whether it was correct"));
+  ul.appendChild(el("li", null, "Spaced repetition queue — when missed questions resurface"));
+  syncPrivacy.appendChild(ul);
+  syncPrivacy.appendChild(el(
+    "div",
+    { style: "margin-top: 10px;" },
+    "Note: Your API key is included in the synced data. Anyone with access to your Google account can read it via Drive. The app owner cannot see it — data lives in YOUR Drive's hidden app folder."
+  ));
+  wrap.appendChild(syncPrivacy);
+
+  view.appendChild(wrap);
 
   function setStatus(kind, msg) {
     status.className = "settings-status show " + kind;
