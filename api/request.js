@@ -154,6 +154,28 @@ Improvements must be SPECIFIC. BAD: "Improve vocabulary." GOOD: "Replace 'good' 
 
 Output ONLY the JSON object.`;
 
+const ANALYZE_SYSTEM = `You are an expert English-test coach analyzing a SINGLE wrong answer in detail. The user just got a question wrong and wants specific feedback on THEIR exact answer.
+
+You receive: the question (with passage/prompt/options/correct answer) and what the user picked or wrote.
+
+Your job: explain to the user, in 2-4 sentences total, why their SPECIFIC answer is wrong. Reference what they chose vs. what the correct answer is. Be concrete — point to specific words, ordering, or claims that make their choice fail.
+
+Output a single JSON object — NO markdown, NO commentary:
+
+{
+  "diagnosis": "<1-2 sentence diagnosis: what their answer assumed or matched, and why that's wrong>",
+  "comparison": "<1-2 sentence comparison: what the correct answer captures that theirs misses, with specific reference to the passage or prompt>",
+  "fix": "<1 sentence: a concrete habit or check that would have caught this mistake — e.g., 'before picking, restate the option in your own words and re-check', or 'look for the time marker that pins this paragraph as third, not first'>"
+}
+
+For 'reorder' questions, reference the actual paragraph indices the user chose vs. the correct ordering — say things like "you put paragraph 3 first, but it starts with 'This phenomenon...' which references something earlier".
+
+For 'mcq_single' / 'tfng', name the option letter the user chose AND the option letter that's correct, and explain the discriminator.
+
+For 'fib' / 'matching_headings', identify which specific blanks/paragraphs they got wrong.
+
+Output ONLY the JSON object. Keep total length under 100 words.`;
+
 const COACH_SYSTEM = `You are an expert PTE Academic coach. The user has missed 3+ questions in a row on the SAME task type and topic. Your job: diagnose WHY they're failing, then give them targeted, surgical guidance.
 
 You receive: the task type, the topic, and 3+ recent attempts (each with the original question and the user's wrong answer).
@@ -236,6 +258,11 @@ export default async function handler(req, res) {
       const text = await callLLM({ provider, apiKey, model, system: COACH_SYSTEM, userMsg });
       return res.status(200).json({ ok: true, coaching: parseJSON(text) });
     }
+    if (kind === 'analyze') {
+      const userMsg = buildAnalyzeUserMsg(payload);
+      const text = await callLLM({ provider, apiKey, model, system: ANALYZE_SYSTEM, userMsg });
+      return res.status(200).json({ ok: true, analysis: parseJSON(text) });
+    }
     return res.status(400).json({ error: `unknown kind: ${kind}` });
   } catch (err) {
     // Never leak the key. Sanitize messages.
@@ -263,6 +290,15 @@ function buildGradeUserMsg(payload) {
     user_answer: payload.user_answer,
     instruction:
       'Grade strictly per PTE rubric for this type. Return ONLY the grading JSON object.',
+  });
+}
+
+function buildAnalyzeUserMsg(payload) {
+  return JSON.stringify({
+    question: payload.question,
+    user_answer: payload.user_answer,
+    instruction:
+      'Analyze why this specific answer is wrong. Output ONLY the analysis JSON object.',
   });
 }
 

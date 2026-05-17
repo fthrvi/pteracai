@@ -1461,6 +1461,24 @@ function showFeedback(q, userAnswer, correct) {
     ));
   }
 
+  // If wrong + API key configured + this is an auto-graded type,
+  // fire a tailored analysis of THEIR specific wrong answer.
+  // SWT and essay already go through LLM grading, so no extra call needed for those.
+  const llmGradedTypes = new Set(["swt", "essay", "task1", "lst_summary",
+    "read_aloud", "repeat_sentence", "describe_image", "retell_lecture",
+    "answer_short", "ielts_part1", "ielts_part2", "ielts_part3"]);
+  if (!correct && loadSettings() && !llmGradedTypes.has(q.type)) {
+    const analyzeBox = el("div", { class: "feedback-analyze" },
+      el("div", { class: "feedback-label" }, "AI analysis of your answer"),
+      el("div", { class: "analyze-status" },
+        el("span", { class: "spinner spinner-sm" }),
+        document.createTextNode(" Analyzing your specific answer..."),
+      ),
+    );
+    fb.appendChild(analyzeBox);
+    requestAnalysis(q, userAnswer, analyzeBox);
+  }
+
   const actions = el("div", { class: "actions" });
   if (correct && state.currentFollowupOf) {
     fb.appendChild(el("div", { class: "feedback-verdict correct" }, "Mastery confirmed ✓"));
@@ -1489,6 +1507,47 @@ function showFeedback(q, userAnswer, correct) {
     actions.appendChild(el("button", { class: "ghost", onclick: () => renderPicker() }, "Back to picker"));
   }
   fb.appendChild(actions);
+}
+
+function requestAnalysis(q, userAnswer, container) {
+  // Send a sanitized copy of the question + the user's specific wrong answer.
+  // Include the correct answer in the question for context.
+  const request = {
+    kind: "analyze",
+    question: q,
+    user_answer: userAnswer,
+  };
+  postRequest(request, (resp) => {
+    if (resp.analysis) renderAnalysis(container, resp.analysis);
+    else if (resp.error) {
+      container.querySelector(".analyze-status")?.replaceWith(
+        el("div", { class: "analyze-error" }, "Analysis failed: " + resp.error)
+      );
+    }
+  });
+}
+
+function renderAnalysis(container, a) {
+  const status = container.querySelector(".analyze-status");
+  if (status) status.remove();
+  if (a.diagnosis) {
+    container.appendChild(el("div", { class: "analyze-line" },
+      el("strong", null, "What happened: "),
+      document.createTextNode(a.diagnosis),
+    ));
+  }
+  if (a.comparison) {
+    container.appendChild(el("div", { class: "analyze-line" },
+      el("strong", null, "The correct answer: "),
+      document.createTextNode(a.comparison),
+    ));
+  }
+  if (a.fix) {
+    container.appendChild(el("div", { class: "analyze-line analyze-fix" },
+      el("strong", null, "Next time: "),
+      document.createTextNode(a.fix),
+    ));
+  }
 }
 
 function requestCoaching(q, streak) {
