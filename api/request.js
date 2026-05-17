@@ -318,12 +318,29 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, analysis: parseJSON(text) });
     }
     if (kind === 'tips') {
+      const qid = payload.question?.id;
+      // Try cache first — if any user has ever generated tips for this question,
+      // serve them instantly with no LLM cost.
+      if (qid) {
+        const cached = await getCachedTips(qid);
+        if (cached) {
+          incrementTipsHit(qid).catch(() => {});
+          return res.status(200).json({ ok: true, tailored_tips: cached, cached: true });
+        }
+      }
       const userMsg = JSON.stringify({
         question: payload.question,
         instruction: 'Generate 2-3 strategic tips specific to this question. NEVER reveal the answer. Output ONLY the JSON.',
       });
       const text = await callLLM({ provider, apiKey, model, system: TIPS_SYSTEM, userMsg });
-      return res.status(200).json({ ok: true, tailored_tips: parseJSON(text) });
+      const tipsObj = parseJSON(text);
+      // Save to global cache for next user
+      if (qid && tipsObj?.tips) {
+        saveTipsToCache(qid, tipsObj).catch((e) =>
+          console.warn('tips cache save failed:', e?.message || e)
+        );
+      }
+      return res.status(200).json({ ok: true, tailored_tips: tipsObj });
     }
     return res.status(400).json({ error: `unknown kind: ${kind}` });
   } catch (err) {
@@ -537,4 +554,55 @@ async function saveToCommunityBank(payload, question) {
     },
     body: JSON.stringify({ test, section, type, topic, data: question, content_hash }),
   });
+}
+
+// Tip cache helpers — global tailored-tips memoization keyed by question id.
+function _supabaseCreds() {
+  return {
+    url: process.env.SUPABASE_URL,
+    key:
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SECRET_KEY ||
+      process.env.SUPABASE_SERVICE_KEY,
+  };
+}
+
+async function getCachedTips(qid) {
+  const { url: supabaseUrl, key: supabaseKey } = _supabaseCreds();
+  if (!supabaseUrl || !supabaseKey || !qid) return null;
+  try {
+    const r = await fetch(
+      `${supabaseUrl}/rest/v1/tailored_tips?question_id=eq.${encodeURIComponent(qid)}&select=tips`,
+      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` } }
+    );
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return rows[0]?.tips || null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveTipsToCache(qid, tipsObj) {
+  const { url: supabaseUrl, key: supabaseKey } = _supabaseCreds();
+  if (!supabaseUrl || !supabaseKey || !qid) return;
+  // Upsert — first-write wins, conflict ignores. Tips are stable per question.
+  const url = `${supabaseUrl}/rest/v1/tailored_tips?on_conflict=question_id`;
+  await fetch(url, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'resolution=ignore-duplicates,return=minimal',
+    },
+    body: JSON.stringify({ question_id: qid, tips: tipsObj }),
+  });
+}
+
+async function incrementTipsHit(qid) {
+  // Best-effort counter increment via RPC would be ideal but PostgREST PATCH
+  // works fine if we read-then-write. Skipped to avoid extra request hop —
+  // total hit count isn't load-bearing right now. Keeping helper stub for later.
+  return;
 }

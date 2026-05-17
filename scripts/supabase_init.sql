@@ -41,3 +41,24 @@ CREATE POLICY "anon can read non-hidden community questions"
 
 COMMENT ON TABLE community_questions IS
   'Crowd-grown question bank. Every AI-generated follow-up is saved (deduped by content hash). Anonymous — no user IDs stored.';
+
+-- ---------------------------------------------------------------------------
+-- Tailored tips cache: each question's LLM-generated tips computed ONCE
+-- across all users, then served instantly to everyone afterward.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tailored_tips (
+  question_id   text PRIMARY KEY,            -- seed bank id (e.g. r-mcq-001) or community 'c-<uuid>'
+  tips          jsonb NOT NULL,              -- {"tips": ["...", "...", "..."]}
+  hit_count     integer NOT NULL DEFAULT 0,  -- how many users got served from cache
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE tailored_tips ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "anon can read tailored tips"
+  ON tailored_tips FOR SELECT
+  USING (true);
+
+COMMENT ON TABLE tailored_tips IS
+  'Per-question LLM tips, computed once across all users. Cache hit = instant + zero cost.';
