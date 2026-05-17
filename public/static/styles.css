@@ -313,6 +313,44 @@ button.primary {
 button.primary:hover { filter: brightness(1.08); }
 button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+button.coach-btn {
+  background: var(--gold);
+  position: relative;
+  animation: coach-pulse 1.8s ease-in-out 2;
+}
+@keyframes coach-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(176, 127, 16, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(176, 127, 16, 0); }
+}
+button.coach-btn:hover { background: #8a6f1e; }
+
+@keyframes card-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.panel.entering {
+  animation: card-fade-in 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kbd-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 10px;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+.kbd-hint kbd {
+  background: white;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink);
+  margin: 0 2px;
+}
+
 button.ghost {
   background: transparent;
   color: var(--accent);
@@ -509,6 +547,21 @@ button.ghost {
   border-radius: 4px;
   background: white;
   margin: 0 2px;
+}
+.lst-sc-input {
+  font: inherit;
+  font-family: var(--serif);
+  padding: 4px 10px;
+  border: none;
+  border-bottom: 2px solid var(--accent);
+  background: white;
+  margin: 0 4px;
+  min-width: 110px;
+  font-size: 15px;
+}
+.lst-sc-input:focus {
+  outline: none;
+  background: var(--accent-soft);
 }
 
 .wfd-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }

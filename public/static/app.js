@@ -42,8 +42,14 @@ const state = {
   responseSeq: 0,
   pollTimer: null,
   inflightById: new Map(),
-  pendingCoaching: null, // {question, streak} set when 3+ consecutive wrong on same topic
+  pendingCoaching: null,
+  keyHandler: null, // current keyboard handler for the active card
 };
+
+// Single global keyboard listener that delegates to state.keyHandler
+window.addEventListener("keydown", (e) => {
+  if (state.keyHandler) state.keyHandler(e);
+});
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -490,6 +496,10 @@ const TYPE_NAMES = {
   ielts_part1: ["IELTS Part 1 — Familiar Topic", "Answer in 2-3 sentences with a personal example"],
   ielts_part2: ["IELTS Part 2 — Cue Card", "1 min prep, then 1-2 min monologue covering all bullets"],
   ielts_part3: ["IELTS Part 3 — Discussion", "Abstract question, give opinion + example + nuance"],
+  // Listening expansions
+  lst_mcq: ["Listening Multiple Choice", "Listen to a passage, answer one MCQ"],
+  lst_summary: ["Summarize Spoken Text", "Listen to a lecture, write a 50-70 word summary"],
+  lst_sc: ["Listening Sentence Completion", "Listen and fill in the blanks in a printed sentence"],
 };
 
 function renderPicker() {
@@ -593,6 +603,7 @@ function pickRandom() {
 // ---------- render question ----------
 function renderQuestion(q) {
   state.currentQ = q;
+  state.keyHandler = null; // cleared per-render; renderers can install their own
   $("#picker").classList.add("hidden");
   $("#feedback").classList.add("hidden");
   $("#bridge-status").classList.add("hidden");
@@ -602,6 +613,9 @@ function renderQuestion(q) {
   const card = $("#card");
   card.classList.remove("hidden");
   clear(card);
+  card.classList.remove("entering");
+  void card.offsetWidth;
+  card.classList.add("entering");
 
   const renderer = RENDERERS[q.type];
   if (!renderer) {
@@ -663,6 +677,9 @@ const TIPS_SECTION_META = {
   listening_wfd: { title: "Listening — Dictation & Sentence Completion", subtitle: "Type what you hear. The highest-leverage task in any English test — dual-scores Listening + Writing." },
   listening_sc: { title: "Listening — Sentence Completion", subtitle: "IELTS-style fill-in-blanks during a played audio. Preparation in the 30-second prep window is decisive." },
   listening_general: { title: "Listening — Other Tasks", subtitle: "Strategy for Summarize Spoken Text, Highlight Correct Summary, Fill in Blanks, and more." },
+  listening_lst_mcq: { title: "Listening — Multiple Choice", subtitle: "Pre-audio reading of options is the most important habit you can build." },
+  listening_lst_summary: { title: "Listening — Summarize Spoken Text", subtitle: "Dual-scores Listening + Writing. Template-based approach beats free composition." },
+  listening_lst_sc: { title: "Listening — Sentence Completion", subtitle: "Read the printed sentence first to know what TYPE of word each blank needs." },
   writing_swt: { title: "Writing — Summarize Written Text", subtitle: "One-sentence summaries: templates, grammar structures, and PTE rubric breakdown." },
   writing_task1: { title: "Writing — Task 1 (Chart Description)", subtitle: "Describe a chart, graph, map, or process in 150+ words. The overview paragraph is critical." },
   writing_essay: { title: "Writing — Essay", subtitle: "5-paragraph templates, question-type identification, and connector rotation." },
@@ -686,6 +703,9 @@ const TIPS_ORDER = [
   "reading_matching_headings",
   "listening_wfd",
   "listening_sc",
+  "listening_lst_mcq",
+  "listening_lst_summary",
+  "listening_lst_sc",
   "listening_general",
   "writing_swt",
   "writing_task1",
@@ -783,6 +803,28 @@ const RENDERERS = {
       opts.appendChild(o);
     });
     card.appendChild(opts);
+    // Keyboard hint + handler
+    const limit = Math.min(q.options.length, 9);
+    card.appendChild(el(
+      "div",
+      { class: "kbd-hint" },
+      "Press ",
+      el("kbd", null, `1–${limit}`),
+      " to select, ",
+      el("kbd", null, "Enter"),
+      " to submit"
+    ));
+    state.keyHandler = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+      const n = parseInt(e.key, 10);
+      if (!isNaN(n) && n >= 1 && n <= limit) {
+        opts.querySelectorAll(".option").forEach((x) => x.classList.remove("selected"));
+        opts.querySelectorAll(".option")[n - 1].classList.add("selected");
+        selected = n - 1;
+      } else if (e.key === "Enter" && selected >= 0) {
+        gradeAuto(q, selected);
+      }
+    };
     card.appendChild(actionsBar(() => {
       if (selected < 0) return alert("Pick one option first.");
       gradeAuto(q, selected);
@@ -962,6 +1004,93 @@ const RENDERERS = {
     card.appendChild(actionsBar(() => {
       if (selected.some((v) => v < 0)) return alert("Pick a heading for every paragraph.");
       gradeAuto(q, selected);
+    }));
+  },
+
+  // ------------------- Listening expansions -------------------
+
+  lst_mcq(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen, then answer the question:"));
+    const controls = el("div", { class: "wfd-controls" });
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text) }, "▶  Play"));
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(q.audio_text), 300);
+
+    card.appendChild(el("div", { class: "qprompt", style: "margin-top: 18px;" }, q.question));
+    const opts = el("div", { class: "options" });
+    let selected = -1;
+    q.options.forEach((opt, idx) => {
+      const o = el("div", { class: "option" }, opt);
+      o.addEventListener("click", () => {
+        opts.querySelectorAll(".option").forEach((x) => x.classList.remove("selected"));
+        o.classList.add("selected");
+        selected = idx;
+      });
+      opts.appendChild(o);
+    });
+    card.appendChild(opts);
+    card.appendChild(actionsBar(() => {
+      if (selected < 0) return alert("Pick one option first.");
+      // Use the same checker as mcq_single by aliasing
+      gradeAuto({ ...q, type: "mcq_single" }, selected);
+    }));
+  },
+
+  lst_summary(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen, then summarize in 50-70 words:"));
+    const controls = el("div", { class: "wfd-controls" });
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text) }, "▶  Play lecture"));
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(q.audio_text), 300);
+
+    const input = el("textarea", { class: "wfd-input", placeholder: "Write your summary (50-70 words)..." });
+    const count = el("div", { class: "word-count" }, "0 words");
+    input.addEventListener("input", () => {
+      const n = countWords(input.value);
+      count.textContent = `${n} words`;
+      count.className = "word-count " + (n >= 50 && n <= 70 ? "ok" : "bad");
+    });
+    card.appendChild(input);
+    card.appendChild(count);
+    card.appendChild(actionsBar(() => {
+      if (!input.value.trim()) return alert("Write your summary first.");
+      submitForLLMGrading(q, input.value.trim());
+    }));
+  },
+
+  lst_sc(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen, then fill in the blanks in the sentence below:"));
+    const controls = el("div", { class: "wfd-controls" });
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text) }, "▶  Play"));
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(q.audio_text), 300);
+
+    const wrap = el("div", { class: "fib-text", style: "margin-top: 16px;" });
+    const inputs = [];
+    q.text_parts.forEach((part, i) => {
+      wrap.appendChild(document.createTextNode(part));
+      if (i < q.answer.length) {
+        const input = el("input", {
+          type: "text",
+          class: "lst-sc-input",
+          autocomplete: "off",
+          spellcheck: "true",
+        });
+        wrap.appendChild(input);
+        inputs.push(input);
+      }
+    });
+    card.appendChild(wrap);
+    card.appendChild(actionsBar(() => {
+      const userAns = inputs.map((i) => i.value.trim());
+      if (userAns.some((v) => !v)) return alert("Fill in every blank.");
+      // Custom check: case-insensitive match per blank
+      const correct = userAns.every((v, idx) => v.toLowerCase().replace(/[.,!?;:]/g, "").trim() === q.answer[idx].toLowerCase().replace(/[.,!?;:]/g, "").trim());
+      recordAttempt(q, userAns, correct);
+      showFeedback({ ...q, type: "lst_sc_display" }, userAns, correct);
     }));
   },
 
@@ -1350,8 +1479,7 @@ function showFeedback(q, userAnswer, correct) {
       actions.appendChild(el(
         "button",
         {
-          class: "primary",
-          style: "background: #d4a017;",
+          class: "primary coach-btn",
           onclick: () => requestCoaching(q, state.pendingCoaching.streak),
         },
         `Coach Mode (${state.pendingCoaching.streak} in a row)`
@@ -1438,6 +1566,8 @@ function answerDisplay(q) {
       ol.appendChild(el("li", null, `Paragraph ${paraIdx + 1} → ${String.fromCharCode(65 + headingIdx)}. ${q.headings[headingIdx]}`));
     });
     wrap.appendChild(ol);
+  } else if (q.type === "lst_sc_display" || q.type === "lst_sc") {
+    wrap.appendChild(el("div", null, q.answer.join("  /  ")));
   } else {
     wrap.appendChild(el("div", null, JSON.stringify(q.answer)));
   }
