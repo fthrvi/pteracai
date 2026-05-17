@@ -56,9 +56,57 @@ async function boot() {
   const res = await fetch("/data/bank.json");
   state.bank = await res.json();
   bindSectionButtons();
-  renderPicker();
+  bindLanding();
   startPolling();
   initSync();
+  // Decide initial view: landing if sync configured and not yet signed in,
+  // otherwise jump straight into the practice app.
+  showAppropriateInitialView();
+}
+
+function bindLanding() {
+  const btn = $("#landing-signin");
+  if (!btn) return;
+  btn.addEventListener("click", async () => {
+    const err = $("#landing-error");
+    err.classList.add("hidden");
+    btn.disabled = true;
+    btn.textContent = "Opening Google sign-in...";
+    try {
+      if (!window.PteracaiSync || !PteracaiSync.configured()) {
+        throw new Error("Sync is not configured. Set window.PTERACAI_GOOGLE_CLIENT_ID.");
+      }
+      await PteracaiSync.signIn();
+      // onSignInChange will call showMainApp
+    } catch (e) {
+      err.textContent = "Sign-in failed: " + (e.message || "unknown error");
+      err.classList.remove("hidden");
+      btn.disabled = false;
+      btn.textContent = "Sign in with Google to start";
+    }
+  });
+}
+
+function showAppropriateInitialView() {
+  const syncReady = window.PteracaiSync && PteracaiSync.configured();
+  if (syncReady && !PteracaiSync.signedIn()) {
+    showLanding();
+  } else {
+    showMainApp();
+  }
+}
+
+function showLanding() {
+  $("#landing-view").classList.remove("hidden");
+  $("#main-header").classList.add("hidden");
+  $("#main-content").classList.add("hidden");
+}
+
+function showMainApp() {
+  $("#landing-view").classList.add("hidden");
+  $("#main-header").classList.remove("hidden");
+  $("#main-content").classList.remove("hidden");
+  renderPicker();
 }
 
 function initSync() {
@@ -66,12 +114,19 @@ function initSync() {
   PteracaiSync.init({
     clientId: GOOGLE_CLIENT_ID,
     onSignInChange: async ({ signedIn, user, source }) => {
-      // Re-render Settings if it's currently visible
-      if (!$("#settings-view").classList.contains("hidden")) {
-        renderSettingsView();
-      }
       if (signedIn) {
         await pullAndMerge();
+        // First time signing in OR cached session resume → show the app
+        showMainApp();
+        // Re-render Settings panel if visible so user sees their state
+        if (!$("#settings-view").classList.contains("hidden")) {
+          renderSettingsView();
+        }
+      } else {
+        // signed out → back to landing (only if sync is configured)
+        if (PteracaiSync.configured()) {
+          showLanding();
+        }
         if (!$("#settings-view").classList.contains("hidden")) {
           renderSettingsView();
         }
