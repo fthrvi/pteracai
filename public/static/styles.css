@@ -285,6 +285,17 @@ h3 { margin: 0 0 12px; font-size: 15px; text-transform: uppercase; letter-spacin
 .picker-empty-title { font-weight: 600; color: var(--ink); margin-bottom: 6px; }
 .picker-empty-sub { color: var(--muted); font-size: 14px; max-width: 380px; margin: 0 auto; line-height: 1.5; }
 
+.picker-community-note {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+}
+
 .section-tips {
   background: var(--gold-soft);
   border: 1px solid var(--gold-border);

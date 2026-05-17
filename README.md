@@ -71,6 +71,38 @@ use this works fine. For wider distribution, lower the per-visitor cap
 in `app.js` (`FREE_TIER_QUOTA`), or skip the shared tier entirely and
 rely on BYOK with documented free-signup paths for each provider.
 
+## Optional: community question bank (Supabase)
+
+PteracAI can save every AI-generated follow-up question to a shared
+Postgres so future visitors see those questions too. The bank grows
+organically as people practice.
+
+To enable:
+
+1. Sign up free at https://supabase.com/ → create a new project.
+2. In the Supabase project: SQL Editor → run the contents of
+   [`scripts/supabase_init.sql`](scripts/supabase_init.sql). Creates one
+   table, `community_questions`, with content-hash dedup and RLS.
+3. Get your project URL and **service_role** key from Settings → API.
+4. In Vercel: Project → Settings → Environment Variables, add:
+   - `SUPABASE_URL` = your project URL (e.g. `https://xxxx.supabase.co`)
+   - `SUPABASE_SERVICE_KEY` = your service_role key (server-side only)
+   - `SUPABASE_ANON_KEY` = your anon public key (also fine — used for reads)
+5. Redeploy: `vercel --prod`.
+
+Once enabled:
+- Every AI-generated follow-up question is silently saved (deduped by
+  content hash, anonymous — no user IDs).
+- The picker fetches up to 30 community questions per type alongside
+  the seed bank, blending them into random selection.
+- Visitors don't need to opt in — they automatically benefit from
+  questions other learners have triggered.
+
+**Privacy and moderation:** questions are stored anonymously (no user
+ID, no IP). The `community_questions` table has a `hidden` column for
+manual moderation via the Supabase dashboard. A future iteration will
+add a report button + auto-hide threshold.
+
 ## Local development
 
 If you have Claude Code installed (claude.com/claude-code), you can

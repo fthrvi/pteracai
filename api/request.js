@@ -21,6 +21,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
+import { createHash } from 'crypto';
 
 const FOLLOWUP_SYSTEM = `You are a PTE Academic question generator. Given a question the user got wrong, generate ONE new question of the SAME type and SAME topic that tests the SAME underlying skill, but with DIFFERENT content.
 
@@ -293,7 +294,12 @@ export default async function handler(req, res) {
     if (kind === 'followup') {
       const userMsg = buildFollowupUserMsg(payload);
       const text = await callLLM({ provider, apiKey, model, system: FOLLOWUP_SYSTEM, userMsg });
-      return res.status(200).json({ ok: true, question: parseJSON(text) });
+      const question = parseJSON(text);
+      // Fire-and-forget save to community bank (don't block user response)
+      saveToCommunityBank(payload, question).catch((e) =>
+        console.warn('community save failed:', e?.message || e)
+      );
+      return res.status(200).json({ ok: true, question });
     }
     if (kind === 'grade') {
       const userMsg = buildGradeUserMsg(payload);

@@ -593,6 +593,14 @@ function renderPicker() {
   const types = new Set(
     currentQuestions().filter((q) => q.section === state.section).map((q) => q.type)
   );
+  // Indicate that community questions blend in
+  const communityNote = el(
+    "div",
+    { class: "picker-community-note" },
+    "Questions from the seed bank are mixed with AI-generated questions contributed by other learners."
+  );
+  picker.appendChild(communityNote);
+
   const list = el("div", { id: "picker-list", class: "picker-list" });
   if (types.size === 0) {
     list.appendChild(el("div", { class: "picker-empty" },
@@ -641,18 +649,52 @@ function collectSectionTips(section) {
   return out;
 }
 
-function pickByType(type) {
-  const candidates = currentQuestions().filter(
+async function pickByType(type) {
+  const seedCandidates = currentQuestions().filter(
     (q) => q.section === state.section && q.type === type
   );
+  // Pull community questions of the same type in parallel — graceful fallback if empty
+  const community = await fetchCommunityQuestions(state.test, state.section, type, 30);
+  const candidates = [...seedCandidates, ...community];
+  if (!candidates.length) return alert("No questions available for this type yet.");
   const q = candidates[Math.floor(Math.random() * candidates.length)];
   renderQuestion(q);
 }
 
-function pickRandom() {
-  const candidates = currentQuestions().filter((q) => q.section === state.section);
+async function pickRandom() {
+  const seedCandidates = currentQuestions().filter((q) => q.section === state.section);
+  // Group community pulls by type to keep request count small
+  const types = [...new Set(seedCandidates.map((q) => q.type))];
+  const community = (await Promise.all(
+    types.map((t) => fetchCommunityQuestions(state.test, state.section, t, 10))
+  )).flat();
+  const candidates = [...seedCandidates, ...community];
+  if (!candidates.length) return alert("No questions available for this section yet.");
   const q = candidates[Math.floor(Math.random() * candidates.length)];
   renderQuestion(q);
+}
+
+// ---------- community bank fetching ----------
+const COMMUNITY_CACHE = new Map(); // key=test:section:type → questions[]
+const COMMUNITY_CACHE_TTL_MS = 5 * 60 * 1000;
+
+async function fetchCommunityQuestions(test, section, type, limit = 30) {
+  const key = `${test}:${section}:${type}`;
+  const cached = COMMUNITY_CACHE.get(key);
+  if (cached && Date.now() - cached.ts < COMMUNITY_CACHE_TTL_MS) {
+    return cached.questions;
+  }
+  try {
+    const url = `/api/community?test=${test}&section=${section}&type=${type}&limit=${limit}`;
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const body = await r.json();
+    const questions = body.questions || [];
+    COMMUNITY_CACHE.set(key, { ts: Date.now(), questions });
+    return questions;
+  } catch (e) {
+    return [];
+  }
 }
 
 // ---------- render question ----------
