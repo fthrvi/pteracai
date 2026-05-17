@@ -38,7 +38,7 @@ Fork this repo and deploy to Vercel — no env vars needed since each
 visitor brings their own key.
 
 ```bash
-git clone https://github.com/bbastola899/pteracai
+git clone https://github.com/fthrvi/pteracai
 cd pteracai
 npm install      # installs @anthropic-ai/sdk and openai
 vercel           # follow prompts; first deploy gives you a preview URL

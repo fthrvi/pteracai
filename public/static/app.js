@@ -76,7 +76,7 @@ function bindSectionButtons() {
 
 // ---------- BYOK settings (localStorage) ----------
 const SETTINGS_KEY = "pteracai_settings_v1";
-const REPO_URL = "https://github.com/bbastola899/pteracai";
+const REPO_URL = "https://github.com/fthrvi/pteracai";
 
 const PROVIDERS = {
   anthropic: {
