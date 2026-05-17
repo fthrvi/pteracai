@@ -1209,6 +1209,26 @@ button.ghost {
 .mock-result-cell.correct { background: var(--right); color: white; }
 .mock-result-cell.wrong { background: var(--wrong); color: white; }
 .mock-result-cell.skipped { background: rgba(0,0,0,0.08); color: var(--muted); }
+.mock-result-cell { cursor: pointer; transition: transform 0.15s; }
+.mock-result-cell:hover { transform: scale(1.1); }
+.mock-result-cell.active {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  transform: scale(1.1);
+}
+
+.mock-review-hint {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 12px;
+}
+.mock-review-question {
+  background: var(--bg);
+  padding: 16px 18px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
 
 /* ---------- landing gate ---------- */
 .landing-view {

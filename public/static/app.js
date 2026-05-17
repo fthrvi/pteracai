@@ -3020,10 +3020,16 @@ function advanceMock() {
   if (!m) return;
   const after = loadProgress().attempts || [];
   const justAttempted = after.slice(m._beforeAttempts || after.length);
-  // Record per-question result
+  // Record per-question result + capture user's answer for later review
   if (justAttempted.length) {
     const last = justAttempted[justAttempted.length - 1];
-    m.results.push({ qid: last.qid, correct: last.correct, topic: last.topic, type: last.type });
+    m.results.push({
+      qid: last.qid,
+      correct: last.correct,
+      topic: last.topic,
+      type: last.type,
+      user_answer: last.user_answer,
+    });
   } else {
     m.results.push({ qid: m.queue[m.index].id, correct: false, type: m.queue[m.index].type });
   }
@@ -3079,19 +3085,28 @@ function renderMockResults(m, timeout) {
   summary.appendChild(grid);
   view.appendChild(summary);
 
-  // Per-question breakdown
+  // Per-question breakdown with clickable cells
   const breakdownCard = el("div", { class: "dash-card" });
   breakdownCard.appendChild(el("div", { class: "dash-card-label" }, "Per-question result"));
+  breakdownCard.appendChild(el("div", { class: "mock-review-hint" },
+    "Click any cell to review the question — see the right answer, the explanation, and an AI analysis of what went wrong."));
   const grid2 = el("div", { class: "mock-result-grid" });
   m.queue.forEach((q, i) => {
     const r = m.results[i];
     const status = r ? (r.correct ? "correct" : "wrong") : "skipped";
-    const cell = el("div", { class: `mock-result-cell ${status}`, title: q.topic || "" },
-      String(i + 1));
+    const cell = el("div", {
+      class: `mock-result-cell ${status}`,
+      title: `Question ${i + 1}${q.topic ? " — " + q.topic : ""}\nClick to review`,
+      onclick: () => renderMockReview(m, i),
+    }, String(i + 1));
     grid2.appendChild(cell);
   });
   breakdownCard.appendChild(grid2);
   view.appendChild(breakdownCard);
+
+  // Review panel placeholder — populated when a cell is clicked
+  const reviewPanel = el("div", { id: "mock-review-panel", class: "dash-card hidden" });
+  view.appendChild(reviewPanel);
 
   // Actions
   const actions = el("div", { class: "dash-actions-row" });
@@ -3101,6 +3116,101 @@ function renderMockResults(m, timeout) {
     onclick: () => startMockExam(m.test, m.section),
   }, "Try another mock"));
   view.appendChild(actions);
+}
+
+// Inline review of one specific question from a finished mock
+function renderMockReview(mock, idx) {
+  const q = mock.queue[idx];
+  const r = mock.results[idx];
+  const status = r ? (r.correct ? "correct" : "wrong") : "skipped";
+  const panel = $("#mock-review-panel");
+  if (!panel) return;
+  panel.classList.remove("hidden");
+  clear(panel);
+
+  // Highlight the active cell in the grid
+  document.querySelectorAll(".mock-result-cell").forEach((c, i) => {
+    c.classList.toggle("active", i === idx);
+  });
+
+  panel.appendChild(el("div", { class: "dash-card-label" },
+    `Question ${idx + 1} of ${mock.queue.length} · ${status === "correct" ? "Correct" : status === "wrong" ? "Wrong" : "Skipped"}`));
+
+  // Question content (truncated for long passages)
+  const qHeading = el("div", { class: "mock-review-question" });
+  if (q.passage) {
+    qHeading.appendChild(el("div", { class: "passage", style: "margin-bottom: 12px;" },
+      q.passage.length > 600 ? q.passage.slice(0, 600) + "…" : q.passage));
+  }
+  if (q.question) qHeading.appendChild(el("div", { class: "qprompt" }, q.question));
+  if (q.statement) qHeading.appendChild(el("div", { class: "qprompt" },
+    "Statement: ", el("em", null, q.statement)));
+  if (q.prompt) qHeading.appendChild(el("div", { class: "qprompt", style: "white-space: pre-wrap;" }, q.prompt));
+  if (q.audio_text && !q.passage) qHeading.appendChild(el("div", { class: "passage" }, q.audio_text));
+  panel.appendChild(qHeading);
+
+  // Correct answer display
+  if (status !== "skipped" || q.answer != null) {
+    const ans = answerDisplay(q);
+    panel.appendChild(ans);
+  }
+
+  // Bank explanation
+  if (q.explanation) {
+    panel.appendChild(el("div", { class: "feedback-label" }, "Why"));
+    panel.appendChild(el("div", { class: "feedback-explanation" }, q.explanation));
+  }
+
+  // Trap warning (only if wrong)
+  if (status === "wrong" && q.trap) {
+    panel.appendChild(el(
+      "div",
+      { class: "feedback-trap" },
+      el("div", { class: "feedback-label" }, "Watch out for"),
+      q.trap
+    ));
+  }
+
+  // AI tips for this specific question (cached if anyone has seen it before)
+  if (aiAvailable()) {
+    const tipsBox = el("div", { class: "tailored-tips-box", style: "margin-top: 16px;" });
+    tipsBox.appendChild(el("div", { class: "cat-label tailored-label" }, "Tips for this question"));
+    tipsBox.appendChild(el("div", { class: "tailored-status" },
+      el("span", { class: "spinner spinner-sm" }),
+      document.createTextNode(" Loading tips...")
+    ));
+    panel.appendChild(tipsBox);
+    requestTailoredTips(q, tipsBox);
+  }
+
+  // AI analysis of wrong answer (only when wrong)
+  if (status === "wrong" && aiAvailable() && r) {
+    const analyzeBox = el("div", { class: "feedback-analyze", style: "margin-top: 16px;" },
+      el("div", { class: "feedback-label" }, "AI analysis of your answer"),
+      el("div", { class: "analyze-status" },
+        el("span", { class: "spinner spinner-sm" }),
+        document.createTextNode(" Analyzing...")
+      ),
+    );
+    panel.appendChild(analyzeBox);
+    const userAnswer = r.user_answer != null
+      ? r.user_answer
+      : "(user picked an incorrect option — specific selection not retained)";
+    requestAnalysis(q, userAnswer, analyzeBox);
+  }
+
+  // Close button
+  const close = el("div", { class: "actions", style: "margin-top: 16px;" });
+  close.appendChild(el("button", {
+    class: "ghost",
+    onclick: () => {
+      panel.classList.add("hidden");
+      document.querySelectorAll(".mock-result-cell").forEach((c) => c.classList.remove("active"));
+    },
+  }, "Close review"));
+  panel.appendChild(close);
+
+  panel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function practiceDue() {
