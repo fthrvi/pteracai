@@ -212,7 +212,10 @@ function showMainApp() {
   $("#main-header").classList.remove("hidden");
   $("#main-content").classList.remove("hidden");
   updateFreeTierBadge();
-  renderPicker();
+  // Dashboard is the new default landing view — Home tab is active by default
+  $$(".section-btn").forEach((x) => x.classList.remove("active"));
+  $("#home-nav").classList.add("active");
+  renderDashboardView();
 }
 
 function initSync() {
@@ -252,6 +255,11 @@ function bindSectionButtons() {
     });
   });
   $("#random-btn").addEventListener("click", () => pickRandom());
+  $("#home-nav").addEventListener("click", () => {
+    $$(".section-btn").forEach((x) => x.classList.remove("active"));
+    $("#home-nav").classList.add("active");
+    renderDashboardView();
+  });
   $("#tips-nav").addEventListener("click", () => {
     $$(".section-btn").forEach((x) => x.classList.remove("active"));
     $("#tips-nav").classList.add("active");
@@ -563,6 +571,7 @@ function renderPicker() {
   $("#tips").classList.add("hidden");
   $("#tips-view").classList.add("hidden");
   $("#settings-view").classList.add("hidden");
+  $("#dashboard-view").classList.add("hidden");
   $("#picker").classList.remove("hidden");
 
   const picker = $("#picker");
@@ -706,6 +715,7 @@ function renderQuestion(q) {
   $("#bridge-status").classList.add("hidden");
   $("#tips-view").classList.add("hidden");
   $("#settings-view").classList.add("hidden");
+  $("#dashboard-view").classList.add("hidden");
 
   const card = $("#card");
   card.classList.remove("hidden");
@@ -924,6 +934,7 @@ function renderTipsView() {
   $("#bridge-status").classList.add("hidden");
   $("#tips").classList.add("hidden");
   $("#settings-view").classList.add("hidden");
+  $("#dashboard-view").classList.add("hidden");
   state.currentFollowupOf = null;
 
   const view = $("#tips-view");
@@ -2266,6 +2277,7 @@ function renderSettingsView() {
   $("#bridge-status").classList.add("hidden");
   $("#tips").classList.add("hidden");
   $("#tips-view").classList.add("hidden");
+  $("#dashboard-view").classList.add("hidden");
 
   const view = $("#settings-view");
   view.classList.remove("hidden");
@@ -2549,6 +2561,312 @@ function renderSyncSection(view) {
   function setStatus(kind, msg) {
     status.className = "settings-status show " + kind;
     status.textContent = msg;
+  }
+}
+
+// ============================================================================
+// PROGRESS DASHBOARD — the new home screen
+// ============================================================================
+function renderDashboardView() {
+  $("#picker").classList.add("hidden");
+  $("#card").classList.add("hidden");
+  $("#feedback").classList.add("hidden");
+  $("#bridge-status").classList.add("hidden");
+  $("#tips").classList.add("hidden");
+  $("#tips-view").classList.add("hidden");
+  $("#settings-view").classList.add("hidden");
+
+  const view = $("#dashboard-view");
+  view.classList.remove("hidden");
+  clear(view);
+
+  const stats = computeStats();
+  const p = loadProgress();
+
+  // ---- Hero greeting ----
+  const hero = el("div", { class: "dash-hero" });
+  const u = window.PteracaiSync?.user?.();
+  const greet = u?.name ? `Welcome back, ${u.name.split(" ")[0]}` : "Welcome back";
+  hero.appendChild(el("h1", { class: "dash-greeting" }, greet));
+  hero.appendChild(el("div", { class: "dash-subtext" },
+    stats.totalAttempts === 0
+      ? `Ready to start? Pick a section above to practice your first ${TEST_LABELS[state.test]?.short || "PTE"} question.`
+      : `${stats.totalAttempts} questions practiced · ${stats.overallAccuracy}% overall accuracy`
+  ));
+  view.appendChild(hero);
+
+  // ---- Today's progress card ----
+  const todayCard = el("div", { class: "dash-card dash-today" });
+  todayCard.appendChild(el("div", { class: "dash-card-label" }, "Today"));
+  const todayInner = el("div", { class: "dash-today-grid" });
+  todayInner.appendChild(makeStat(stats.todayAttempts, "questions", "dash-stat-primary"));
+  todayInner.appendChild(makeStat(
+    stats.todayAttempts > 0 ? `${Math.round(stats.todayAccuracy)}%` : "—",
+    "accuracy"
+  ));
+  todayInner.appendChild(makeStat(stats.dailyStreak, stats.dailyStreak === 1 ? "day streak" : "days streak"));
+  todayInner.appendChild(makeStat(stats.dueCount, "due for review"));
+  todayCard.appendChild(todayInner);
+  // Daily-goal progress bar (default: 10 questions/day)
+  const goal = 10;
+  const goalPct = Math.min(100, Math.round((stats.todayAttempts / goal) * 100));
+  todayCard.appendChild(el("div", { class: "dash-goal-row" },
+    el("div", { class: "dash-goal-label" }, `Daily goal: ${stats.todayAttempts}/${goal}`),
+    el("div", { class: "dash-goal-bar" },
+      el("div", { class: "dash-goal-fill", style: `width: ${goalPct}%` })
+    ),
+  ));
+  view.appendChild(todayCard);
+
+  // ---- Next actions row ----
+  if (stats.totalAttempts > 0) {
+    const actions = el("div", { class: "dash-actions-row" });
+    if (stats.dueCount > 0) {
+      actions.appendChild(el("button", {
+        class: "primary dash-action-btn",
+        onclick: () => practiceDue(),
+      }, `Review ${stats.dueCount} due question${stats.dueCount === 1 ? "" : "s"}`));
+    }
+    if (stats.weakestType) {
+      actions.appendChild(el("button", {
+        class: "ghost dash-action-btn",
+        onclick: () => {
+          state.section = stats.weakestType.section;
+          $$(".section-btn[data-section]").forEach((b) =>
+            b.classList.toggle("active", b.dataset.section === stats.weakestType.section));
+          $("#home-nav").classList.remove("active");
+          pickByType(stats.weakestType.type);
+        },
+      }, `Drill your weakest: ${TYPE_NAMES[stats.weakestType.type]?.[0] || stats.weakestType.type} (${stats.weakestType.accuracy}%)`));
+    }
+    actions.appendChild(el("button", {
+      class: "ghost dash-action-btn",
+      onclick: () => {
+        $$(".section-btn[data-section]").forEach((b) =>
+          b.classList.toggle("active", b.dataset.section === "reading"));
+        $("#home-nav").classList.remove("active");
+        state.section = "reading";
+        renderPicker();
+      },
+    }, "Pick by section →"));
+    view.appendChild(actions);
+  }
+
+  // ---- Two-column grid: section accuracy + activity heatmap ----
+  const cols = el("div", { class: "dash-cols" });
+
+  // Section accuracy bars
+  const sectionCard = el("div", { class: "dash-card" });
+  sectionCard.appendChild(el("div", { class: "dash-card-label" }, "Accuracy by section"));
+  if (Object.keys(stats.bySection).length === 0) {
+    sectionCard.appendChild(el("div", { class: "dash-empty" }, "Practice your first question to see stats here."));
+  } else {
+    const bars = el("div", { class: "dash-bars" });
+    const sectionOrder = ["reading", "listening", "writing", "speaking"];
+    for (const sec of sectionOrder) {
+      const s = stats.bySection[sec];
+      if (!s) continue;
+      bars.appendChild(makeBar(
+        sec.charAt(0).toUpperCase() + sec.slice(1),
+        s.correct, s.total
+      ));
+    }
+    sectionCard.appendChild(bars);
+  }
+  cols.appendChild(sectionCard);
+
+  // 30-day activity heatmap
+  const heatCard = el("div", { class: "dash-card" });
+  heatCard.appendChild(el("div", { class: "dash-card-label" }, "Last 30 days"));
+  heatCard.appendChild(makeHeatmap(stats.dailyCounts));
+  cols.appendChild(heatCard);
+
+  view.appendChild(cols);
+
+  // ---- Topic mastery ----
+  if (Object.keys(stats.topicAccuracy).length > 0) {
+    const masteryCard = el("div", { class: "dash-card" });
+    masteryCard.appendChild(el("div", { class: "dash-card-label" }, "Topic mastery"));
+    const list = el("div", { class: "dash-mastery-list" });
+    const topics = Object.entries(stats.topicAccuracy)
+      .filter(([_, t]) => t.total >= 2)
+      .sort((a, b) => b[1].accuracy - a[1].accuracy)
+      .slice(0, 8);
+    for (const [topic, t] of topics) {
+      const masteryClass = t.accuracy >= 80 ? "mastered" : t.accuracy >= 60 ? "progressing" : "weak";
+      list.appendChild(el("div", { class: `dash-mastery-row ${masteryClass}` },
+        el("div", { class: "dash-mastery-topic" }, topic),
+        el("div", { class: "dash-mastery-meta" }, `${t.accuracy}% · ${t.total}`),
+      ));
+    }
+    masteryCard.appendChild(list);
+    view.appendChild(masteryCard);
+  }
+
+  // ---- Empty state for brand new users ----
+  if (stats.totalAttempts === 0) {
+    const empty = el("div", { class: "dash-card dash-onboarding" });
+    empty.appendChild(el("div", { class: "dash-card-label" }, "Getting started"));
+    empty.appendChild(el("div", { class: "dash-onboarding-text" },
+      "Click any section in the top nav to pick a task type and start practicing. Wrong answers come with explanations and AI-powered follow-up questions to confirm you've actually learned."
+    ));
+    const ctas = el("div", { class: "dash-actions-row" });
+    ctas.appendChild(el("button", {
+      class: "primary dash-action-btn",
+      onclick: () => {
+        $$(".section-btn[data-section]").forEach((b) =>
+          b.classList.toggle("active", b.dataset.section === "reading"));
+        $("#home-nav").classList.remove("active");
+        state.section = "reading";
+        renderPicker();
+      },
+    }, "Start with Reading →"));
+    empty.appendChild(ctas);
+    view.appendChild(empty);
+  }
+}
+
+function makeStat(value, label, extraClass = "") {
+  return el("div", { class: `dash-stat ${extraClass}` },
+    el("div", { class: "dash-stat-value" }, String(value)),
+    el("div", { class: "dash-stat-label" }, label),
+  );
+}
+
+function makeBar(label, num, total) {
+  const pct = total > 0 ? Math.round((num / total) * 100) : 0;
+  const tone = pct >= 80 ? "good" : pct >= 60 ? "ok" : "weak";
+  return el("div", { class: "dash-bar-row" },
+    el("div", { class: "dash-bar-label" }, label),
+    el("div", { class: "dash-bar-track" },
+      el("div", { class: `dash-bar-fill ${tone}`, style: `width: ${pct}%` })
+    ),
+    el("div", { class: "dash-bar-value" }, total > 0 ? `${pct}% (${num}/${total})` : "—"),
+  );
+}
+
+function makeHeatmap(dailyCounts) {
+  const wrap = el("div", { class: "dash-heatmap" });
+  const today = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const dateKey = d.toISOString().slice(0, 10);
+    const count = dailyCounts[dateKey] || 0;
+    const level = count === 0 ? 0 : count < 3 ? 1 : count < 7 ? 2 : count < 15 ? 3 : 4;
+    const cell = el("div", {
+      class: `dash-heat-cell level-${level}`,
+      title: `${dateKey}: ${count} question${count === 1 ? "" : "s"}`,
+    });
+    wrap.appendChild(cell);
+  }
+  return wrap;
+}
+
+function computeStats() {
+  const p = loadProgress();
+  const attempts = p.attempts || [];
+  const today = new Date().toISOString().slice(0, 10);
+
+  const stats = {
+    totalAttempts: attempts.length,
+    todayAttempts: 0,
+    todayAccuracy: 0,
+    overallAccuracy: 0,
+    dailyStreak: 0,
+    dueCount: 0,
+    bySection: {},      // {section: {correct, total}}
+    byType: {},         // {type: {section, correct, total}}
+    topicAccuracy: {},  // {topic: {correct, total, accuracy}}
+    dailyCounts: {},    // {YYYY-MM-DD: count}
+    weakestType: null,
+  };
+
+  let totalCorrect = 0;
+  let todayCorrect = 0;
+  for (const a of attempts) {
+    const date = new Date(a.ts).toISOString().slice(0, 10);
+    stats.dailyCounts[date] = (stats.dailyCounts[date] || 0) + 1;
+    if (date === today) {
+      stats.todayAttempts += 1;
+      if (a.correct) todayCorrect += 1;
+    }
+    if (a.correct) totalCorrect += 1;
+    // by section
+    if (!stats.bySection[a.section]) stats.bySection[a.section] = { correct: 0, total: 0 };
+    stats.bySection[a.section].total += 1;
+    if (a.correct) stats.bySection[a.section].correct += 1;
+    // by type
+    if (!stats.byType[a.type]) stats.byType[a.type] = { section: a.section, correct: 0, total: 0 };
+    stats.byType[a.type].total += 1;
+    if (a.correct) stats.byType[a.type].correct += 1;
+    // by topic
+    const topicKey = a.topic || "(general)";
+    if (!stats.topicAccuracy[topicKey]) stats.topicAccuracy[topicKey] = { correct: 0, total: 0, accuracy: 0 };
+    stats.topicAccuracy[topicKey].total += 1;
+    if (a.correct) stats.topicAccuracy[topicKey].correct += 1;
+  }
+
+  stats.overallAccuracy = stats.totalAttempts > 0
+    ? Math.round((totalCorrect / stats.totalAttempts) * 100) : 0;
+  stats.todayAccuracy = stats.todayAttempts > 0
+    ? Math.round((todayCorrect / stats.todayAttempts) * 100) : 0;
+
+  // Topic accuracy %
+  for (const t of Object.values(stats.topicAccuracy)) {
+    t.accuracy = Math.round((t.correct / t.total) * 100);
+  }
+
+  // Find weakest type (lowest accuracy with at least 3 attempts)
+  let weakest = null;
+  for (const [type, t] of Object.entries(stats.byType)) {
+    if (t.total < 3) continue;
+    const acc = Math.round((t.correct / t.total) * 100);
+    if (!weakest || acc < weakest.accuracy) {
+      weakest = { type, section: t.section, accuracy: acc };
+    }
+  }
+  stats.weakestType = weakest;
+
+  // Daily streak: count consecutive days back from today with at least one attempt
+  let streak = 0;
+  const cursor = new Date();
+  for (let i = 0; i < 365; i++) {
+    const key = cursor.toISOString().slice(0, 10);
+    if (stats.dailyCounts[key]) {
+      streak += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      // Today missing? Don't break streak yet (give until end of day)
+      if (i === 0) {
+        cursor.setDate(cursor.getDate() - 1);
+        continue;
+      }
+      break;
+    }
+  }
+  stats.dailyStreak = streak;
+
+  // Due count from SR queue
+  stats.dueCount = dueQuestionIds().length;
+
+  return stats;
+}
+
+function practiceDue() {
+  const due = dueQuestionIds();
+  if (!due.length) return;
+  const qid = due[0];
+  // Find the question in current test's seed bank
+  const q = currentQuestions().find((x) => x.id === qid);
+  if (q) {
+    $$(".section-btn").forEach((b) => b.classList.remove("active"));
+    $$(".section-btn[data-section]").forEach((b) =>
+      b.classList.toggle("active", b.dataset.section === q.section));
+    state.section = q.section;
+    renderQuestion(q);
+  } else {
+    alert("Some due questions aren't in the current test's bank (maybe community-generated). Pick by section instead.");
   }
 }
 
