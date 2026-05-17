@@ -1,0 +1,15 @@
+{
+  "name": "pteracai",
+  "version": "0.2.0",
+  "private": false,
+  "license": "MIT",
+  "description": "PTE Academic practice with real feedback. Bring your own AI key (Claude, OpenAI, or OpenRouter).",
+  "scripts": {
+    "dev": "python3 server.py",
+    "dev:vercel": "vercel dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.1",
+    "openai": "^4.78.1"
+  }
+}

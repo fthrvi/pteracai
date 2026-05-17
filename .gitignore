@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+.vercel
+data/requests.jsonl
+data/responses.jsonl
+data/attempts.jsonl
+__pycache__/
+*.pyc
+.DS_Store
