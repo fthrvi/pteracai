@@ -21,7 +21,7 @@ insights, and exam-day tactical hacks.
 
 ## Try it
 
-🌐 **Live demo:** _coming soon — paste your link here after deploying_
+🌐 **Live demo:** https://pteracai.vercel.app
 
 You'll need a key from one of:
 
