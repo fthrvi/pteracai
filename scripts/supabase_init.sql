@@ -32,6 +32,8 @@ CREATE INDEX IF NOT EXISTS community_questions_filter_idx
 -- in the API layer for cleanliness)
 ALTER TABLE community_questions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "anon can read non-hidden community questions"
+  ON community_questions;
 CREATE POLICY "anon can read non-hidden community questions"
   ON community_questions FOR SELECT
   USING (hidden = false);
@@ -56,6 +58,8 @@ CREATE TABLE IF NOT EXISTS tailored_tips (
 
 ALTER TABLE tailored_tips ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "anon can read tailored tips"
+  ON tailored_tips;
 CREATE POLICY "anon can read tailored tips"
   ON tailored_tips FOR SELECT
   USING (true);
