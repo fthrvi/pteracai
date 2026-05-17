@@ -961,9 +961,11 @@ const RENDERERS = {
     card.appendChild(el("div", { class: "qprompt" }, q.question));
     const opts = el("div", { class: "options" });
     let selected = -1;
+    let submitted = false;
     q.options.forEach((opt, idx) => {
       const o = el("div", { class: "option" }, opt);
       o.addEventListener("click", () => {
+        if (submitted) return;
         opts.querySelectorAll(".option").forEach((x) => x.classList.remove("selected"));
         o.classList.add("selected");
         selected = idx;
@@ -983,6 +985,7 @@ const RENDERERS = {
       " to submit"
     ));
     state.keyHandler = (e) => {
+      if (submitted) return;
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
       const n = parseInt(e.key, 10);
       if (!isNaN(n) && n >= 1 && n <= limit) {
@@ -990,12 +993,25 @@ const RENDERERS = {
         opts.querySelectorAll(".option")[n - 1].classList.add("selected");
         selected = n - 1;
       } else if (e.key === "Enter" && selected >= 0) {
-        gradeAuto(q, selected);
+        submit();
       }
     };
+    function submit() {
+      if (submitted) return;
+      submitted = true;
+      const correct = checkAnswer(q, selected);
+      recordAttempt(q, selected, correct);
+      // Inline marking on the options themselves
+      opts.querySelectorAll(".option").forEach((o, idx) => {
+        o.classList.remove("selected");
+        if (idx === q.answer) o.classList.add("correct");
+        if (idx === selected && selected !== q.answer) o.classList.add("wrong");
+      });
+      showInlineFeedback(card, q, selected, correct);
+    }
     card.appendChild(actionsBar(() => {
       if (selected < 0) return alert("Pick one option first.");
-      gradeAuto(q, selected);
+      submit();
     }));
   },
 
@@ -1039,7 +1055,27 @@ const RENDERERS = {
 
     card.appendChild(el("div", { class: "qprompt" }, "Arrange these paragraphs in the correct order:"));
     card.appendChild(zone);
-    card.appendChild(actionsBar(() => gradeAuto(q, order.slice())));
+    let submitted = false;
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      submitted = true;
+      const userOrder = order.slice();
+      const correct = checkAnswer(q, userOrder);
+      recordAttempt(q, userOrder, correct);
+      // Show correct order under each paragraph row
+      const rows = zone.querySelectorAll(".reorder-item");
+      // user's display has paragraphs in `order` mapping; check each display position
+      userOrder.forEach((displayIdx, correctPos) => {
+        // The user's row at displayIdx claims correctPos
+        const row = rows[displayIdx];
+        if (!row) return;
+        if (displayIdx === q.answer[correctPos]) row.classList.add("correct");
+        else row.classList.add("wrong");
+      });
+      // Disable reorder buttons
+      zone.querySelectorAll("button").forEach((b) => (b.disabled = true));
+      showInlineFeedback(card, q, userOrder, correct);
+    }));
   },
 
   fib(card, q) {
@@ -1060,9 +1096,26 @@ const RENDERERS = {
       }
     });
     card.appendChild(wrap);
+    let submitted = false;
     card.appendChild(actionsBar(() => {
+      if (submitted) return;
       if (selected.some((v) => v < 0)) return alert("Fill every blank first.");
-      gradeAuto(q, selected);
+      submitted = true;
+      const correct = checkAnswer(q, selected);
+      recordAttempt(q, selected, correct);
+      // Annotate each dropdown with correct/wrong styling and show the right answer next to it
+      wrap.querySelectorAll("select").forEach((sel, i) => {
+        sel.disabled = true;
+        const isRight = selected[i] === q.answer[i];
+        sel.classList.add(isRight ? "fib-correct" : "fib-wrong");
+        if (!isRight) {
+          // Show correct answer inline
+          const correctText = q.options[i][q.answer[i]];
+          const marker = el("span", { class: "fib-correction" }, ` → ${correctText}`);
+          sel.insertAdjacentElement("afterend", marker);
+        }
+      });
+      showInlineFeedback(card, q, selected, correct);
     }));
   },
 
@@ -1075,7 +1128,25 @@ const RENDERERS = {
 
     const input = el("textarea", { class: "wfd-input", placeholder: "Type the sentence here..." });
     card.appendChild(input);
-    card.appendChild(actionsBar(() => gradeAuto(q, input.value.trim())));
+    let submitted = false;
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      submitted = true;
+      const userAnswer = input.value.trim();
+      const correct = checkAnswer(q, userAnswer);
+      recordAttempt(q, userAnswer, correct);
+      input.disabled = true;
+      input.classList.add(correct ? "fib-correct" : "fib-wrong");
+      if (!correct) {
+        // Show the correct sentence directly below the textarea
+        const corr = el("div", { class: "wfd-correction" },
+          el("div", { class: "feedback-label" }, "Correct sentence"),
+          el("div", { class: "passage" }, q.answer),
+        );
+        input.insertAdjacentElement("afterend", corr);
+      }
+      showInlineFeedback(card, q, userAnswer, correct);
+    }));
 
     setTimeout(() => speak(q.audio_text), 300);
   },
@@ -1122,17 +1193,20 @@ const RENDERERS = {
     card.appendChild(el("div", { class: "qprompt" }, "Statement: ", el("em", null, q.statement)));
     card.appendChild(el("div", { class: "tfng-hint" }, "Is this statement TRUE according to the passage, FALSE according to the passage, or NOT GIVEN (not addressed)?"));
     let selected = null;
+    let submitted = false;
     const opts = el("div", { class: "options tfng-options" });
-    [
+    const entries = [
       { value: "true", label: "True", note: "passage confirms it" },
       { value: "false", label: "False", note: "passage contradicts it" },
       { value: "not given", label: "Not Given", note: "passage doesn't address it" },
-    ].forEach((entry) => {
+    ];
+    entries.forEach((entry) => {
       const o = el("div", { class: "option tfng-option" },
         el("div", { class: "tfng-label" }, entry.label),
         el("div", { class: "tfng-note" }, entry.note),
       );
       o.addEventListener("click", () => {
+        if (submitted) return;
         opts.querySelectorAll(".option").forEach((x) => x.classList.remove("selected"));
         o.classList.add("selected");
         selected = entry.value;
@@ -1140,9 +1214,25 @@ const RENDERERS = {
       opts.appendChild(o);
     });
     card.appendChild(opts);
+    function submit() {
+      if (submitted || selected == null) return;
+      submitted = true;
+      const correct = checkAnswer(q, selected);
+      recordAttempt(q, selected, correct);
+      // Mark options
+      const nodes = opts.querySelectorAll(".option");
+      entries.forEach((entry, i) => {
+        nodes[i].classList.remove("selected");
+        const isCorrect = entry.value.toLowerCase() === String(q.answer).toLowerCase();
+        const isUserPick = entry.value === selected;
+        if (isCorrect) nodes[i].classList.add("correct");
+        if (isUserPick && !isCorrect) nodes[i].classList.add("wrong");
+      });
+      showInlineFeedback(card, q, selected, correct);
+    }
     card.appendChild(actionsBar(() => {
       if (selected == null) return alert("Pick True, False, or Not Given.");
-      gradeAuto(q, selected);
+      submit();
     }));
   },
 
@@ -1169,9 +1259,26 @@ const RENDERERS = {
       wrap.appendChild(row);
     });
     card.appendChild(wrap);
+    let submitted = false;
     card.appendChild(actionsBar(() => {
+      if (submitted) return;
       if (selected.some((v) => v < 0)) return alert("Pick a heading for every paragraph.");
-      gradeAuto(q, selected);
+      submitted = true;
+      const correct = checkAnswer(q, selected);
+      recordAttempt(q, selected, correct);
+      // Annotate each row with its result
+      wrap.querySelectorAll(".mh-row").forEach((row, i) => {
+        const sel = row.querySelector(".mh-select");
+        sel.disabled = true;
+        const isRight = selected[i] === q.answer[i];
+        row.classList.add(isRight ? "mh-correct" : "mh-wrong");
+        if (!isRight) {
+          const correctHeading = q.headings[q.answer[i]];
+          row.appendChild(el("div", { class: "mh-correction" },
+            `Correct: ${String.fromCharCode(65 + q.answer[i])}. ${correctHeading}`));
+        }
+      });
+      showInlineFeedback(card, q, selected, correct);
     }));
   },
 
@@ -1198,10 +1305,21 @@ const RENDERERS = {
       opts.appendChild(o);
     });
     card.appendChild(opts);
+    let submitted = false;
     card.appendChild(actionsBar(() => {
+      if (submitted) return;
       if (selected < 0) return alert("Pick one option first.");
-      // Use the same checker as mcq_single by aliasing
-      gradeAuto({ ...q, type: "mcq_single" }, selected);
+      submitted = true;
+      // Use mcq_single checker logic by aliasing
+      const aliased = { ...q, type: "mcq_single" };
+      const correct = checkAnswer(aliased, selected);
+      recordAttempt(q, selected, correct);
+      opts.querySelectorAll(".option").forEach((o, idx) => {
+        o.classList.remove("selected");
+        if (idx === q.answer) o.classList.add("correct");
+        if (idx === selected && selected !== q.answer) o.classList.add("wrong");
+      });
+      showInlineFeedback(card, q, selected, correct);
     }));
   },
 
@@ -1252,13 +1370,26 @@ const RENDERERS = {
       }
     });
     card.appendChild(wrap);
+    let submitted = false;
     card.appendChild(actionsBar(() => {
+      if (submitted) return;
       const userAns = inputs.map((i) => i.value.trim());
       if (userAns.some((v) => !v)) return alert("Fill in every blank.");
-      // Custom check: case-insensitive match per blank
-      const correct = userAns.every((v, idx) => v.toLowerCase().replace(/[.,!?;:]/g, "").trim() === q.answer[idx].toLowerCase().replace(/[.,!?;:]/g, "").trim());
+      submitted = true;
+      const norm = (s) => s.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+      const blankResults = userAns.map((v, idx) => norm(v) === norm(q.answer[idx]));
+      const correct = blankResults.every(Boolean);
       recordAttempt(q, userAns, correct);
-      showFeedback({ ...q, type: "lst_sc_display" }, userAns, correct);
+      // Annotate each input with correct/wrong + show right answer if wrong
+      inputs.forEach((input, i) => {
+        input.disabled = true;
+        input.classList.add(blankResults[i] ? "fib-correct" : "fib-wrong");
+        if (!blankResults[i]) {
+          input.insertAdjacentElement("afterend",
+            el("span", { class: "fib-correction" }, ` → ${q.answer[i]}`));
+        }
+      });
+      showInlineFeedback(card, q, userAns, correct);
     }));
   },
 
@@ -1533,7 +1664,81 @@ function speak(text, rate = 0.95) {
 function gradeAuto(q, userAnswer) {
   const correct = checkAnswer(q, userAnswer);
   recordAttempt(q, userAnswer, correct);
+  // Inline mode: feedback rendered into the question card itself (modern UX).
+  // Each renderer that supports inline mode marks its widgets and calls
+  // showInlineFeedback(). Legacy fallback to showFeedback for types that
+  // haven't been migrated yet.
   showFeedback(q, userAnswer, correct);
+}
+
+// Renders inline feedback into the question card (below the options/widgets).
+// Replaces the actions bar at the bottom of the card with feedback + new actions.
+function showInlineFeedback(card, q, userAnswer, correct) {
+  // Remove the original actions bar
+  card.querySelectorAll('.actions').forEach((a) => a.remove());
+
+  const fb = el('div', { class: 'inline-feedback' });
+  fb.appendChild(el(
+    'div',
+    { class: 'inline-verdict ' + (correct ? 'correct' : 'wrong') },
+    correct ? '✓ Correct' : '✗ Not quite'
+  ));
+
+  // Bank explanation (always shown — it's the "why" reference)
+  if (q.explanation) {
+    fb.appendChild(el('div', { class: 'feedback-label' }, 'Why'));
+    fb.appendChild(el('div', { class: 'feedback-explanation' }, q.explanation));
+  }
+
+  // Trap warning (wrong only)
+  if (!correct && q.trap) {
+    fb.appendChild(el(
+      'div',
+      { class: 'feedback-trap' },
+      el('div', { class: 'feedback-label' }, 'Watch out for'),
+      q.trap
+    ));
+  }
+
+  // AI analysis (wrong + AI available + not LLM-graded)
+  const llmGraded = new Set(['swt', 'essay', 'task1', 'lst_summary',
+    'read_aloud', 'repeat_sentence', 'describe_image', 'retell_lecture',
+    'answer_short', 'ielts_part1', 'ielts_part2', 'ielts_part3']);
+  if (!correct && aiAvailable() && !llmGraded.has(q.type)) {
+    const analyzeBox = el('div', { class: 'feedback-analyze' },
+      el('div', { class: 'feedback-label' }, 'AI analysis of your answer'),
+      el('div', { class: 'analyze-status' },
+        el('span', { class: 'spinner spinner-sm' }),
+        document.createTextNode(' Analyzing...')
+      ),
+    );
+    fb.appendChild(analyzeBox);
+    requestAnalysis(q, userAnswer, analyzeBox);
+  }
+
+  // Action buttons
+  const actions = el('div', { class: 'actions' });
+  if (correct && state.currentFollowupOf) {
+    state.currentFollowupOf = null;
+    actions.appendChild(el('button', { class: 'primary', onclick: () => renderPicker() }, 'Mastery confirmed ✓ — next topic'));
+  } else if (correct) {
+    actions.appendChild(el('button', { class: 'primary', onclick: () => pickByType(q.type) }, 'Next question'));
+    actions.appendChild(el('button', { class: 'ghost', onclick: () => renderPicker() }, 'Back to picker'));
+  } else {
+    actions.appendChild(el('button', { class: 'primary', onclick: () => requestFollowup(q) }, 'Try a similar one'));
+    if (state.pendingCoaching && aiAvailable()) {
+      actions.appendChild(el('button', {
+        class: 'primary coach-btn',
+        onclick: () => requestCoaching(q, state.pendingCoaching.streak),
+      }, `Coach Mode (${state.pendingCoaching.streak} in a row)`));
+    }
+    actions.appendChild(el('button', { class: 'ghost', onclick: () => pickByType(q.type) }, 'Skip'));
+    actions.appendChild(el('button', { class: 'ghost', onclick: () => renderPicker() }, 'Back to picker'));
+  }
+  fb.appendChild(actions);
+  card.appendChild(fb);
+  // Smooth scroll to feedback
+  fb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function checkAnswer(q, ans) {

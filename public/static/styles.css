@@ -521,8 +521,32 @@ button.ghost {
 }
 .option:hover { border-color: var(--accent); }
 .option.selected { border-color: var(--accent); background: var(--accent-soft); }
-.option.correct { border-color: var(--right); background: #ecf6f0; }
-.option.wrong { border-color: var(--wrong); background: #fbeeec; }
+.option.correct {
+  border-color: var(--right);
+  background: #ecf6f0;
+  border-width: 2px;
+  font-weight: 500;
+}
+.option.correct::before {
+  content: "✓ ";
+  color: var(--right);
+  font-weight: 700;
+}
+.option.wrong {
+  border-color: var(--wrong);
+  background: #fbeeec;
+  border-width: 2px;
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(179,66,51,0.5);
+  opacity: 0.85;
+}
+.option.wrong::before {
+  content: "✗ ";
+  color: var(--wrong);
+  font-weight: 700;
+  text-decoration: none;
+}
 
 .reorder-zone {
   display: flex;
@@ -639,6 +663,71 @@ button.ghost {
   margin-bottom: 14px;
   font-size: 14px;
   line-height: 1.55;
+}
+
+/* Inline feedback — rendered into the question card itself, replacing the actions bar */
+.inline-feedback {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+  animation: card-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.inline-verdict {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
+}
+.inline-verdict.correct { color: var(--right); }
+.inline-verdict.wrong { color: var(--wrong); }
+
+/* FIB / WFD / lst_sc inline marking */
+.fib-correct {
+  border: 2px solid var(--right) !important;
+  background: #ecf6f0 !important;
+}
+.fib-wrong {
+  border: 2px solid var(--wrong) !important;
+  background: #fbeeec !important;
+}
+.fib-correction {
+  color: var(--right);
+  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 13px;
+  margin-left: 4px;
+}
+.wfd-correction {
+  margin-top: 8px;
+}
+
+/* Re-order paragraph inline marking */
+.reorder-item.correct {
+  border-color: var(--right);
+  background: #ecf6f0;
+}
+.reorder-item.correct .order-num { background: var(--right); }
+.reorder-item.wrong {
+  border-color: var(--wrong);
+  background: #fbeeec;
+}
+.reorder-item.wrong .order-num { background: var(--wrong); }
+
+/* Matching Headings inline marking */
+.mh-row.mh-correct {
+  border-color: var(--right);
+  background: #ecf6f0;
+}
+.mh-row.mh-wrong {
+  border-color: var(--wrong);
+  background: #fbeeec;
+}
+.mh-correction {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--right);
+  font-weight: 600;
 }
 .analyze-status {
   color: var(--muted);
