@@ -479,6 +479,7 @@ const TYPE_NAMES = {
   // IELTS-specific
   tfng: ["True / False / Not Given", "Decide if a statement matches the passage"],
   task1: ["Writing Task 1", "150-word description of a chart, graph, or process"],
+  matching_headings: ["Matching Headings", "Match each paragraph to the best heading"],
 };
 
 function renderPicker() {
@@ -648,6 +649,7 @@ const TIPS_SECTION_META = {
   reading_reorder: { title: "Reading — Re-order Paragraphs", subtitle: "How to find the topic sentence and sequence using connectors, pronouns, and time markers." },
   reading_fib: { title: "Reading — Fill in the Blanks", subtitle: "Collocations, grammar matching, and high-leverage scoring across Reading + Writing." },
   reading_tfng: { title: "Reading — True / False / Not Given", subtitle: "The classic IELTS task. Mastering the False vs Not Given distinction is worth 2-3 band points." },
+  reading_matching_headings: { title: "Reading — Matching Headings", subtitle: "Pick the best heading for each paragraph. The slowest reading task — do it last." },
   listening_wfd: { title: "Listening — Dictation & Sentence Completion", subtitle: "Type what you hear. The highest-leverage task in any English test — dual-scores Listening + Writing." },
   listening_sc: { title: "Listening — Sentence Completion", subtitle: "IELTS-style fill-in-blanks during a played audio. Preparation in the 30-second prep window is decisive." },
   listening_general: { title: "Listening — Other Tasks", subtitle: "Strategy for Summarize Spoken Text, Highlight Correct Summary, Fill in Blanks, and more." },
@@ -663,6 +665,7 @@ const TIPS_ORDER = [
   "reading_reorder",
   "reading_fib",
   "reading_tfng",
+  "reading_matching_headings",
   "listening_wfd",
   "listening_sc",
   "listening_general",
@@ -907,6 +910,35 @@ const RENDERERS = {
     }));
   },
 
+  // IELTS Matching Headings — for each paragraph, pick one heading from a shared bank
+  matching_headings(card, q) {
+    if (q.instructions) {
+      card.appendChild(el("div", { class: "tfng-hint" }, q.instructions));
+    }
+    const selected = new Array(q.paragraphs.length).fill(-1);
+    const wrap = el("div", { class: "mh-wrap" });
+    q.paragraphs.forEach((para, pi) => {
+      const row = el("div", { class: "mh-row" });
+      row.appendChild(el("div", { class: "mh-para-num" }, `Paragraph ${pi + 1}`));
+      row.appendChild(el("div", { class: "mh-para-text" }, para));
+      const sel = el("select", {
+        class: "mh-select",
+        onchange: (e) => { selected[pi] = parseInt(e.target.value, 10); },
+      });
+      sel.appendChild(el("option", { value: "-1" }, "— choose a heading —"));
+      q.headings.forEach((h, hi) => {
+        sel.appendChild(el("option", { value: String(hi) }, `${String.fromCharCode(65 + hi)}. ${h}`));
+      });
+      row.appendChild(sel);
+      wrap.appendChild(row);
+    });
+    card.appendChild(wrap);
+    card.appendChild(actionsBar(() => {
+      if (selected.some((v) => v < 0)) return alert("Pick a heading for every paragraph.");
+      gradeAuto(q, selected);
+    }));
+  },
+
   // IELTS Writing Task 1 — same UX as essay but lower word floor
   task1(card, q) {
     card.appendChild(el("div", { class: "qprompt" }, q.prompt));
@@ -972,6 +1004,9 @@ function checkAnswer(q, ans) {
   }
   if (q.type === "tfng") {
     return String(ans).toLowerCase() === String(q.answer).toLowerCase();
+  }
+  if (q.type === "matching_headings") {
+    return JSON.stringify(ans) === JSON.stringify(q.answer);
   }
   return false;
 }
@@ -1152,6 +1187,12 @@ function answerDisplay(q) {
     wrap.appendChild(el("div", null, q.answer.map((idx, i) => q.options[i][idx]).join("  /  ")));
   } else if (q.type === "wfd") {
     wrap.appendChild(el("div", { class: "passage" }, q.answer));
+  } else if (q.type === "matching_headings") {
+    const ol = el("ol", null);
+    q.answer.forEach((headingIdx, paraIdx) => {
+      ol.appendChild(el("li", null, `Paragraph ${paraIdx + 1} → ${String.fromCharCode(65 + headingIdx)}. ${q.headings[headingIdx]}`));
+    });
+    wrap.appendChild(ol);
   } else {
     wrap.appendChild(el("div", null, JSON.stringify(q.answer)));
   }

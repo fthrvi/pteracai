@@ -365,6 +365,38 @@ button.ghost {
 .tfng-note { font-size: 12px; color: var(--muted); }
 .tfng-option.selected .tfng-label { color: var(--accent); }
 
+.mh-wrap { display: flex; flex-direction: column; gap: 18px; margin-bottom: 16px; }
+.mh-row {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.mh-para-num {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.mh-para-text {
+  font-family: var(--serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.mh-select {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: white;
+}
+
 .options { display: flex; flex-direction: column; gap: 8px; }
 .option {
   border: 1px solid var(--border);

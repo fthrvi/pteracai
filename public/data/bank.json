@@ -2951,6 +2951,1445 @@
           "rubric": "200-300 words. 5 paragraphs (intro+thesis / 3 body / conclusion). Address the question type (agree-disagree, discuss-both-views, advantages-disadvantages, or problem-solution) explicitly.",
           "grading_notes": "PTE essay: content 0-3, form (length+paragraphs) 0-2, development/structure 0-2, grammar 0-2, linguistic range 0-2, vocabulary range 0-2, spelling 0-2. Total 0-15. Need >=10/15 for solid pass.",
           "source": "language academy (personal practice)"
+        },
+        {
+          "id": "r-reorder-200",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "First, when an email is sent, encryption software converts the message from readable text into scrambled cipher text.",
+            "This ensures that even if someone intercepts the email, they cannot understand its contents without the key.",
+            "When the recipient receives the email, their software uses a decryption key to convert the cipher text back into readable text.",
+            "This is done using an encryption key, which only the sender and receiver possess.",
+            "Email encryption is a process that secures email content to protect it from being read by anyone other than the intended recipients."
+          ],
+          "answer": [
+            4,
+            0,
+            3,
+            2,
+            1
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-201",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "A typical water filtration system works by passing water through multiple layers that trap and remove contaminants.",
+            "The final product is clean, safe drinking water.",
+            "Next, it may pass through an activated carbon filter that removes chemicals and impurities through a process called adsorption.",
+            "Additional stages might include reverse osmosis, which uses a semi-permeable membrane to remove smaller particles, and UV filters that disinfect water by killing bacteria and viruses.",
+            "First, water enters through a sediment filter that catches large particles like dirt and rust."
+          ],
+          "answer": [
+            0,
+            4,
+            2,
+            3,
+            1
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-202",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "The event served as a melting pot of cultures, featuring cooking demonstrations by renowned international chefs, tasting booths, and seminars on food sustainability and health.",
+            "Highlights included the Sushi Rolling Contest and the Italian Pasta Making Workshop, which were open for all attendees to participate.",
+            "The International Food Expo returned this year at the Grand Expo Center, showcasing culinary delights from over 40 countries.",
+            "The expo also emphasized eco-friendly practices, with vendors using biodegradable utensils and promoting organic ingredients.",
+            "The vibrant atmosphere and the exchange of culinary traditions made this expo a must-visit for food lovers looking to explore global cuisine."
+          ],
+          "answer": [
+            2,
+            0,
+            1,
+            3,
+            4
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-203",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Another candidate countered that such a system would limit competition and potentially lower the quality of care.",
+            "One candidate argued for a single-payer system, claiming it would simplify healthcare delivery and ensure coverage for all citizens.",
+            "Each side cited data from other countries' experiences to support their arguments.",
+            "In a televised national debate, political candidates discussed the future of healthcare reform.",
+            "The debate highlighted the complexities of healthcare policy and left voters pondering the trade-offs of different approaches."
+          ],
+          "answer": [
+            3,
+            1,
+            0,
+            2,
+            4
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-204",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "The marathon featured a full 26.2-mile route and a half-marathon option, catering to all levels of runners.",
+            "Over 10,000 participants, including survivors and supporters, took to the streets in a demonstration of solidarity and resilience.",
+            "The day concluded with a celebration in the central park, where families enjoyed live music and a variety of food stalls, all while contributing to a noble cause.",
+            "Local businesses sponsored the event, providing water stations and encouragement along the route.",
+            "The city hosted its annual Run for Hope marathon this Sunday to raise funds for cancer research."
+          ],
+          "answer": [
+            4,
+            1,
+            0,
+            3,
+            2
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-205",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "A new community art project titled 'Walls of Expression' has transformed the city's blank walls into vibrant murals.",
+            "Organizers hope these murals will inspire more public art projects across the city.",
+            "Walking tours of the murals are now offered, drawing both residents and tourists.",
+            "Local artists and community groups collaborated on the designs, which reflect the city's cultural diversity and history.",
+            "The project not only beautifies the area but also provides a platform for artists to showcase their talents."
+          ],
+          "answer": [
+            0,
+            3,
+            4,
+            2,
+            1
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-206",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Local aspiring writers and literature enthusiasts filled the venue, eager to engage with one of their favorite authors.",
+            "Bestselling author Jane Smith celebrated the launch of her latest novel with a special event at Booktown Library on Saturday.",
+            "Fans had the opportunity to meet the author, get their books signed, and hear Jane read excerpts from her new book.",
+            "The event was a success, further solidifying Jane's reputation as a key figure in contemporary literature.",
+            "The evening also included a Q&A session where Jane discussed her inspirations and writing process."
+          ],
+          "answer": [
+            1,
+            2,
+            4,
+            0,
+            3
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-207",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "The preliminary results suggest a strong correlation between a whole food diet and improved mental health indicators.",
+            "Participants followed specific dietary plans rich in either processed foods or whole foods for six months.",
+            "This research could lead to dietary recommendations for managing mental health conditions.",
+            "In an innovative study by nutritionists at the Health and Wellness Research Center, the impact of different diets on mental health was explored.",
+            "Researchers measured changes in mood and anxiety levels through regular psychological assessments and blood tests, which monitored markers of inflammation and neurotransmitter activity."
+          ],
+          "answer": [
+            3,
+            1,
+            4,
+            0,
+            2
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-208",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Her mysterious disappearance during an attempt to circumnavigate the globe in 1937 remains one of aviation's greatest mysteries.",
+            "Four years later, in 1932, she made the solo nonstop flight across the Atlantic.",
+            "In 1928, Amelia Earhart became the first woman to fly across the Atlantic Ocean as a passenger.",
+            "Earhart's achievements promoted aviation and inspired a generation of female aviators.",
+            "Her courage and determination made her a symbol of the advancement of women in non-traditional fields."
+          ],
+          "answer": [
+            2,
+            1,
+            4,
+            3,
+            0
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-209",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "This process allows for the creation of complex and customized items that would be difficult to produce with traditional manufacturing methods.",
+            "Each layer corresponds to a cross-section of the final object.",
+            "This model is then sent to a 3D printer, which builds the object layer by layer from the bottom up.",
+            "The printer uses materials such as plastic, metal, or resin, which it deposits in thin layers and then fuses together, typically using heat.",
+            "3D printing, or additive manufacturing, starts with designing a 3D model on a computer."
+          ],
+          "answer": [
+            4,
+            2,
+            3,
+            1,
+            0
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-210",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "The research, published in 'Quantum Science Journal,' details how these qubits can be produced and integrated into existing quantum computing architectures.",
+            "Their method involves using topological quantum states, which are less affected by environmental noise, a common problem in earlier designs.",
+            "A team at the Tech Advanced Research Lab has made significant progress in quantum computing by developing a new type of quantum bit that is more stable and less prone to error.",
+            "This breakthrough could accelerate the practical deployment of quantum computers, potentially transforming data encryption and problem-solving capacities."
+          ],
+          "answer": [
+            2,
+            1,
+            0,
+            3
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-211",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Insulin provided a way to manage blood sugar levels, saving countless lives.",
+            "Before their discovery, diabetes was essentially a death sentence.",
+            "In 1921, Canadian scientists Frederick Banting and Charles Best discovered insulin, transforming the treatment of diabetes.",
+            "The first successful treatment with insulin on a human was carried out in 1922.",
+            "This medical breakthrough earned Banting the Nobel Prize and has continued to benefit millions worldwide."
+          ],
+          "answer": [
+            2,
+            1,
+            0,
+            3,
+            4
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-212",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Educational researchers from the University of Queensland embarked on a year-long study to assess the efficacy of remote learning tools used in elementary schools during the pandemic.",
+            "The study also considered socio-economic factors to determine if some tools were more beneficial in different contexts.",
+            "By analyzing student performance data and surveying teachers, parents, and students, they aimed to identify which technologies facilitated effective learning and which did not.",
+            "Results from this research are expected to guide future educational technology development and deployment in schools."
+          ],
+          "answer": [
+            0,
+            2,
+            1,
+            3
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-213",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "It led to the rise of the French Republic and significant changes in French society.",
+            "The French Revolution began in 1789, triggered by deep social and economic inequalities and discontent with the monarchy.",
+            "The Revolution saw the overthrow of the monarchy, the establishment of a republic, and drastic and violent shifts in power.",
+            "The French Revolution had a profound influence on modern political ideologies and the development of democratic principles.",
+            "The infamous Reign of Terror, marked by mass executions, was a significant phase of the Revolution."
+          ],
+          "answer": [
+            1,
+            0,
+            2,
+            4,
+            3
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-214",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "This current is captured by wiring in the panels and is then converted from direct current (DC) to alternating current (AC) using an inverter.",
+            "The sunlight's energy then frees electrons in the material, creating an electrical current.",
+            "Solar panels convert sunlight into electricity through a process called photovoltaic (PV) conversion.",
+            "First, solar panels, which are made of semiconductor materials, absorb sunlight.",
+            "The AC electricity is then usable in homes or businesses, or can be fed back into the power grid."
+          ],
+          "answer": [
+            2,
+            3,
+            1,
+            0,
+            4
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-215",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Once shaped, the glass is slowly cooled in a process called annealing, which prevents it from becoming too brittle.",
+            "This mixture is then heated to a very high temperature in a furnace until it melts and becomes liquid.",
+            "The molten glass is then poured into molds or floated on a bed of molten tin to form sheets.",
+            "Glass making begins with mixing sand (silicon dioxide) with soda ash and limestone.",
+            "After cooling, the glass can be cut to size and further processed, such as by adding coatings or treatments to enhance strength or reduce glare."
+          ],
+          "answer": [
+            3,
+            1,
+            2,
+            0,
+            4
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-216",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Early observations indicate that microplastics may disrupt endocrine functions and reduce reproductive success in several fish species.",
+            "By introducing controlled amounts of microplastics into replicated freshwater environments, they observe how these particles affect fish health and behavior.",
+            "Environmental scientists at Greenwater Institute have initiated a project to investigate the effects of microplastics on freshwater ecosystems.",
+            "This ongoing research is crucial for understanding the broader ecological impacts of plastic pollution and shaping water quality regulations."
+          ],
+          "answer": [
+            2,
+            1,
+            0,
+            3
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-217",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "The canal's completion had a profound impact on global trade patterns.",
+            "Today, it remains one of the most important waterways in the world.",
+            "Over 40,000 workers participated in the construction, facing extreme challenges such as disease and difficult terrain.",
+            "The Panama Canal, an engineering marvel, was completed in 1914 after ten years of intense labor.",
+            "It connected the Atlantic and Pacific Oceans, dramatically reducing the travel time for ships by avoiding the lengthy journey around South America."
+          ],
+          "answer": [
+            3,
+            4,
+            2,
+            0,
+            1
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-218",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "A national security debate took place among candidates running for federal office, focusing on the balance between privacy and security.",
+            "One candidate advocated for increased surveillance and intelligence gathering to protect the nation from threats.",
+            "The candidates' differing views highlighted the challenging decisions faced by lawmakers in an era of complex global threats.",
+            "Another candidate warned of the risks to civil liberties and privacy, urging for more oversight and accountability in intelligence practices.",
+            "The debate touched on recent incidents of terrorism and cyber attacks, making it a critical issue for voters."
+          ],
+          "answer": [
+            0,
+            1,
+            3,
+            4,
+            2
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-219",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Researchers at EcoPack Solutions are working on developing new bio-degradable packaging materials from plant-based polymers.",
+            "The company aims to commercialize their bio-degradable packaging within the next three years, offering a sustainable alternative to industries.",
+            "Their process involves extracting cellulose from agricultural waste, which is then treated with enzymes to produce a flexible, durable material.",
+            "Success in this area could significantly reduce reliance on conventional plastics and the environmental damage they cause.",
+            "The team conducts various tests to evaluate the material's decomposition rate, resilience, and safety for food contact."
+          ],
+          "answer": [
+            0,
+            2,
+            4,
+            3,
+            1
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-reorder-220",
+          "section": "reading",
+          "type": "reorder",
+          "topic": "logical flow",
+          "paragraphs": [
+            "Networking opportunities were abundant, with a special focus on startups looking to connect with potential investors.",
+            "This week, the downtown convention center was bustling with tech enthusiasts and professionals attending the annual Tech Innovate Conference.",
+            "The conference wrapped up with an insightful roundtable on the ethical implications of artificial intelligence, a topic that sparked lively debate among participants.",
+            "Exhibitors showcased cutting-edge gadgets and software, offering attendees a glimpse into the future of tech.",
+            "The three-day event featured keynote speeches from industry leaders, panels discussing the latest trends in technology, and workshops for hands-on learning."
+          ],
+          "answer": [
+            1,
+            4,
+            3,
+            0,
+            2
+          ],
+          "explanation": "Find the topic sentence first (it stands alone). Track time markers, pronouns (this, these, they), and connectors (however, then, finally) to determine sequence.",
+          "trap": "Paragraphs starting with 'This', 'These', or 'However' cannot be first — they reference something prior.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-200",
+          "section": "writing",
+          "type": "swt",
+          "topic": "electric vehicles",
+          "passage": "A recent surge in electric vehicle (EV) sales marks a significant milestone in the global shift towards sustainable transportation. According to a report by the International Energy Agency (IEA), EV sales doubled in 2023, reaching a record high of 10 million units worldwide. Governments are playing a pivotal role in this transition by offering incentives such as tax breaks, subsidies, and rebates to encourage consumers to purchase electric cars. Additionally, major automakers are investing heavily in EV technology and infrastructure, with companies like Tesla, Ford, and Volkswagen leading the charge. Despite the positive trends, challenges remain. The limited availability of charging stations and the high cost of EVs compared to traditional gasoline-powered vehicles are significant barriers to widespread adoption.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "A significant increase in electric vehicle (EV) sales, doubling to 10 million units in 2023, marks progress in sustainable transportation, driven by government incentives and major automaker investments, though challenges like charging infrastructure, high costs, and environmental concerns from battery production remain, requiring advancements in technology and recycling programs for continued growth and environmental benefits.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-201",
+          "section": "writing",
+          "type": "swt",
+          "topic": "universal basic income",
+          "passage": "The debate over universal basic income (UBI) has gained momentum amid the economic uncertainties brought on by the COVID-19 pandemic. Advocates argue that UBI, which involves providing all citizens with a regular, unconditional sum of money, can alleviate poverty and reduce inequality. Countries like Finland and Spain have conducted pilot programs to test the feasibility and impact of UBI, with mixed results. Supporters highlight the potential benefits, such as improved mental health, increased financial security, and greater economic stability. Critics, however, caution against the high costs and potential disincentives to work. They argue that UBI could lead to inflation and reduce the motivation for people to seek employment.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "The debate over universal basic income (UBI) has intensified due to the COVID-19 pandemic, with advocates highlighting its potential to alleviate poverty and improve economic stability, while critics warn of high costs, possible inflation, and reduced work incentives, leaving policymakers to consider various funding mechanisms and mixed pilot-program results from Finland and Spain.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-202",
+          "section": "writing",
+          "type": "swt",
+          "topic": "data breach",
+          "passage": "Amid rising tensions over cybersecurity, a major data breach has compromised the personal information of millions of users. The breach, which affected a leading social media platform, exposed names, email addresses, and phone numbers of over 100 million users. The company has since apologized and promised to enhance its security protocols, but the breach has sparked widespread concern among users and privacy advocates. In response, regulatory bodies are calling for stricter oversight and more robust data protection regulations to prevent future incidents.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "A major data breach at a leading social media platform exposed the personal information of over 100 million users, highlighting the urgent need for stronger cybersecurity measures, stricter regulatory oversight, and better data protection practices, while sparking widespread concern and reigniting debates on the responsibility of tech companies in safeguarding user data.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-203",
+          "section": "writing",
+          "type": "swt",
+          "topic": "offshore wind",
+          "passage": "The global push for renewable energy took a significant step forward this year with the announcement of a groundbreaking offshore wind farm project off the coast of Scotland. The project, expected to be one of the largest in the world, will generate enough electricity to power over two million homes. The wind farm, slated for completion in 2027, is part of Scotland's ambitious plan to achieve net-zero carbon emissions by 2045. Notably, the project will also create thousands of jobs in construction, maintenance, and associated industries, providing a significant boost to the local economy. Environmental groups have welcomed the announcement, highlighting the project's potential to reduce reliance on fossil fuels and lower greenhouse gas emissions. However, some local communities and fishermen have expressed concerns about the impact on marine life and fishing activities.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "The announcement of a major offshore wind farm project off Scotland's coast marks a significant advance in renewable energy, set to power over two million homes by 2027, create thousands of jobs, boost the local economy, and contribute to Scotland's net-zero carbon goals, though concerns about marine life and fishing impacts will be addressed through environmental assessments and consultations.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-204",
+          "section": "writing",
+          "type": "swt",
+          "topic": "digital privacy ruling",
+          "passage": "In a landmark ruling, the Supreme Court has declared that digital privacy is a fundamental right, setting a significant precedent for future cases. The decision came in response to a case involving the unauthorized collection of personal data by a major telecommunications company. Justice Elena Martinez, writing for the majority, stated that the right to privacy in the digital age is as essential as any other fundamental right. The case has sparked widespread debate about the balance between privacy and security. Proponents of the ruling argue that it will protect citizens from intrusive surveillance and data exploitation.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "In a landmark ruling, the Supreme Court declared digital privacy a fundamental right, ensuring individuals have control over their personal information, sparking debate between privacy protection advocates and those concerned about its impact on law enforcement and national security, and requiring the involved telecommunications company to implement stricter data protection measures and notify affected customers.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-205",
+          "section": "writing",
+          "type": "swt",
+          "topic": "plastic ban",
+          "passage": "Efforts to combat plastic pollution are gaining momentum as countries around the world introduce bans on single-use plastics. Recent data from the United Nations Environment Programme (UNEP) shows that more than 60 countries have enacted legislation to reduce plastic waste. These measures include bans on plastic bags, straws, and microbeads, as well as initiatives to promote recycling and the use of biodegradable alternatives. In addition to government actions, many corporations are committing to reducing their plastic footprint.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "Countries worldwide are ramping up efforts to combat plastic pollution through bans on single-use plastics, with over 60 nations enacting legislation and corporations committing to sustainable packaging, but challenges such as regional enforcement and finding cost-effective alternatives persist, necessitating collaboration among governments, businesses, and consumers for significant and lasting change.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-206",
+          "section": "writing",
+          "type": "swt",
+          "topic": "youth mental health",
+          "passage": "The mental health crisis among young people is a growing concern for educators, parents, and policymakers. Studies have shown that anxiety, depression, and other mental health issues are on the rise among adolescents and young adults. The COVID-19 pandemic has exacerbated these problems, with school closures, social isolation, and economic uncertainty contributing to increased stress and mental health challenges. According to the World Health Organization (WHO), mental health conditions account for 16% of the global burden of disease and injury in people aged 10-19 years.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "The growing mental health crisis among young people, exacerbated by the COVID-19 pandemic, has prompted educators, parents, and policymakers to introduce mental health education programs and expand access to services, though significant barriers remain, especially in underserved communities, highlighting the need for continued investment in mental health support to ensure the well-being of future generations.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-207",
+          "section": "writing",
+          "type": "swt",
+          "topic": "remote learning",
+          "passage": "The education sector is undergoing a significant transformation as remote learning becomes increasingly mainstream. The COVID-19 pandemic accelerated the adoption of online education, with schools and universities worldwide shifting to virtual classrooms. According to a report by the World Bank, nearly 1.6 billion students were affected by school closures at the height of the pandemic. One major advantage of remote learning is the ability to access a wealth of digital resources and interactive tools that can enhance the learning experience. However, the transition has also highlighted significant disparities in access to technology and internet connectivity.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "The education sector is transforming due to the mainstream adoption of remote learning, accelerated by the COVID-19 pandemic, affecting 1.6 billion students and highlighting both opportunities for innovation and challenges such as disparities in access to technology, with efforts underway to improve digital infrastructure and support disadvantaged students, thereby shaping the future of education.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-208",
+          "section": "writing",
+          "type": "swt",
+          "topic": "modular housing",
+          "passage": "In a bid to address the housing crisis, several cities across the country are experimenting with new approaches to affordable housing. One such initiative is the construction of modular homes, which are built off-site and assembled on location. These homes are designed to be cost-effective, energy-efficient, and quick to construct. The modular housing project in San Francisco aims to provide affordable housing for low-income families, seniors, and individuals experiencing homelessness. The first phase of the project, which includes 500 units, is expected to be completed by the end of the year.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "In response to the housing crisis, cities are adopting modular homes that are cost-effective, energy-efficient, and quick to build, with San Francisco's initiative aiming to provide 500 affordable units for low-income families and homeless individuals, though critics stress the need for comprehensive urban planning and infrastructure investment for long-term success.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-209",
+          "section": "writing",
+          "type": "swt",
+          "topic": "colony collapse",
+          "passage": "The decline of bee populations worldwide is causing alarm among scientists, environmentalists, and agricultural experts. Bees play a crucial role in pollinating crops, which is essential for food production and biodiversity. The phenomenon, known as Colony Collapse Disorder (CCD), has been linked to several factors, including pesticide exposure, habitat loss, climate change, and diseases. According to a report by the Food and Agriculture Organization (FAO), bee populations have decreased by over 30% in some regions over the past decade.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "The global decline of bee populations, attributed to various factors like pesticide exposure, habitat loss, climate change, and diseases, raises concerns among scientists and environmentalists due to its detrimental effects on pollination and biodiversity, prompting initiatives such as promoting bee-friendly farming practices, restoring natural habitats, researching disease treatments, and raising public awareness to safeguard bees.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-210",
+          "section": "writing",
+          "type": "swt",
+          "topic": "ancient migration",
+          "passage": "Human migration in ancient history has played a critical role in shaping the cultural and genetic landscape of modern populations. Archaeological evidence and genetic studies suggest that early humans migrated out of Africa approximately 60,000 years ago, spreading across the globe and populating various regions. These migrations were driven by a range of factors, including climate changes, resource availability, and social dynamics. One of the key migration routes led early humans into the Middle East and then into Europe and Asia.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "Ancient human migrations, sparked by factors like climate shifts and resource availability, sculpted modern cultural and genetic diversity, with early Homo sapiens venturing out of Africa around 60,000 years ago, settling in regions like the Middle East, Europe, and Asia, where evidence of complex cultures and interbreeding with other hominins like Neanderthals and Denisovans enrich our understanding of humanity's dynamic history.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-211",
+          "section": "writing",
+          "type": "swt",
+          "topic": "animal testing ethics",
+          "passage": "The ongoing debate over the ethics of animal testing in scientific research has reached new heights, as activists and scientists clash over the practice. Animal testing has been a cornerstone of biomedical research for decades, playing a crucial role in the development of treatments for diseases such as cancer, diabetes, and heart disease. Proponents argue that animal models are essential for understanding complex biological processes and ensuring the safety of new medications before they are tested on humans. However, animal rights groups vehemently oppose the practice, citing concerns about the welfare and ethical treatment of animals.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "The debate over animal testing's ethics is intensifying as activists and scientists clash, with proponents highlighting its crucial role in biomedical research and treatment development, while opponents emphasize animal welfare and advocate for alternative methods, reflecting a global trend towards more ethical scientific practices with legislative efforts like the EU's strict regulations.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "w-swt-212",
+          "section": "writing",
+          "type": "swt",
+          "topic": "space exploration",
+          "passage": "The resurgence of space exploration is capturing global attention, as nations and private companies embark on ambitious missions to the Moon, Mars, and beyond. This renewed interest in space is driven by advancements in technology, a spirit of international collaboration, and the tantalizing potential for scientific discovery. Recent milestones, such as the successful landing of NASA's Perseverance rover on Mars and China's Chang'e-5 mission returning lunar samples, underscore the rapid progress being made. The potential benefits of this new space age are vast.",
+          "rubric": "ONE sentence, 5-75 words. Capture main claim + key tension or caveat. Use a complex structure (although/while/despite).",
+          "sample": "The global resurgence in space exploration, driven by technological advancements and international collaboration, holds promise for unlocking the universe's mysteries and yielding significant scientific, economic, and technological benefits, though it faces challenges like high costs, technical complexities, and ethical considerations demanding careful planning and international cooperation.",
+          "grading_notes": "PTE rubric: Form (1 sentence) 0-1, Length (5-75 words) 0-1, Content (main idea + supporting) 0-2, Grammar 0-2, Vocab 0-1. Need >=5/7.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-200",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In recent years, the global economy has faced numerous challenges, from sudden market crashes to slow economic growth in many countries. This has made it tough for people to find good jobs, and many are worried about their future. Governments are trying hard to fix these problems by creating more job opportunities and supporting businesses to grow. One key approach is investing in technology and education. By improving education, people can gain the skills needed for the jobs of tomorrow. Also, supporting new technologies can lead to more innovations and business opportunities, boosting the economy. However, these changes take time and require everyone—governments, businesses, and individuals—to work together. It's important for everyone to stay informed and be proactive in shaping a resilient economy. By understanding these challenges and working on solutions, we can hope to build a more stable and prosperous future for everyone.",
+          "question": "According to the text, what is a key strategy governments are using to address economic challenges and create job opportunities?",
+          "options": [
+            "They are focusing on reducing taxes for all businesses to encourage investment and economic stability.",
+            "Governments are increasing import tariffs to protect domestic industries and create more jobs locally.",
+            "Investing in technology and education is a primary approach to prepare individuals for future job demands and stimulate economic growth.",
+            "They are primarily offering direct financial assistance to individuals to reduce unemployment rates quickly.",
+            "Governments are enforcing stricter regulations on businesses to ensure more job openings are made available for locals."
+          ],
+          "answer": 2,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-201",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Biotechnology is revolutionizing medicine and agriculture, but it also brings up tough ethical questions. For example, scientists can now edit genes in ways that could eliminate diseases even before a baby is born. This might sound like a good thing, but it also raises concerns about whether it's right to change a person's genes at all. What if these changes cause unexpected problems? Plus, there's a big debate about whether only rich people will be able to afford such treatments, making health inequalities even worse.\n\nAnother issue is with genetically modified crops. These crops are engineered to resist pests and grow faster, which can lead to more food production and less pesticide use. However, people worry about the long-term effects on health and the environment. There's also the fear that a few big companies could end up controlling the world's food supply because they hold the patents to these genetically modified seeds.",
+          "question": "What ethical concerns arise from the use of biotechnology in medicine, according to the text?",
+          "options": [
+            "There is an ethical dilemma about the fairness of access to gene-editing treatments that could deepen health inequalities.",
+            "Ethical issues include the potential for gene edits to cause unforeseen health problems and the exclusivity of access to these technologies.",
+            "The main ethical concern is whether genetically modified crops may lead to an over-reliance on a few large agricultural companies.",
+            "The ethical debate focuses solely on the long-term health impacts of consuming genetically modified foods.",
+            "Biotechnology in agriculture is questioned primarily for its effects on environmental sustainability and pesticide use."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-202",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In the evolving field of Comparative Religious Studies, scholars are increasingly emphasizing the importance of understanding the similarities and differences between world religions. This academic discipline explores various belief systems, rituals, and traditions, aiming to foster a deeper comprehension of how diverse cultures approach spirituality and the divine. By examining texts, historical contexts, and contemporary practices, researchers seek to identify common themes such as the search for meaning, the role of rituals, and the ethical frameworks that guide adherents' lives.\n\nRecently, there has been a growing interest in the intersection of religion and social issues. Studies have highlighted how religious beliefs influence perspectives on topics like gender roles, social justice, and environmental stewardship. For instance, many religions advocate for caring for the less fortunate, promoting a sense of community and responsibility.\n\nFurthermore, in an increasingly globalized world, interfaith dialogue has become crucial. By comparing and contrasting different religions, scholars and practitioners can build bridges of understanding and cooperation, reducing conflicts and fostering peaceful coexistence. Ultimately, Comparative Religious Studies not only enriches academic knowledge but also contributes to a more harmonious global society.",
+          "question": "What is a primary goal of Comparative Religious Studies according to the provided text?",
+          "options": [
+            "To highlight the superior practices of one religion over others to establish a dominant perspective.",
+            "To uncover how religions uniquely approach environmental concerns without considering historical or textual contexts.",
+            "To enhance academic knowledge and promote global harmony through understanding different religious beliefs and practices.",
+            "To focus solely on ancient texts while ignoring the relevance of contemporary religious practices in modern societies.",
+            "To advocate for the amalgamation of all religions into a single unified belief system."
+          ],
+          "answer": 2,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-203",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "As robots and artificial intelligence (AI) systems become more capable, many tasks traditionally performed by humans are now being automated. This shift is most evident in manufacturing, where machines can now handle complex tasks with speed and precision. However, the influence of automation extends beyond factories; it is also reshaping sectors like retail, transportation, and even customer service.\n\nWhile automation can lead to increased productivity and economic growth, it also poses significant challenges. Many workers fear job displacement as machines take over routine tasks. According to recent studies, millions of jobs could be at risk in the next decade. This potential job loss could exacerbate economic inequality, as low-skilled workers are most vulnerable.\n\nOn the flip side, automation also creates new job opportunities. There is a growing demand for skilled workers who can develop, maintain, and operate advanced technologies. Thus, education and training programs are crucial to prepare the workforce for these new roles. Balancing the benefits and challenges of automation will be key to ensuring a fair and prosperous future.",
+          "question": "What is one major challenge associated with the increasing automation in various sectors?",
+          "options": [
+            "Automation restricts economic growth due to decreased job opportunities.",
+            "Machines lack the precision and speed needed for complex tasks, reducing efficiency.",
+            "There is a decreasing demand for skilled workers as automation does not require human intervention.",
+            "Many low-skilled workers face job displacement and increased economic inequality due to automation."
+          ],
+          "answer": 3,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-204",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Global trends in art and culture are increasingly shaped by technology and social change. Artists worldwide are using digital platforms to share their work, reaching wider audiences than ever before. This digital revolution allows for greater collaboration and innovation, blending traditional techniques with modern digital tools. Social issues like climate change, gender equality, and political movements are also influencing contemporary art, pushing artists to create works that reflect and critique these themes. Additionally, the rise of cultural festivals and international art fairs highlights the global exchange of ideas and creativity. These events foster cross-cultural dialogue and showcase diverse artistic expressions, enriching the global art scene. As a result, the world of art and culture is becoming more interconnected and dynamic, reflecting the complexities of our times.",
+          "question": "What is a primary effect of technology and social change on global art trends, as described in the text?",
+          "options": [
+            "They facilitate the blending of traditional techniques with modern digital tools, fostering innovation.",
+            "They limit the exposure of artists' works to traditional and local audiences only.",
+            "They prevent artists from addressing contemporary social issues through their work.",
+            "They discourage collaboration between artists from different cultural backgrounds.",
+            "They reduce the occurrence of cultural festivals and international art fairs."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-205",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In recent years, global education has seen significant changes, shaping how students learn and teachers teach across the world. One major trend is the shift towards digital learning. With the rise of the internet and smart devices, more schools are using digital tools to enhance learning. Online platforms, educational apps, and virtual classrooms have become common, making education more accessible, especially in remote areas.\n\nAnother key trend is the focus on personalized learning. This approach tailors education to fit each student's needs, abilities, and interests. By using data and technology, educators can create personalized lesson plans that help students learn at their own pace, improving engagement and outcomes.\n\nAdditionally, there is a growing emphasis on global citizenship education. Schools are increasingly teaching students about global issues like climate change, poverty, and human rights. The goal is to prepare students to understand and address the challenges facing the world, fostering a sense of responsibility and community.\n\nDespite these advancements, challenges remain. Inequality in education still exists, with students in poorer countries often lacking the resources and support found in wealthier nations. Addressing these disparities is crucial to ensure that all students, regardless of their background, have access to quality education.",
+          "question": "According to the text, what is a key advantage of digital learning in global education?",
+          "options": [
+            "It allows schools to completely replace traditional teaching methods with technology.",
+            "It focuses solely on improving test scores through rigorous training.",
+            "It enhances the accessibility of education, particularly in remote areas.",
+            "It eliminates the need for personalized learning plans by standardizing education.",
+            "It reduces the importance of global citizenship education by focusing on digital skills."
+          ],
+          "answer": 2,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-206",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Digital media has changed the way we live and interact in today's world. Every day, millions of people log on to their social media accounts, read news online, and stream videos. This constant connectivity has made information more accessible but also raises concerns about the quality of that information. Misinformation can spread quickly, influencing public opinion and even elections. On the other hand, digital media has been a powerful tool for social change. It allows people to organize, share their stories, and advocate for themselves in ways that were not possible before.\n\nHowever, the impact on mental health cannot be ignored. Studies show that excessive use of social media can lead to feelings of loneliness and anxiety, especially among young people. There is also a growing divide between those who have access to the internet and those who do not, which can deepen social inequalities. As we continue to navigate this digital age, it's important for individuals and communities to find balance and ensure that digital media is used in a way that enriches society rather than diminishes it.",
+          "question": "What is a significant negative effect of excessive social media use, as indicated in the text?",
+          "options": [
+            "It often causes feelings of loneliness and anxiety, especially in young people.",
+            "It can lead to increased physical activity and better health outcomes.",
+            "It enhances personal relationships and community bonding.",
+            "Social media use increases the quality and accuracy of information shared online.",
+            "It eliminates social inequalities by providing equal access to digital resources."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-207",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Scientists have made a groundbreaking discovery in the field of renewable energy, potentially revolutionizing how we power our world. A team of researchers at the University of Cambridge has developed a new type of solar cell that is significantly more efficient than current models. These cells, made from a material called perovskite, can convert sunlight into electricity with an efficiency of over 30%, compared to the 20% efficiency of traditional silicon-based cells.\n\nWhat makes perovskite solar cells so promising is not just their efficiency but also their cost-effectiveness. The materials needed to produce these cells are abundant and inexpensive, making them a viable option for large-scale manufacturing. Additionally, the production process is simpler and less energy-intensive than that of silicon cells, which could further drive down costs and reduce the environmental impact of solar energy production.\n\nThe potential applications of this discovery are vast. From powering homes and businesses to providing electricity in remote areas without access to the grid, perovskite solar cells could play a crucial role in the global shift toward sustainable energy. The research team is now focused on improving the stability and durability of these cells to ensure they can withstand real-world conditions and maintain their high efficiency over time.\n\nThis discovery comes at a critical moment as the world grapples with the urgent need to address climate change. With governments and industries increasingly committed to reducing carbon emissions, innovations like perovskite solar cells offer a promising path forward. If successfully commercialized, this technology could significantly accelerate the transition to a cleaner, more sustainable energy future.",
+          "question": "What are the main advantages of the perovskite solar cells developed by the University of Cambridge researchers?",
+          "options": [
+            "They require rare and expensive materials which ensures exclusivity in production.",
+            "They have a higher sunlight-to-electricity conversion efficiency and are cost-effective due to abundant materials.",
+            "The cells are primarily focused on reducing the physical size of solar panels for better aesthetic integration in urban areas.",
+            "These cells can only convert a specific spectrum of light more efficiently than traditional cells.",
+            "They offer enhanced durability and stability in extreme weather conditions compared to other solar cells."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-208",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In the wake of recent pandemics, the world has gleaned invaluable lessons on public health and crisis management. One critical takeaway is the importance of early detection and rapid response. Delays in identifying and addressing outbreaks can lead to widespread transmission and overwhelm healthcare systems. Another key lesson is the necessity of clear and consistent communication from health authorities. Misinformation and mixed messages can cause confusion and panic, hindering effective disease control efforts.\n\nThe pandemics have also highlighted the need for robust healthcare infrastructure. Countries with well-funded and well-prepared health systems fared better in managing the surge of patients and delivering timely care. Additionally, global cooperation has proven essential. Sharing information, resources, and expertise across borders can accelerate the development of treatments and vaccines, ultimately saving lives.\n\nEqually important is the role of public behavior. Adherence to health guidelines, such as social distancing and vaccination, significantly influences the course of an outbreak. As we look to the future, these lessons should inform policies and preparedness plans, ensuring that societies are better equipped to handle similar crises.",
+          "question": "What is a critical lesson learned from recent pandemics regarding the management of public health crises?",
+          "options": [
+            "Ensuring all citizens have access to personal protective equipment is the most critical step in managing a pandemic.",
+            "Comprehensive healthcare reform is necessary to improve the general health of the population.",
+            "Early detection and rapid response are crucial to prevent widespread transmission and avoid overwhelming healthcare systems.",
+            "Investment in mental health services is the most effective way to handle public health emergencies.",
+            "Strict enforcement of international travel bans is essential for controlling disease spread."
+          ],
+          "answer": 2,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-209",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "The rise of virtual and augmented reality (VR and AR) is transforming various industries, from gaming to healthcare. These technologies create immersive experiences that can simulate real-world environments or overlay digital information onto our physical surroundings. In gaming, VR offers players a more interactive and engaging experience, while AR enhances mobile games with real-world interaction. Beyond entertainment, VR and AR are making significant impacts in education and training, providing realistic simulations for students and professionals. For instance, medical students can practice surgeries in a virtual environment, gaining hands-on experience without risks. As VR and AR technologies become more accessible and affordable, their applications are expected to expand, further integrating into daily life and reshaping how we learn, work, and play.",
+          "question": "How are VR and AR technologies influencing the field of education and training?",
+          "options": [
+            "They offer realistic, risk-free environments for medical students to practice surgeries.",
+            "They allow students to access historical events in real-time, enhancing their understanding of history.",
+            "They provide a platform for virtual meetings, reducing the need for travel in professional settings.",
+            "They enable students to interact with digital elements in physical textbooks through augmented reality.",
+            "They increase physical activity in learning environments by requiring movement to interact with virtual elements."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-210",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Artificial Intelligence (AI) is rapidly changing the way we live and work, making tasks easier and helping solve complex problems. In recent years, AI has made impressive advancements, particularly in areas like healthcare, where it helps doctors diagnose diseases faster and more accurately. In the business world, AI is used to analyze data quickly, helping companies understand market trends and make better decisions.\n\nOne of the most exciting developments in AI is in the field of natural language processing. This technology allows computers to understand and respond to human language, making it possible for people to have conversations with machines. This is not only making customer service more efficient but is also helping in educational settings, where AI can provide personalized learning experiences.\n\nDespite these benefits, the rapid growth of AI also raises important questions about privacy and job security. As machines become capable of doing human jobs, what will this mean for employment? Also, as AI systems collect and use more personal data, how do we protect individual privacy?\n\nExperts agree that while AI offers many benefits, it also requires careful management. Governments and businesses need to work together to create rules that ensure AI is used responsibly. The goal is to harness the positive power of AI while minimizing risks, ensuring that these technological advancements benefit everyone.\n\nLooking ahead, AI is set to become even more integrated into our daily lives, promising to transform various sectors and offering exciting possibilities. However, it's crucial that we approach these changes thoughtfully, ensuring a balance between innovation and ethical considerations.",
+          "question": "What is a primary challenge associated with the rapid growth of artificial intelligence, according to the text?",
+          "options": [
+            "AI technology is struggling to make significant progress in natural language processing, limiting its application in customer service.",
+            "The increase in AI capabilities in healthcare and business raises concerns about the displacement of human jobs and the security of personal data.",
+            "Governments are rapidly implementing strict regulations that hinder the development and application of AI technologies.",
+            "AI advancements are leading to a decrease in market trends analysis, affecting business decision-making negatively.",
+            "There is a significant resistance from educational institutions regarding the integration of AI into personalized learning experiences."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-211",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Public health is at the forefront of community development, and recent initiatives across the country aim to improve the wellbeing of citizens in several innovative ways. One of the major focuses has been on tackling obesity, which affects a large portion of the population and contributes to serious health issues like diabetes and heart disease. To combat this, several cities have introduced programs that encourage people to engage in more physical activities. These programs include free community exercise classes, new bike lanes to promote cycling, and walking paths in parks. Alongside physical activity, there's a push for better nutrition. Many schools now offer healthier lunch options and some cities have started campaigns to educate residents about nutritious diets.\n\nAnother significant public health initiative involves mental health. With rising awareness of mental health issues, more resources are being allocated to counseling and support services. Cities are training first responders in mental health first aid, and some are setting up 24/7 helplines to assist those in crisis. Vaccination campaigns have also been ramped up, especially in the wake of recent global health scares. Public health departments are making vaccines more accessible and running informational campaigns to dispel myths and encourage vaccination.",
+          "question": "What strategies have cities implemented to tackle the issue of obesity according to the text?",
+          "options": [
+            "They have decreased the availability of fast food by implementing city-wide bans.",
+            "They have increased taxes on sugary drinks and junk food to discourage consumption.",
+            "They have initiated free community exercise classes, introduced new bike lanes, and developed walking paths in parks.",
+            "Cities have focused solely on improving mental health resources to indirectly reduce obesity.",
+            "They have mandated daily physical education classes in all schools to ensure children are active."
+          ],
+          "answer": 2,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-212",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "The transportation sector is witnessing remarkable innovations that promise to reshape how we travel. Among these, electric vehicles (EVs) are leading the charge, offering a cleaner alternative to traditional gasoline-powered cars. Cities worldwide are increasingly adopting EVs, supported by growing networks of charging stations. This shift not only reduces air pollution but also cuts down on noise, creating quieter urban environments.\n\nAnother exciting development is the expansion of high-speed rail systems. These trains can travel as fast as airplanes over short distances, providing a fast, efficient alternative that could decrease reliance on air travel, which is much heavier on carbon emissions. Additionally, bike-sharing programs are gaining popularity in metropolitan areas. These systems encourage people to choose cycling over driving for short trips, easing traffic congestion and reducing carbon footprints.",
+          "question": "What is the primary environmental benefit of cities adopting electric vehicles (EVs) according to the text?",
+          "options": [
+            "They contribute to faster commute times by utilizing modern technology.",
+            "They enhance the aesthetic appeal of cities with modernized transport options.",
+            "They provide a safer driving experience through advanced automated systems.",
+            "They significantly lower specifically carbon dioxide emissions by replacing gasoline-powered cars.",
+            "They help in creating quieter urban environments by reducing noise pollution."
+          ],
+          "answer": 4,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-213",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In recent years, the rise of financial technology, or fintech, has significantly reshaped the landscape of the financial industry. Traditional banking practices have been disrupted by innovative solutions such as mobile payment systems, blockchain technology, and digital currencies. One key lesson from these advancements is the importance of accessibility. Fintech has made financial services more inclusive, reaching previously unbanked populations in remote areas. Mobile banking apps and digital wallets enable users to perform transactions, save money, and access credit without needing a physical bank branch.\n\nAnother critical lesson is the need for robust cybersecurity measures. As financial transactions move online, the risk of cyber attacks and data breaches increases. Companies must invest in strong security protocols to protect user information and maintain trust. Additionally, the collaboration between fintech firms and traditional banks has proven beneficial. By combining innovative technology with established banking expertise, both sectors can enhance their service offerings and improve customer experiences. The rapid growth of fintech highlights the necessity for adaptable regulatory frameworks that can keep pace with technological advancements while ensuring consumer protection and financial stability.",
+          "question": "What critical lesson about cybersecurity can be learned from the rise of fintech?",
+          "options": [
+            "Companies need to relax security measures to accommodate more users.",
+            "Cybersecurity is a minor concern when compared to the benefits of fintech.",
+            "Investing in cybersecurity slows down the progress of fintech innovations.",
+            "Strong security protocols are essential to protect user information and maintain trust.",
+            "Collaborations between fintech firms and traditional banks negate the need for enhanced cybersecurity.",
+            "Regulatory frameworks regarding cybersecurity can remain static despite technological advancements."
+          ],
+          "answer": 3,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-214",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "As summer approaches, travelers are eagerly exploring new beach destinations that offer unique experiences and stunning landscapes. One such emerging hotspot is Tulum, Mexico, known for its pristine beaches and ancient Mayan ruins. Visitors can relax on the soft, white sands of Playa Paraiso or explore the rich history at the Tulum Archaeological Site, where ancient ruins overlook the turquoise waters of the Caribbean Sea.\n\nAnother hidden gem gaining popularity is the island of Koh Rong in Cambodia. This tropical paradise boasts crystal-clear waters, vibrant coral reefs, and secluded beaches. Sok San Beach, with its tranquil atmosphere and stunning sunsets, is perfect for those seeking a peaceful retreat.\n\nIn Europe, the Albanian Riviera is capturing the attention of beach lovers. Once overlooked, this region offers unspoiled beaches like Dhermi and Himara, where visitors can enjoy crystal-clear waters and dramatic coastal scenery without the crowds found in more popular Mediterranean destinations.",
+          "question": "What makes Tulum, Mexico, an attractive destination for summer travelers?",
+          "options": [
+            "Travelers are drawn to its pristine beaches and the Tulum Archaeological Site with ancient Mayan ruins.",
+            "It is renowned for its bustling city life and modern architectural landmarks.",
+            "Tulum is famous for its extensive nightlife and urban entertainment options.",
+            "The city offers a wide range of winter sports activities, including skiing and snowboarding."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-215",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "The world is increasingly turning to renewable energy to power its future, and the latest trends and technologies are making headlines. Solar and wind energy are leading the charge, with new farms popping up all over the globe. These sources are not only cleaner than traditional fossil fuels but are also becoming cheaper as technology improves. Experts say that within a few years, renewable energy could be as affordable as, if not more so than, coal or natural gas. This shift is also creating jobs, from engineers who design these systems to workers who install and maintain them. Additionally, advances in battery technology mean that storing energy for use when the sun doesn't shine or the wind doesn't blow is becoming easier. This is a big step toward using renewables all the time, making them a key player in the fight against climate change.",
+          "question": "According to the text, what significant benefit does the improvement in battery technology offer for renewable energy?",
+          "options": [
+            "It provides a more sustainable alternative to non-renewable energy sources like coal or natural gas.",
+            "It significantly reduces the cost of producing renewable energy to levels competitive with traditional energy sources.",
+            "It creates numerous job opportunities in various sectors of the renewable energy industry.",
+            "It allows for the continuous use of renewable energy sources even when conditions are not ideal for energy generation.",
+            "It enables the transportation sector to shift completely to electric vehicles, reducing overall carbon emissions."
+          ],
+          "answer": 3,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-216",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In cities around the world, breathtaking buildings are redefining skylines and showcasing what modern architecture can achieve. These structures aren't just tall; they combine beauty, functionality, and the latest in environmental sustainability. One standout example is the Lotus Tower in Colombo, Sri Lanka. Soaring nearly 350 meters high, this tower is inspired by the shape of a lotus flower and is both a telecommunications hub and a tourist attraction, featuring an observation deck with panoramic views of the city.\n\nAnother innovative design is the Edge in Western Europe, often called the \"smartest building in the world.\" It's outfitted with thousands of sensors that monitor light, temperature, and even employee attendance. This data helps manage the building's energy use, making it one of the most energy-efficient office spaces globally.\n\nThese modern marvels are more than just places to work or visit. They are symbols of how cities are adapting to new challenges. Architects and engineers use advanced materials and technology to make buildings safer, more comfortable, and environmentally friendly. They also consider how these buildings fit into their neighborhoods, hoping to inspire and serve the community.\n\nAs we continue to face urban growth and environmental challenges, the importance of innovative architecture becomes clearer. These buildings are not only functional; they enhance our cities and improve our quality of life, demonstrating the power of human creativity and forward-thinking in shaping the future of urban landscapes.",
+          "question": "Which of the following statements accurately describe the architectural features and purposes of the buildings mentioned in the text?",
+          "options": [
+            "The Lotus Tower primarily functions as a luxury hotel and lacks any significant tourist attractions.",
+            "The Edge in Western Europe is equipped with advanced sensors to optimize energy usage and monitor environmental conditions.",
+            "Innovative architecture is increasingly focused on aesthetics only, without considering functionality or environmental impact.",
+            "The Lotus Tower is inspired by the shape of a lotus flower and features an observation deck offering city-wide panoramic views.",
+            "Modern buildings are designed to be safe, comfortable, and environmentally friendly while integrating into their neighborhoods.",
+            "The Edge is renowned for being one of the tallest skyscrapers in the world, dominating its city's skyline.",
+            "Architects use advanced materials and technology to address urban growth and environmental challenges through building design."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-217",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In a thrilling conclusion to the Puerto Rican National Basketball League finals, the San Juan Titans emerged victorious, clinching the championship title in a nail-biting finish. Last night, the packed Coliseo de Puerto Rico witnessed a game for the ages as the Titans faced off against the Ponce Lions. The match was a roller-coaster of emotions, with both teams displaying exceptional skill and determination. The Titans, led by their star player Carlos Rivera, showcased a remarkable comeback in the final quarter. Rivera's three-point shot in the last minute sealed the victory, bringing the final score to 89-87.\n\nThe Lions, despite a valiant effort and a strong defense, couldn't hold back the Titans' relentless offense. Fans from both sides filled the arena with deafening cheers and chants, creating an electrifying atmosphere. This victory marks the Titans' third championship win in the past five years, solidifying their reputation as a powerhouse in Puerto Rican basketball. Celebrations erupted across San Juan, with fans taking to the streets to celebrate their team's hard-fought triumph. The win also highlights the growing popularity and competitive spirit of basketball in Puerto Rico.",
+          "question": "What are the key details about the San Juan Titans' victory in the Puerto Rican National Basketball League finals?",
+          "options": [
+            "The San Juan Titans won by a large margin of 20 points.",
+            "The final score of the game was 89-87, with the Titans clinching the victory.",
+            "Carlos Rivera scored the winning three-point shot in the last minute of the game.",
+            "The Ponce Lions won their fourth championship in the last five years.",
+            "The Titans lost the game but showed great spirit in a tight match.",
+            "The game took place at the packed Coliseo de Puerto Rico, amidst a lively crowd.",
+            "Celebrations were held in Ponce to honor the Lions' spirited performance despite their loss."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-218",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Recent studies suggest that emotional intelligence, more than technical skills or traditional intelligence, plays a crucial role in successful leadership. Leaders with high emotional intelligence are better at understanding and managing their own emotions and those of others. This ability allows them to build stronger relationships, foster trust, and inspire their teams.\n\nMoreover, effective leaders often display a mix of confidence and humility. Confidence helps them to make decisive actions and lead with conviction, while humility allows them to listen to others and adapt when necessary. Another important trait is resilience. Leaders face many challenges and setbacks, and their ability to recover and keep moving forward sets the tone for their team.\n\nUnderstanding the psychology behind these traits can help organizations identify and develop potential leaders. By focusing on emotional intelligence, confidence, humility, and resilience, companies can cultivate leaders who not only drive success but also create a positive and motivating environment for their teams.",
+          "question": "Which of the following statements accurately reflect the key traits of successful leaders according to the recent studies mentioned in the text?",
+          "options": [
+            "Leaders with high technical skills are the most effective at fostering trust within their teams.",
+            "Emotional intelligence in leaders contributes significantly to their ability to manage relationships and inspire their teams.",
+            "Effective leaders primarily rely on their traditional intelligence to navigate challenges and setbacks.",
+            "Confidence and humility are both essential traits that help leaders make decisions and adapt to feedback.",
+            "Resilience is an important quality in leaders, enabling them to recover from setbacks and positively influence their team.",
+            "A successful leader's ability to drive success stems solely from their strategic planning skills.",
+            "Understanding the psychology behind leadership traits like confidence and resilience helps organizations in developing potential leaders."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-219",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In recent studies, scientists have explored the fascinating field of the science of happiness, uncovering key factors that contribute to our well-being. Researchers have found that social connections, gratitude, and mindfulness play crucial roles in maintaining a happy life. Building strong relationships with family and friends can significantly boost happiness levels. Additionally, practicing gratitude daily helps individuals focus on positive aspects of their lives, enhancing their overall mood. Mindfulness, the act of being present and fully engaged in the moment, has also shown to reduce stress and increase feelings of contentment. These findings suggest that by actively cultivating these habits, people can improve their mental health and lead more fulfilling lives. As the science of happiness evolves, it continues to offer valuable insights into achieving and maintaining well-being.",
+          "question": "According to the text, what are the key factors that contribute to happiness, as discovered by recent scientific studies?",
+          "options": [
+            "Exercising for at least 30 minutes a day has been identified as a primary factor in enhancing happiness.",
+            "Maintaining social connections with family and friends is crucial for boosting happiness levels.",
+            "Daily practice of gratitude allows individuals to focus on negative aspects, reducing overall happiness.",
+            "Mindfulness, involving being present in the moment, helps in reducing stress and increasing contentment.",
+            "Financial prosperity is noted as a significant contributor to achieving happiness.",
+            "Engaging in hobbies such as painting or reading contributes majorly to personal well-being."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-220",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Smoking remains a major public health issue around the world, affecting millions of people every year. Recent statistics reveal that approximately 1.3 billion people globally are smokers, with the habit leading to over 8 million deaths annually. Most of these deaths are due to diseases linked to smoking, like lung cancer, heart disease, and respiratory illnesses.\n\nCountries are tackling the smoking crisis in various ways. Some have introduced strict laws that limit where people can smoke, while others have increased taxes on tobacco products to make them less affordable. Public health campaigns are also common, aiming to educate people about the dangers of smoking and encourage them to quit.\n\nDespite these efforts, smoking rates remain high in many developing countries. This is often due to less strict tobacco control policies and the influence of tobacco companies. On the other hand, many developed countries have seen a significant drop in smoking rates thanks to robust anti-smoking laws and effective public health campaigns.\n\nThe fight against smoking is ongoing, and experts emphasize the importance of global cooperation in combating this issue. By sharing strategies and supporting anti-smoking initiatives, countries can work together to reduce smoking rates and improve public health worldwide.",
+          "question": "What are some of the measures countries have implemented to address the smoking crisis, according to the text?",
+          "options": [
+            "Most countries have banned the sale of all tobacco products to decrease smoking rates.",
+            "Some countries have introduced strict laws that limit where people can smoke.",
+            "Public health campaigns have been widespread, focusing on educating people about the benefits of smoking.",
+            "Increased taxes on tobacco products have been implemented to make them less affordable.",
+            "The influence of tobacco companies has led to increased smoking rates in developed countries.",
+            "Developing countries often experience high smoking rates due to less strict tobacco control policies."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-221",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In today's world, age-old philosophical concepts are gaining new life as people seek to understand the complexities of modern society. Ideas about morality, justice, and the meaning of life, which have been debated for centuries by philosophers, are now being examined under the lens of contemporary issues like technology, climate change, and social justice.\n\nFor instance, the rapid advancement of artificial intelligence (AI) challenges our traditional notions of ethics and responsibility. Who is accountable when a self-driving car makes a wrong decision, or an AI system discriminates? These questions push us to reconsider our ethical frameworks. Similarly, climate change brings up philosophical debates about our duty to future generations and other species. What do we owe them, and how should we balance their needs against our own?\n\nAs social movements rise, discussions about justice and equality become even more relevant. These movements urge us to think about what a fair society looks like and how we can achieve it. These philosophical discussions are not just academic; they influence policies and personal decisions, showing that philosophy is as crucial now as it has ever been in helping us navigate the challenges of modern life.",
+          "question": "Which philosophical concepts are being reevaluated in the context of modern societal issues, according to the text?",
+          "options": [
+            "The morality of accumulating wealth in a rapidly changing economy.",
+            "Justice and equality as influenced by the rise of social movements.",
+            "The ethical implications of artificial intelligence and its decision-making processes.",
+            "The obligation of current generations to address climate change for the sake of future ones.",
+            "Philosophical debates around the significance of ancient cultural practices in contemporary society.",
+            "How modern technology impacts traditional concepts of the meaning of life.",
+            "The role of philosophy in providing solutions to economic inequalities."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-222",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Culinary traditions vary widely across continents, reflecting the diverse histories, climates, and cultures of each region. In Asia, rice is a staple, often served with dishes like sushi in Japan or curry in India. These foods not only provide a taste of local flavor but also tell stories of the regions' agricultural practices and historical trade routes.\n\nMoving to Europe, the Mediterranean diet offers a stark contrast with its emphasis on olive oil, fresh fruits, vegetables, and fish. This diet, particularly prevalent in countries like Italy and Greece, is celebrated for its health benefits and its roots in the regions' sunny climates and coastal access.\n\nIn Africa, the cuisine is as varied as the continent itself. In North Africa, you can taste the rich flavors of tagine, a slow-cooked stew. Sub-Saharan Africa offers a range of flavors from the spicy jollof rice, a favorite in West Africa, to the simple, nourishing ugali in East Africa, made from maize flour.\n\nThe Americas bring a fusion of indigenous and European influences, resulting in varied cuisines. In North America, dishes like the hamburger represent modern culinary developments. Meanwhile, South America offers unique dishes like ceviche, a raw fish dish marinated in citrus from the coastal regions, showing the local penchant for fresh, vibrant ingredients.",
+          "question": "Which statements accurately reflect the culinary traditions and influences mentioned for the different regions in the text?",
+          "options": [
+            "In Asia, curry is a popular dish in Japan due to its long history with rice-based foods.",
+            "The Mediterranean diet includes fresh fruits, vegetables, and fish, largely because of Italy and Greece's coastal climates.",
+            "Tagine, a type of slow-cooked stew, is commonly enjoyed in Sub-Saharan Africa.",
+            "Jollof rice is a spicy dish that originates from North Africa and is popular across the continent.",
+            "Ceviche, a dish made from raw fish marinated in citrus, highlights South America's use of fresh local ingredients.",
+            "Ugali, made from maize flour, is a staple in East Africa due to its simplicity and nourishment."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-223",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In today's digital age, cybersecurity and privacy are becoming critical issues for everyone using the internet. As we rely more on online services for shopping, banking, and communication, our personal information is often at risk. Hackers are constantly finding new ways to break into systems and steal data like passwords, credit card numbers, and other private information. This can lead to serious problems like identity theft and financial loss.\n\nGovernments and companies are taking steps to protect users. They are improving security systems and using stronger encryption methods to keep data safe. However, there's also a need for users to be cautious. Experts recommend using complex passwords, changing them regularly, and being careful about the information shared online. Additionally, it's wise to use two-factor authentication whenever it's available, adding an extra layer of security.\n\nDespite these precautions, some people worry that their privacy is being invaded as companies collect vast amounts of data for advertising and other purposes. This raises questions about how much privacy we're willing to give up for convenience. Balancing security and privacy in the internet era is complex, and it requires cooperation from everyone — governments, companies, and internet users.",
+          "question": "What measures are being taken to enhance cybersecurity and protect user privacy online, according to the text?",
+          "options": [
+            "Experts suggest using complex passwords and regularly updating them to enhance security.",
+            "Companies are limiting the amount of data they collect from users to ensure privacy.",
+            "Two-factor authentication is recommended to add an additional security layer for online activities.",
+            "Governments are rolling back regulations to allow for more data collection by companies.",
+            "Encryption methods are being strengthened by companies to secure user data effectively.",
+            "Hackers are reducing their activities due to increased security measures.",
+            "Users are advised to be cautious about the personal information they share online."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-224",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Personalized medicine, which tailors medical treatment to the individual characteristics of each patient, is becoming a significant part of modern healthcare. A key component of this approach is genetics. By studying a person's genetic makeup, doctors can understand how different patients might respond to various treatments. This helps in choosing the best treatment options and dosages for each individual.\n\nFor instance, some people may have a genetic variation that makes them respond better to a certain medication, while others might not benefit from it at all. Similarly, genetics can help identify individuals who are at higher risk for specific diseases, allowing for early intervention and preventive measures.\n\nOne of the most promising areas of personalized medicine is in cancer treatment. By analyzing the genetic mutations present in a tumor, doctors can select therapies that are more likely to be effective for that specific cancer type. This not only improves the chances of successful treatment but also reduces the side effects, as the treatment can be more targeted.\n\nWhile the field of personalized medicine is still evolving, its potential to transform healthcare is enormous. As genetic research continues to advance, we can expect even more precise and effective treatments, leading to better health outcomes for patients worldwide.",
+          "question": "What are the key benefits of personalized medicine according to the text?",
+          "options": [
+            "Personalized medicine guarantees a cure for all genetic diseases.",
+            "It allows for treatments to be tailored based on individual genetic profiles.",
+            "Genetic research in personalized medicine has been completed and no further research is needed.",
+            "Personalized medicine can predict and prevent diseases by identifying high-risk individuals.",
+            "It provides little help in selecting the most effective treatments and dosages for each patient.",
+            "The field has completely eliminated the occurrence of side effects in treatments.",
+            "In the treatment of heart diseases, it uses genetic analysis to choose therapies likely to succeed against specific mutations."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-225",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In today's rapidly changing economic landscape, the theories of the past are being put to the test in real-world scenarios. One of the most discussed theories is that of supply and demand, which suggests that the price of a product is determined by how much of it is available and how much people want it. This simple idea helps explain why prices go up during a shortage, like when there's a sudden demand for batteries during a hurricane.\n\nAnother key theory is Keynesian economics, named after John Maynard Keynes. This theory supports the idea that during tough economic times, the government should increase spending to boost demand. This has been applied in situations like the 2008 financial crisis, where governments around the world spent money on projects to keep people employed and stimulate the economy.\n\nOn the other hand, there's the concept of laissez-faire, a hands-off approach where the government does very little to interfere with the economy. Proponents argue that less regulation frees businesses to innovate and grow.\n\nThese economic theories are not just academic; they have practical implications that affect everyday life. From government policies on taxes and spending to decisions made by businesses about what to produce or how much to charge, the ideas of economists from decades ago are shaping our economic reality today. Understanding these theories helps us make sense of the financial news and the market movements we see daily.",
+          "question": "Which economic theories are discussed in the text, and how are they explained to be applicable in real-world scenarios?",
+          "options": [
+            "The text mentions Marxist economics, emphasizing the redistribution of wealth during economic downturns.",
+            "Supply and demand theory is described, highlighting how it explains price fluctuations during shortages.",
+            "Keynesian economics is explained as supporting government intervention during economic downturns to boost demand.",
+            "Laissez-faire economics is discussed, advocating for minimal government interference in economic activities.",
+            "The text outlines the theory of comparative advantage, explaining how countries benefit from specializing in certain goods.",
+            "It is mentioned that supply and demand theory fails to apply during economic crises, requiring different approaches.",
+            "The text discusses how monetarism focuses on controlling the money supply to manage the economy."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-226",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Cultural festivals around the world bring vibrant colors, unique traditions, and joyous celebrations to the forefront, showcasing the rich diversity of human heritage. From the lively samba rhythms at Brazil's Carnival to the intricate dragon dances of China's Spring Festival, these events offer a glimpse into the heart and soul of different cultures. In India, the Diwali festival lights up the night with thousands of lamps, symbolizing the victory of light over darkness. Meanwhile, in Spain, the streets come alive during La Tomatina, where participants joyfully hurl tomatoes at one another. Each festival, whether it marks a seasonal change, a historical event, or a religious belief, strengthens community bonds and encourages global unity by inviting people from all walks of life to partake in the festivities. These cultural celebrations not only entertain but also educate, connecting us all through the universal language of festivity and joy.",
+          "question": "Which statements accurately describe the cultural festivals mentioned in the text?",
+          "options": [
+            "The Carnival in Brazil is known for its calm and reflective atmosphere.",
+            "Diwali in India is celebrated by lighting thousands of lamps to signify the triumph of light over darkness.",
+            "La Tomatina in Spain involves participants throwing tomatoes at each other in the streets.",
+            "The Spring Festival in China is highlighted by modern pop music and laser shows.",
+            "The main attraction of Brazil's Carnival is dragon dancing.",
+            "Diwali is a festival that celebrates the onset of winter in India."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-227",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "As global hunger continues to be a pressing issue, experts around the world are turning to technology for solutions. Recent advancements in agricultural tech, like drone technology and smart farming, are showing promise in increasing food production efficiently. Drones, for instance, are used to map and monitor crops, allowing farmers to spot problems early and treat areas that need attention. Meanwhile, smart farming involves using Internet of Things (IoT) devices to track the conditions of soil and crops in real time, ensuring optimal growth conditions.\n\nScientists are also developing genetically modified crops that can withstand harsh climates and pests, reducing the reliance on chemical pesticides and increasing crop resilience. In areas prone to drought, new irrigation technologies that conserve water are making farming possible where it once wasn't.\n\nDespite these advancements, challenges remain. Access to these technologies is limited in many developing countries due to high costs and lack of infrastructure. International cooperation and investment are crucial to expand access to these innovative tools.\n\nExperts agree that while technology alone won't solve global hunger, it's an essential part of the solution. With continued innovation and collaboration, the dream of ending hunger worldwide could one day be realized.",
+          "question": "What are the roles of technology in addressing global hunger according to the text?",
+          "options": [
+            "Drones are primarily used for the delivery of food supplies to remote areas.",
+            "Smart farming uses Internet of Things (IoT) devices to improve the real-time monitoring of soil and crop conditions.",
+            "Genetically modified crops are developed to require more chemical pesticides.",
+            "New irrigation technologies have been introduced to reduce water usage in drought-prone areas.",
+            "Technological solutions have completely eliminated the issue of global hunger.",
+            "Limited access to agricultural technology in developing countries is due to their advanced technological infrastructure.",
+            "Drones help in mapping and monitoring crops to identify issues early and target treatment efforts."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-228",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In recent years, psychotherapy has seen remarkable innovations that are transforming mental health care. One significant development is the integration of digital tools, such as mobile apps and online therapy platforms, which have made mental health support more accessible. These tools offer various features, including cognitive-behavioral therapy exercises, mood tracking, and virtual counseling sessions, allowing individuals to receive help from the comfort of their homes. Another groundbreaking approach is the use of virtual reality (VR) in therapy. VR creates immersive environments that can help patients confront and manage phobias, anxiety, and post-traumatic stress disorder (PTSD) in a controlled setting. This technology provides a safe space for exposure therapy, making it easier for patients to face their fears and anxieties. Overall, these innovations are expanding the horizons of mental health care, offering new hope and possibilities for those in need.",
+          "question": "Which statements accurately describe the recent innovations in psychotherapy according to the text?",
+          "options": [
+            "Mobile apps have reduced the need for traditional in-person therapy sessions by providing online alternatives.",
+            "Virtual reality in therapy has been utilized primarily for treating physical disabilities.",
+            "Cognitive-behavioral therapy exercises are available through digital tools, enhancing access to mental health care.",
+            "Digital tools in psychotherapy include mood tracking and virtual counseling sessions.",
+            "Virtual reality is used to help patients manage symptoms of schizophrenia in immersive environments.",
+            "The integration of digital tools has made psychotherapy inaccessible for people without advanced technological skills.",
+            "VR technology in psychotherapy focuses on exposure therapy for managing phobias, anxiety, and PTSD in a safe setting."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-229",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Ancient civilizations have always fascinated historians and archaeologists with their mysteries and achievements. The Egyptians, for example, built the pyramids, which still baffle scientists with their precise construction techniques. Similarly, the Mayan civilization, known for its advanced astronomical knowledge, left behind intricate calendars and impressive structures. In Mesopotamia, the Sumerians developed one of the earliest writing systems, cuneiform, which remains a subject of study. The Indus Valley civilization, with its well-planned cities and sophisticated drainage systems, continues to puzzle researchers about its sudden decline. These ancient societies achieved remarkable feats with limited technology, leaving behind clues that we are still trying to decipher. Each discovery sheds light on their ways of life and the innovations that shaped human history.",
+          "question": "Which achievements are associated with the ancient civilizations mentioned in the text, and what did they contribute?",
+          "options": [
+            "The Egyptians are known for their development of the decimal system.",
+            "The Mayan civilization developed advanced medicines.",
+            "The Sumerians invented cuneiform, which is one of the earliest forms of writing.",
+            "The Indus Valley civilization is celebrated for its pioneering use of metal alloys in construction.",
+            "Archaeologists thoroughly understand the sudden decline of the well-planned cities of the Indus Valley civilization thanks to extensive historical records.",
+            "The Egyptians constructed the pyramids using advanced techniques that still puzzle modern scientists.",
+            "The Mayans left behind simple tools that suggest a primitive lifestyle devoid of any significant astronomical knowledge."
+          ],
+          "answer": 2,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-230",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Historical conflicts have left deep marks on the world, shaping international relations and domestic policies in ways that still affect us today. One clear example is the impact of World War II, which not only reshaped the map of Europe but also set the stage for the Cold War. This period of tension between the United States and the Soviet Union influenced many aspects of life, from politics to technology, as both countries competed for global dominance.\n\nIn regions like the Middle East, the effects of colonial rule and the drawing of borders by foreign powers after World War I have led to ongoing conflicts and instability. Countries such as Iraq and Syria are still dealing with the consequences of these decisions, which have fueled wars, displaced millions of people, and created severe humanitarian crises.\n\nSimilarly, the legacy of apartheid in South Africa and segregation in the United States show how historical injustices continue to influence social and political issues. Movements against these systems led to significant changes in laws and attitudes, but many communities still face discrimination and inequality.\n\nUnderstanding the impacts of these historical conflicts is crucial for addressing current issues. It helps us see why some regions struggle with peace and development and why some social issues persist despite progress. By learning from the past, we can work towards solutions that promote justice and reconciliation, helping to heal the wounds left by history and build a more peaceful and equitable world.",
+          "question": "Which historical events mentioned in the text have had a lasting impact on global and domestic policies?",
+          "options": [
+            "The Renaissance period led to major shifts in European borderlines, shaping today's nations.",
+            "World War II reshaped the map of Europe and initiated the Cold War between the United States and the Soviet Union.",
+            "The drawing of borders by foreign powers after World War I has led to ongoing conflicts and instability in the Middle East.",
+            "The impact of the Cold War was mostly felt in the technological advancements in Asia.",
+            "Apartheid in South Africa and segregation in the United States continue to influence social and political issues due to historical injustices.",
+            "The fall of the Berlin Wall led to immediate peace and stability in Eastern Europe.",
+            "The creation of the European Union was a direct result of the Napoleonic Wars in the early 19th century."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-231",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In today's rapidly growing urban landscapes, the concept of smart cities is gaining traction as a solution to many modern challenges. Cities around the world are turning to technology to improve the quality of life for their residents. Smart cities use sensors and data analytics to manage everything from traffic and waste management to energy use and public safety.\n\nFor example, in some cities, street lamps equipped with sensors can adjust their brightness based on the presence of people, saving energy when no one is around. Similarly, smart traffic lights can change their timings to reduce congestion based on real-time traffic conditions. This not only saves time for commuters but also reduces air pollution caused by idling vehicles.\n\nAnother significant aspect of smart cities is the use of data to improve public services. Cities are installing sensors that can quickly detect and report problems like water leaks or power outages, leading to faster repairs and less inconvenience for residents. Moreover, apps that provide real-time information about public transportation schedules make commuting easier and more predictable.\n\nHowever, as cities become smarter, concerns about privacy and data security arise. It's crucial that city planners and technology providers work together to ensure that the data collected is used responsibly and protected from misuse.\n\nUltimately, the goal of smart cities is to create environments where technology and data-driven solutions foster more sustainable, efficient, and livable urban spaces. As this trend continues, it could redefine urban living for millions of people, making cities more adaptable and responsive to the needs of their inhabitants.",
+          "question": "What are some features and benefits of smart cities as described in the text?",
+          "options": [
+            "Smart cities use sensors to monitor personal conversations to improve public safety.",
+            "Street lamps in smart cities can adjust their brightness automatically based on the presence of people.",
+            "Smart traffic lights adjust their timings to reduce congestion and lower air pollution.",
+            "Data from sensors in smart cities is primarily used to monitor the personal activities of residents.",
+            "Real-time public transportation schedules are provided to residents through apps to make commuting more predictable.",
+            "Sensors in smart cities quickly detect infrastructure issues like water leaks, facilitating faster repairs."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-232",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "The way we communicate has changed dramatically with the rise of the digital age. Today, texting, emailing, and social media platforms have transformed traditional language into something quicker and more informal. Words are shorter, and sentences are to the point. Emojis and GIFs are now a big part of how we express emotions quickly and effectively. For example, a simple smiley face can replace a whole sentence.\n\nExperts note that while some people worry this new form of communication is lowering writing standards, others argue it is simply the evolution of language. Young people are at the forefront of these changes, often adapting their writing style for different digital platforms. The language used on Twitter, with its character limit, is different from what might be seen in an email to a teacher or a post on Facebook.\n\nThis evolution is not just about convenience; it reflects deeper changes in society. People across the world can communicate more easily than ever before, leading to a blend of languages and slang. As digital communication continues to grow, it will be interesting to see how language further evolves to meet our changing needs.",
+          "question": "What are some of the ways digital communication has influenced language and expression, according to the text?",
+          "options": [
+            "Digital communication has led to an increase in the use of long, complex sentences in everyday writing.",
+            "The use of emojis and GIFs has become prevalent, allowing for quicker and more effective expression of emotions.",
+            "Young people are increasingly writing in academic settings the way they would write on digital platforms like Twitter and Facebook.",
+            "The digital age has caused a decline in the ability of people to communicate effectively across different languages.",
+            "Experts are not concerned that texting and social media have resulted in the simplification and informalization of traditional language.",
+            "Texting, emailing, and social media have transformed language into something more direct and less formal.",
+            "Digital communication has had little impact on the evolution of language in society."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-233",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Recent studies in evolutionary biology reveal significant insights into human behavior. Researchers have found that many of our social behaviors, such as cooperation and competition, have deep roots in our evolutionary past. For instance, the tendency to form social bonds and work together in groups likely helped early humans survive in harsh environments. These behaviors were essential for hunting, gathering, and protection. Additionally, competitive behaviors, like striving for status and resources, can be traced back to natural selection, where individuals had to compete to pass on their genes. Understanding these evolutionary influences helps explain why certain behaviors persist today. This knowledge not only sheds light on our past but also provides valuable perspectives on current social dynamics and interactions.",
+          "question": "What do recent studies in evolutionary biology suggest about the origins of human social behaviors?",
+          "options": [
+            "Social behaviors like cooperation and competition are recent developments in human society, primarily influenced by modern cultural changes.",
+            "The tendency to form social bonds and work together has ancient origins that helped early humans to survive and thrive in difficult environments.",
+            "Competitive behaviors in humans, such as striving for status and resources, have no connection to natural selection or evolutionary pressures.",
+            "Researchers suggest that understanding the evolutionary roots of our behaviors can provide insights into modern social dynamics and interactions.",
+            "Early humans primarily survived through individual efforts rather than group cooperation, which contradicts the findings of recent studies.",
+            "The drive for social status and resource competition among humans is believed to be a behavior learned from observing animal interactions."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-234",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "As blockchain technology and cryptocurrencies continue to evolve, their potential impact on the global economy is becoming increasingly clear. Originally known for their association with Bitcoin, these technologies now offer much more. Blockchain, a decentralized ledger system, promises greater transparency and security in various sectors, from finance to supply chain management. Cryptocurrencies, while still volatile, are gaining acceptance as legitimate forms of payment. Major companies and financial institutions are beginning to explore and invest in these digital assets, recognizing their potential to streamline transactions and reduce costs. However, this growth comes with challenges. Regulatory bodies worldwide are grappling with how to manage and oversee this new financial landscape. Issues such as security, fraud, and market stability remain significant concerns. Despite these hurdles, the future of blockchain and cryptocurrencies looks promising, with ongoing innovations likely to shape the next decade of technological and economic development.",
+          "question": "What are the potential benefits and challenges associated with blockchain technology and cryptocurrencies as mentioned in the text?",
+          "options": [
+            "Blockchain technology promises increased efficiency in global shipping and logistics due to its centralized nature.",
+            "Cryptocurrencies are widely recognized for their stability and are completely immune to market volatility.",
+            "Major companies and financial institutions are increasingly investing in cryptocurrencies to reduce transaction costs and streamline operations.",
+            "Regulatory bodies are actively developing frameworks to ensure blockchain technology enhances security in digital transactions.",
+            "One of the key benefits of blockchain is its ability to offer greater transparency and security across various sectors.",
+            "Challenges such as managing security, fraud, and market stability are significant concerns for the growth of cryptocurrencies and blockchain technology.",
+            "Blockchain and cryptocurrencies are expected to decline in relevance as technological innovations cease."
+          ],
+          "answer": 2,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-235",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "The future of space exploration looks brighter than ever as scientists and engineers make plans to go beyond the moon. New rockets and technologies are being developed to send astronauts to Mars and maybe even farther. These missions aim to learn more about other planets and whether life could exist there. Experts believe that exploring space can help solve problems here on Earth, like climate change and resource shortages, by providing new insights and technologies. Companies are also getting involved, building spacecraft that could one day take regular people into space for trips or even to live. While these adventures are exciting, they come with big challenges and risks. Safety, costs, and the impact on the environment are major concerns that scientists are working hard to address.",
+          "question": "Based on the text about the future of space exploration, which of the following statements are true?",
+          "options": [
+            "New rockets and technologies are under development for missions to Mars and potentially beyond.",
+            "Scientists plan to send astronauts only to the moon in the near future.",
+            "The main goal of these missions is to find suitable vacation spots on other planets.",
+            "Space exploration is expected to help address terrestrial problems such as climate change and resource shortages.",
+            "Companies are constructing spacecraft intended for space tourism and possibly permanent residence in space.",
+            "Climate change is one of the major concerns being addressed by scientists in the field of space exploration."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-236",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "In a world where wildlife faces numerous threats, conservation efforts are more critical than ever. From the lush rainforests of South America to the expansive savannas of Africa, various species struggle to survive against challenges like habitat destruction, poaching, and climate change.\n\nOne inspiring story comes from the national parks in Kenya, where dedicated rangers are using new technology to protect endangered elephants. They've started using drones to monitor large areas quickly, making it easier to spot poachers before they can harm the animals. This has led to a significant drop in poaching incidents in the last year, giving hope to conservationists and animal lovers alike.\n\nMeanwhile, in Brazil, efforts are underway to save the Amazon rainforest, home to countless species. Organizations are teaching local communities how to use the land without harming it, promoting sustainable farming techniques that help preserve the forest. This not only protects the habitat of many creatures but also supports the livelihoods of local people.\n\nEfforts like these are crucial for the survival of our planet's diverse wildlife. They show that with innovation, education, and community involvement, it's possible to fight back against the forces threatening our natural world. As more people and governments realize the importance of conservation, there is hope for a future where nature and humans exist in harmony.",
+          "question": "What conservation strategies are highlighted in the text as effective in protecting wildlife and their habitats?",
+          "options": [
+            "Rangers in Kenya have reduced poaching by utilizing traditional tracking methods on foot.",
+            "Drones are used in Kenyan national parks to monitor large areas and prevent poaching incidents.",
+            "Local communities in Brazil are being encouraged to leave the Amazon rainforest untouched to preserve its natural state.",
+            "In Brazil, sustainable farming techniques are being taught to local communities to help protect the Amazon rainforest.",
+            "New legislation in Kenya has banned all forms of animal tourism to protect wildlife from human interference.",
+            "The introduction of heavy machinery in the Amazon rainforest for rapid reforestation efforts."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-237",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Quantum computing, a technology that operates on the principles of quantum theory, is poised to revolutionize the future. Unlike traditional computers, which use bits as the basic unit of information, quantum computers use quantum bits, or qubits. This allows them to handle operations at speeds unimaginable with today's technology.\n\nExperts believe that quantum computing could greatly enhance our capabilities in fields such as medicine, finance, and security. In medicine, for instance, quantum computers could simulate molecular structures to help develop new drugs much faster than current methods allow. In finance, these computers could optimize investment strategies by analyzing vast amounts of data in seconds.\n\nSecurity is another area where quantum computing could make a significant impact. It has the potential to create unbreakable encryption methods for sensitive information, which is crucial in our increasingly digital world. However, the technology is still in its infancy. Current quantum computers are prone to errors and require extremely cold temperatures to function. Researchers are working on making quantum computers more reliable and accessible for more practical uses.\n\nThe road ahead is challenging, but the potential benefits make it an exciting area of research. Governments and private companies around the world are investing heavily in quantum computing research, hoping to be at the forefront of this technological revolution. As these efforts continue, we may soon see quantum computing changing our world in ways we can only begin to imagine.",
+          "question": "What are the potential applications and current challenges of quantum computing according to the text?",
+          "options": [
+            "Quantum computing uses traditional bits like current computers, making it compatible with existing technology.",
+            "Quantum computers could help develop new drugs by simulating molecular structures more efficiently than conventional methods.",
+            "The technology could revolutionize investment strategies in finance by processing large datasets in seconds.",
+            "Current quantum computers operate at room temperature, making them easily integrable into today's tech infrastructure.",
+            "Quantum computing promises to introduce unbreakable encryption methods, enhancing digital security.",
+            "Despite its potential, quantum computing is still prone to errors and requires very low temperatures to operate effectively.",
+            "Governments and private sectors are reducing their investments in quantum computing due to its high error rates."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-238",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Educational psychology is rapidly transforming our understanding of how students learn best. Recent studies emphasize the importance of personalized learning models, which tailor educational experiences to individual needs and strengths. These models stand in contrast to the traditional one-size-fits-all approach. Research shows that when students engage in learning activities that match their interests and abilities, they are more motivated and achieve better outcomes. Key strategies include differentiated instruction, where teachers adjust their methods based on student readiness, interests, and learning profiles. Additionally, formative assessments play a crucial role by providing ongoing feedback that helps students improve continuously. Experts also highlight the significance of a growth mindset, where students are encouraged to see their abilities as developable through effort and persistence. This shift in perspective can lead to increased resilience and a love for learning. As educational psychology continues to evolve, these insights pave the way for more effective teaching and learning environments.",
+          "question": "Which statements accurately reflect the key elements discussed in the recent advancements in educational psychology?",
+          "options": [
+            "Personalized learning models are emphasized for tailoring education to meet individual student needs and strengths.",
+            "Educational psychology suggests that a one-size-fits-all approach is the most effective way to enhance student learning.",
+            "Formative assessments are highlighted as essential for providing intermittent feedback that helps students advance steadily.",
+            "Differentiated instruction involves teachers adapting their methods based on the collective class performance.",
+            "A growth mindset encourages students to view their abilities as fixed traits that cannot be developed.",
+            "Recent studies show that matching learning activities to students' interests and abilities leads to higher motivation and better outcomes.",
+            "Experts advocate for the continued use of traditional teaching methods as the most effective strategy."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-239",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Recent advances in non-invasive medical technologies are revolutionizing patient care. These breakthroughs offer new ways to diagnose and treat diseases without the need for surgery or other invasive procedures. One notable development is the use of high-resolution imaging techniques, such as advanced MRI and CT scans, which provide detailed pictures of the body's internal structures. These tools help doctors detect conditions early and plan more effective treatments.\n\nAnother significant advancement is in the field of wearable health monitors. These devices track vital signs like heart rate, blood pressure, and oxygen levels in real-time, allowing for continuous health monitoring. Patients can share this data with their doctors remotely, enabling timely medical interventions.\n\nMoreover, new treatments, such as targeted drug delivery systems, use advanced technology to direct medications precisely where they are needed in the body, reducing side effects and improving outcomes. These non-invasive innovations are making healthcare safer, more efficient, and more patient-friendly.",
+          "question": "What are the major advancements in non-invasive medical technologies mentioned in the text, and how do they benefit patient care?",
+          "options": [
+            "The use of lower-resolution imaging techniques, such as basic X-rays, has improved the ability to detect diseases early.",
+            "High-resolution imaging techniques, like advanced MRI and CT scans, allow for detailed visualization of the body's internal structures, aiding in early detection and treatment planning.",
+            "Wearable health monitors can track vital signs such as heart rate and blood pressure, facilitating continuous health monitoring and enabling timely medical interventions.",
+            "New treatments involve invasive surgeries that are made less risky through precise medication delivery.",
+            "Targeted drug delivery systems direct medications precisely to the needed areas in the body, minimizing side effects and enhancing treatment effectiveness.",
+            "The advancements have made healthcare more time-consuming and less efficient due to the complexity of the technologies.",
+            "Real-time data from wearable devices can be shared with doctors remotely, making healthcare more responsive and patient-friendly."
+          ],
+          "answer": 1,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
+        },
+        {
+          "id": "r-mcq-240",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Global tourism has become a significant driver of economic growth, contributing billions of dollars to the world economy each year. According to recent statistics, international tourist arrivals reached a staggering 1.4 billion in 2019, generating an estimated $1.7 trillion in export earnings. This influx of tourists creates numerous jobs, supporting industries ranging from hospitality and transportation to entertainment and retail. For many countries, especially those with fewer natural resources, tourism is a vital source of income and development.\n\nHowever, the economic impact of global tourism is a double-edged sword. While it brings substantial financial benefits, it also poses challenges that need careful management. Over-tourism, for instance, can strain local infrastructure, lead to environmental degradation, and disrupt the lives of residents. Popular destinations such as Venice, Barcelona, and the Great Barrier Reef are grappling with the adverse effects of too many visitors. These places face increased pollution, loss of natural habitats, and higher costs of living, which can diminish the quality of life for locals.\n\nThe COVID-19 pandemic highlighted the vulnerability of economies reliant on tourism. Travel restrictions and lockdowns led to a dramatic decline in tourist numbers, causing significant economic losses and widespread job cuts. This downturn underscored the need for diversifying economies and making tourism more sustainable. Governments and businesses are now focusing on developing eco-friendly tourism practices, investing in infrastructure that can handle larger crowds, and promoting lesser-known destinations to spread the benefits more evenly.",
+          "question": "Based on the text, what are the impacts and challenges of global tourism?",
+          "options": [
+            "Tourism significantly drives economic growth, creating millions of jobs globally in various industries.",
+            "Over-tourism can strain local infrastructure and lead to environmental degradation and lower quality of life for residents.",
+            "The COVID-19 pandemic had little impact on tourism economies and job markets.",
+            "Tourism is a vital source of income for countries with fewer natural resources and alternative income sources.",
+            "Developing eco-friendly tourism practices and promoting lesser-known destinations are solutions being pursued by governments and businesses.",
+            "International tourist arrivals in 2019 exceeded 1 billion, generating substantial export earnings."
+          ],
+          "answer": 0,
+          "explanation": "Match each option directly to the passage. The correct option restates the passage's claim in different words; distractors either contradict, exaggerate, or add facts not stated.",
+          "trap": "Watch for options with absolute words ('all', 'only', 'never') or that go beyond what the passage explicitly states.",
+          "source": "goarno (personal practice)"
         }
       ]
     },
@@ -3236,6 +4675,48 @@
           {
             "cat": "Scoring",
             "tip": "Band 7 essay = clear position, well-developed ideas, flexible vocabulary with occasional errors, mix of complex structures. That's the realistic target for most test-takers."
+          }
+        ],
+        "reading_matching_headings": [
+          {
+            "cat": "Strategy",
+            "tip": "Read all the headings FIRST, then read each paragraph and ask: 'Which heading captures THIS paragraph's main idea?' Don't try to match passage-to-heading; match heading-to-passage."
+          },
+          {
+            "cat": "Strategy",
+            "tip": "There are always MORE headings than paragraphs (typically 2-3 extra). Don't try to use them all. Headings you don't use are the distractors."
+          },
+          {
+            "cat": "Strategy",
+            "tip": "Eliminate headings as you confirm matches. After you assign heading X to paragraph 2, cross it off — it can't also fit paragraph 3."
+          },
+          {
+            "cat": "Strategy",
+            "tip": "If two headings seem to fit a paragraph, look at the FIRST and LAST sentences of the paragraph. The main heading should reflect the central claim, not a detail."
+          },
+          {
+            "cat": "Time",
+            "tip": "Matching Headings is the SLOWEST IELTS reading task. Budget 7-8 minutes for a 5-paragraph set. Do it LAST in a passage after faster tasks."
+          },
+          {
+            "cat": "Traps",
+            "tip": "Distractor headings often pick up a single keyword from the paragraph but miss the main idea. 'Government subsidies' as a heading when the paragraph mentions 'government' once = trap."
+          },
+          {
+            "cat": "Traps",
+            "tip": "Sometimes the right heading uses NO words from the paragraph — it's a thematic summary. Don't reject a heading just because it lacks shared vocabulary."
+          },
+          {
+            "cat": "Tricks",
+            "tip": "Two-pass approach: pass 1, match the OBVIOUS paragraphs (where the heading shouts at you). Pass 2, work through the remaining paragraphs with a smaller heading pool — much easier with distractors already used."
+          },
+          {
+            "cat": "Tricks",
+            "tip": "If you're stuck on the LAST paragraph and only one heading remains, go ahead and assign it — but spot-check whether it actually fits. If not, you mis-assigned an earlier one."
+          },
+          {
+            "cat": "Scoring",
+            "tip": "1 raw point per paragraph correctly matched. No partial credit per paragraph. Order matters — write the heading number that matches each paragraph number in order."
           }
         ]
       },
@@ -3648,6 +5129,340 @@
           "prompt": "The maps below show the village of Stokeford in 1930 and in 2020. Summarise the information by selecting and reporting the main features, and make comparisons where relevant. Write at least 150 words.",
           "rubric": "150+ words. 4 paragraphs: Intro (paraphrase prompt) + Overview (main trends, no detail) + 2 Detail paragraphs. NO opinion, NO speculation about causes. Use change vocabulary (rose / climbed / plummeted / fluctuated). Compare key data points.",
           "grading_notes": "IELTS Writing Task 1 scored on 4 criteria (each 25%): Task Achievement (covers all key features + clear overview), Coherence/Cohesion, Lexical Resource, Grammatical Range. The Overview paragraph is CRITICAL — examiners look for it explicitly. Without it, Task Achievement caps at band 5."
+        },
+        {
+          "id": "i-tfng-200",
+          "section": "reading",
+          "type": "tfng",
+          "topic": "true false not given",
+          "passage": "The phenomenon of urban heat islands — areas in cities that experience significantly higher temperatures than surrounding rural regions — has been studied extensively since the 1960s. Concrete and asphalt absorb solar radiation during the day and release it slowly at night, leading to nighttime temperature differences of up to 7°C between city centers and their outskirts. The effect is intensified by the heat generated by vehicles, air conditioning units, and industrial activity. Recent research has shown that planting urban trees, painting roofs white, and installing reflective pavements can mitigate the effect, with some cities reporting temperature reductions of 2-3°C after implementing such measures. However, the relative effectiveness of these interventions varies considerably based on climate, building density, and the species of trees planted.",
+          "statement": "Urban heat islands can be up to 7°C warmer than rural areas during the day.",
+          "answer": "false",
+          "explanation": "The passage says the 7°C difference applies to NIGHTTIME, not daytime. The statement reverses this. FALSE — passage explicitly contradicts.",
+          "trap": "If you skim and see '7°C' next to 'urban heat islands', you may mark TRUE. Always check the qualifier (day vs night)."
+        },
+        {
+          "id": "i-tfng-201",
+          "section": "reading",
+          "type": "tfng",
+          "topic": "true false not given",
+          "passage": "The phenomenon of urban heat islands — areas in cities that experience significantly higher temperatures than surrounding rural regions — has been studied extensively since the 1960s. Concrete and asphalt absorb solar radiation during the day and release it slowly at night, leading to nighttime temperature differences of up to 7°C between city centers and their outskirts. The effect is intensified by the heat generated by vehicles, air conditioning units, and industrial activity. Recent research has shown that planting urban trees, painting roofs white, and installing reflective pavements can mitigate the effect, with some cities reporting temperature reductions of 2-3°C after implementing such measures. However, the relative effectiveness of these interventions varies considerably based on climate, building density, and the species of trees planted.",
+          "statement": "Tokyo has implemented the most successful urban cooling program in Asia.",
+          "answer": "not given",
+          "explanation": "The passage discusses cooling interventions generically but mentions no specific city, country, or comparison. NOT GIVEN — not addressed.",
+          "trap": "The passage mentions cooling success in 'some cities' — readers may guess one. But guessing is exactly what NG catches. If the city isn't named, it's NG."
+        },
+        {
+          "id": "i-tfng-202",
+          "section": "reading",
+          "type": "tfng",
+          "topic": "true false not given",
+          "passage": "The history of vaccination dates back to 1796, when English physician Edward Jenner observed that milkmaids who had contracted cowpox seemed immune to the more deadly smallpox. Building on this observation, Jenner inoculated a young boy with cowpox material and then exposed him to smallpox, demonstrating that the cowpox infection conferred immunity. Although his approach was crude by modern standards and would not be permitted under contemporary ethical guidelines, it laid the foundation for the science of immunology. Within a century, vaccination had become standard practice in much of Europe and North America. Modern vaccines work through diverse mechanisms — some use weakened pathogens, others use only fragments of the pathogen's protein, and the most recent generation uses messenger RNA to instruct cells to produce a target protein.",
+          "statement": "Edward Jenner's vaccination experiment would be considered ethical by today's standards.",
+          "answer": "false",
+          "explanation": "The passage states his approach 'would not be permitted under contemporary ethical guidelines' — the statement claims the opposite. FALSE.",
+          "trap": "If you skim and miss the 'would not be permitted' clause, you might mark TRUE because the experiment 'worked'. Read for ethical language explicitly."
+        },
+        {
+          "id": "i-tfng-203",
+          "section": "reading",
+          "type": "tfng",
+          "topic": "true false not given",
+          "passage": "The history of vaccination dates back to 1796, when English physician Edward Jenner observed that milkmaids who had contracted cowpox seemed immune to the more deadly smallpox. Building on this observation, Jenner inoculated a young boy with cowpox material and then exposed him to smallpox, demonstrating that the cowpox infection conferred immunity. Although his approach was crude by modern standards and would not be permitted under contemporary ethical guidelines, it laid the foundation for the science of immunology. Within a century, vaccination had become standard practice in much of Europe and North America. Modern vaccines work through diverse mechanisms — some use weakened pathogens, others use only fragments of the pathogen's protein, and the most recent generation uses messenger RNA to instruct cells to produce a target protein.",
+          "statement": "Some modern vaccines instruct human cells to produce specific proteins.",
+          "answer": "true",
+          "explanation": "The passage states directly: 'the most recent generation uses messenger RNA to instruct cells to produce a target protein.' Direct match — TRUE.",
+          "trap": "None significant. Clear TRUE — trust the passage when it's this explicit."
+        },
+        {
+          "id": "i-tfng-204",
+          "section": "reading",
+          "type": "tfng",
+          "topic": "true false not given",
+          "passage": "The Maillard reaction, discovered by French chemist Louis-Camille Maillard in 1912, is the chemical process responsible for the browning of food when heated. It occurs between amino acids and reducing sugars, typically at temperatures above 140°C, and produces hundreds of distinct flavor compounds — the reason a seared steak smells and tastes fundamentally different from a boiled one. Despite its central role in cooking, the reaction was studied seriously by food scientists only from the 1950s onward, when industrial food production demanded better understanding of flavor development. The reaction is also linked to less desirable outcomes: it produces acrylamide, a compound considered a probable human carcinogen, when starchy foods are cooked at high temperatures.",
+          "statement": "Louis-Camille Maillard immediately recognized the importance of his discovery for cooking.",
+          "answer": "not given",
+          "explanation": "The passage notes that food scientists studied the reaction 'seriously...only from the 1950s onward', but says nothing about Maillard's personal recognition or attitude. NOT GIVEN.",
+          "trap": "It's tempting to infer FALSE because cooking application was delayed, but the passage doesn't speak to Maillard's PERSONAL view. Inference ≠ stated."
+        },
+        {
+          "id": "i-tfng-205",
+          "section": "reading",
+          "type": "tfng",
+          "topic": "true false not given",
+          "passage": "The Maillard reaction, discovered by French chemist Louis-Camille Maillard in 1912, is the chemical process responsible for the browning of food when heated. It occurs between amino acids and reducing sugars, typically at temperatures above 140°C, and produces hundreds of distinct flavor compounds — the reason a seared steak smells and tastes fundamentally different from a boiled one. Despite its central role in cooking, the reaction was studied seriously by food scientists only from the 1950s onward, when industrial food production demanded better understanding of flavor development. The reaction is also linked to less desirable outcomes: it produces acrylamide, a compound considered a probable human carcinogen, when starchy foods are cooked at high temperatures.",
+          "statement": "The Maillard reaction can produce compounds that may be harmful to human health.",
+          "answer": "true",
+          "explanation": "The passage explicitly states acrylamide (a Maillard product) is 'considered a probable human carcinogen'. Direct support — TRUE.",
+          "trap": "If you anchor on the early positive description (browning, flavor) and miss the final sentence, you might mark FALSE or NG. Always finish the passage."
+        },
+        {
+          "id": "i-mcq-200",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "main idea identification",
+          "passage": "The recent shift towards plant-based diets has been driven by a combination of environmental, health, and ethical considerations. Studies have shown that diets centered on plants, particularly whole grains, legumes, vegetables, and nuts, are associated with lower rates of cardiovascular disease, type 2 diabetes, and certain cancers. From an environmental perspective, plant-based foods generally require less land, water, and energy to produce than animal products, contributing fewer greenhouse gas emissions per calorie. However, nutritionists caution that simply removing meat from one's diet does not guarantee improved health — heavily processed plant-based substitutes often contain high levels of sodium, saturated fat from coconut and palm oils, and various additives. A genuinely beneficial plant-based diet relies primarily on minimally processed whole foods, not on industrial meat alternatives.",
+          "question": "What is the main argument of the passage?",
+          "options": [
+            "All plant-based diets are equally beneficial for health and the environment.",
+            "Plant-based diets are healthier than any meat-based diet under all conditions.",
+            "Whole-food plant-based diets offer benefits, but processed alternatives are problematic.",
+            "Industrial meat alternatives are the most important component of a plant-based diet."
+          ],
+          "answer": 2,
+          "explanation": "The passage acknowledges benefits AND warns about processed substitutes, concluding that 'genuinely beneficial' diets rely on 'minimally processed whole foods'. Option C captures this distinction. A and B overstate; D contradicts the warning.",
+          "trap": "B is tempting because the passage spends time on health benefits — but the WHOLE passage is about the distinction within plant-based diets, not plant vs meat."
+        },
+        {
+          "id": "i-mcq-201",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Sleep research conducted over the past two decades has overturned several long-held assumptions about the function and structure of sleep. Once thought to be a passive state of inactivity, sleep is now understood as an active process during which the brain consolidates memories, clears metabolic waste through the recently discovered glymphatic system, and modulates immune responses. Crucially, these functions are not evenly distributed across the night: deep slow-wave sleep, concentrated in the first half of the night, appears most important for waste clearance and physical recovery, while REM sleep, more abundant in the later hours, plays a central role in emotional processing and creative problem-solving. Cutting sleep short therefore does not merely reduce total hours — it disproportionately strips away the REM phases that occur in the morning, with consequences for emotional regulation and cognition.",
+          "question": "According to the passage, why is cutting sleep short particularly damaging?",
+          "options": [
+            "It eliminates deep slow-wave sleep, which is concentrated in the morning.",
+            "It disproportionately reduces REM sleep, which is more abundant later in the night.",
+            "It prevents the glymphatic system from clearing metabolic waste entirely.",
+            "It reduces total sleep hours but does not affect any specific sleep phase."
+          ],
+          "answer": 1,
+          "explanation": "The passage states cutting sleep short 'disproportionately strips away the REM phases that occur in the morning'. Option B paraphrases this. A reverses (slow-wave is FIRST half), C overstates ('entirely'), D contradicts.",
+          "trap": "A confuses the two sleep types — deep slow-wave and REM have different distributions. If you remember 'one type is more important morning' but not which, you may pick wrong. Specific reading wins."
+        },
+        {
+          "id": "i-mcq-202",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "writer's view",
+          "passage": "The rise of artificial intelligence has prompted intense debate about its impact on creative work. Some commentators argue that AI tools will democratize creativity, allowing individuals without formal training to produce sophisticated music, images, and text. Others warn that the same tools threaten the livelihoods of working artists by flooding markets with cheap synthetic output and by training on copyrighted material without permission. The truth likely lies between these positions: AI may indeed lower the barrier to certain forms of creative production while simultaneously concentrating economic value in the hands of platform owners rather than human creators. What the current debate often overlooks is that the technology is unlikely to evolve neatly into either utopia or dystopia — its effects will depend on how it is regulated, on what compensation models emerge, and on how human audiences value the distinction between AI-generated and human-made work.",
+          "question": "What is the writer's stance on AI's impact on creative work?",
+          "options": [
+            "AI will conclusively democratize creativity for all individuals.",
+            "AI will destroy the livelihoods of all working artists.",
+            "AI's impact will be shaped by regulation, business models, and audience preferences.",
+            "AI will have no meaningful impact on creative industries."
+          ],
+          "answer": 2,
+          "explanation": "The writer explicitly says 'its effects will depend on how it is regulated, on what compensation models emerge, and on how human audiences value the distinction'. C captures this. A and B mirror the extreme positions the writer EXPLICITLY rejects ('between these positions'). D contradicts.",
+          "trap": "A and B are the OBVIOUS positions in the debate — but the writer's tactic is to reject both and articulate a middle path. The right answer is rarely the loudest claim."
+        },
+        {
+          "id": "i-mcq-203",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "inference",
+          "passage": "Until the mid-19th century, the dominant view in Western medicine held that disease was caused by 'miasmas' — noxious air emanating from rotting matter. This theory provided a logical framework for some sound public health interventions, such as removing waste from streets and improving ventilation, but it offered no explanation for why the same air affected some individuals and not others. The germ theory of disease, developed primarily through the work of Louis Pasteur and Robert Koch in the 1860s and 1870s, eventually displaced miasma theory by identifying specific microorganisms responsible for specific illnesses. The transition was not immediate: many established physicians resisted the new theory, and it took decades for germ-based hygiene practices, such as surgeons washing their hands between patients, to become standard.",
+          "question": "What can be inferred from the passage about the acceptance of new scientific theories?",
+          "options": [
+            "Scientific communities universally welcome new theories that overturn old ones.",
+            "Established practitioners are sometimes slow to adopt theories that contradict prevailing views.",
+            "Miasma theory is still considered scientifically valid by some doctors today.",
+            "Germ theory was never resisted by anyone in the medical community."
+          ],
+          "answer": 1,
+          "explanation": "The passage explicitly says 'many established physicians resisted the new theory' and 'it took decades' for new practices to standardize. Option B paraphrases this. A and D contradict the passage; C is not mentioned.",
+          "trap": "A is what one might WANT to believe about science (open-minded). The passage clearly shows otherwise — read for what's stated, not what's appealing."
+        },
+        {
+          "id": "i-mcq-204",
+          "section": "reading",
+          "type": "mcq_single",
+          "topic": "detail identification",
+          "passage": "Sponges are among the simplest of multicellular animals, yet they exhibit remarkable biological capabilities that have caught the attention of medical researchers. Unlike most animals, sponges lack true tissues, organs, or a nervous system, instead functioning as collections of specialized cells that can be separated, mixed, and then reassembled — sometimes from cells of different individuals — into functioning sponges. This regenerative capacity, combined with the chemical compounds sponges produce to defend against predators and pathogens, has made them a focus of pharmaceutical research. Several anticancer drugs in current use, including cytarabine and trabectedin, were derived from compounds originally identified in marine sponges. The challenge is sustainability: harvesting sponges in quantities sufficient for drug production threatens fragile reef ecosystems.",
+          "question": "Why is sustainability a concern in sponge-based drug development?",
+          "options": [
+            "Sponges cannot regenerate quickly enough to meet pharmaceutical demand.",
+            "Harvesting sponges in sufficient quantities threatens reef ecosystems.",
+            "The chemical compounds in sponges lose potency when extracted.",
+            "Sponges have only been discovered in very small numbers worldwide."
+          ],
+          "answer": 1,
+          "explanation": "The passage states directly: 'harvesting sponges in quantities sufficient for drug production threatens fragile reef ecosystems.' Option B paraphrases. Others are not stated.",
+          "trap": "A sounds plausible given the passage discussed regeneration, but the passage actually emphasizes how regenerative sponges ARE — so 'cannot regenerate quickly enough' contradicts the passage's tone."
+        },
+        {
+          "id": "i-essay-200",
+          "section": "writing",
+          "type": "essay",
+          "topic": "opinion",
+          "prompt": "Many people believe that social media has fundamentally changed political discourse for the worse. Others argue that it has democratized political participation. Discuss both views and give your own opinion. Write at least 250 words.",
+          "rubric": "250-300 words. 5 paragraphs. Address the question type explicitly.",
+          "grading_notes": "IELTS Task 2: Task Response, Coherence/Cohesion, Lexical Resource, Grammar (each 25%)."
+        },
+        {
+          "id": "i-essay-201",
+          "section": "writing",
+          "type": "essay",
+          "topic": "agree-disagree",
+          "prompt": "Some people believe that governments should invest heavily in public transportation rather than building new roads. To what extent do you agree or disagree? Write at least 250 words.",
+          "rubric": "250-300 words. 5 paragraphs. Address the question type explicitly.",
+          "grading_notes": "IELTS Task 2: Task Response, Coherence/Cohesion, Lexical Resource, Grammar (each 25%)."
+        },
+        {
+          "id": "i-essay-202",
+          "section": "writing",
+          "type": "essay",
+          "topic": "two-part",
+          "prompt": "In many countries today, people are working longer hours than in the past. What are the reasons for this trend? What problems can it cause? Write at least 250 words.",
+          "rubric": "250-300 words. 5 paragraphs. Address the question type explicitly.",
+          "grading_notes": "IELTS Task 2: Task Response, Coherence/Cohesion, Lexical Resource, Grammar (each 25%)."
+        },
+        {
+          "id": "i-essay-203",
+          "section": "writing",
+          "type": "essay",
+          "topic": "problem-solution",
+          "prompt": "Obesity rates are rising in many developed countries, particularly among children. What do you think are the main causes of this problem, and what measures can be taken to address it? Write at least 250 words.",
+          "rubric": "250-300 words. 5 paragraphs. Address the question type explicitly.",
+          "grading_notes": "IELTS Task 2: Task Response, Coherence/Cohesion, Lexical Resource, Grammar (each 25%)."
+        },
+        {
+          "id": "i-essay-204",
+          "section": "writing",
+          "type": "essay",
+          "topic": "opinion",
+          "prompt": "Some argue that history is the most important school subject because it teaches us about the past. Others believe subjects like mathematics and science are more useful. Discuss both views and give your opinion. Write at least 250 words.",
+          "rubric": "250-300 words. 5 paragraphs. Address the question type explicitly.",
+          "grading_notes": "IELTS Task 2: Task Response, Coherence/Cohesion, Lexical Resource, Grammar (each 25%)."
+        },
+        {
+          "section": "reading",
+          "type": "matching_headings",
+          "id": "i-mh-001",
+          "topic": "scientific overview",
+          "instructions": "Choose the best heading for each paragraph from the list of headings below. There are more headings than paragraphs.",
+          "paragraphs": [
+            "Coral reefs cover less than 1% of the ocean floor, yet they support approximately one quarter of all marine species. This extraordinary biodiversity has earned them the nickname 'rainforests of the sea'. The structural complexity of reefs creates countless microhabitats, each occupied by specialized organisms that have co-evolved over millions of years.",
+            "The primary threats to reefs come from three converging pressures. Rising sea temperatures cause coral bleaching, a stress response in which the symbiotic algae living within coral tissues are expelled. Ocean acidification, driven by absorbed atmospheric CO2, weakens the calcium carbonate skeletons corals depend on. And localized pollution from coastal development introduces nutrients and sediments that suffocate reef systems.",
+            "Conservation efforts have produced mixed results. Marine protected areas have shown clear benefits where enforcement is consistent, allowing fish populations to recover and providing breeding sanctuaries that benefit surrounding fisheries. However, MPAs cannot address the systemic threats of climate change, which require coordinated international action far beyond local protection.",
+            "Some researchers are now exploring more interventionist approaches. Selective breeding of heat-tolerant coral strains, assisted migration to cooler waters, and even genetic engineering have moved from fringe ideas to subjects of serious scientific investigation. These approaches carry their own risks but reflect a growing acceptance that conventional conservation alone will not be sufficient."
+          ],
+          "headings": [
+            "The economic value of reef tourism",
+            "The biodiversity hotspot of the ocean",
+            "Combined causes of reef decline",
+            "Limitations of local protection measures",
+            "New and controversial intervention strategies",
+            "Historical use of corals in medicine",
+            "Public awareness campaigns"
+          ],
+          "answer": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "explanation": "Para 1 → heading 1 (biodiversity hotspot — main idea of paragraph). Para 2 → 2 (lists three causes of decline). Para 3 → 3 (MPA limitations). Para 4 → 4 (new interventionist methods). The two extra headings (economic value, medicine, awareness) are distractors not addressed in any paragraph.",
+          "trap": "Heading 0 ('economic value of reef tourism') sounds plausibly related but is NEVER mentioned. Matching Headings often includes plausible-sounding distractors. Match what's IN the paragraph, not what could be."
+        },
+        {
+          "section": "reading",
+          "type": "matching_headings",
+          "id": "i-mh-002",
+          "topic": "social trends",
+          "instructions": "Choose the best heading for each paragraph from the list of headings below.",
+          "paragraphs": [
+            "The traditional milestones of adulthood — finishing education, leaving home, finding stable work, marrying, and having children — once occurred for most people in their early twenties. In many wealthy countries today, the average age at which these milestones are reached has shifted by five to ten years. Sociologists describe this as 'emerging adulthood', a distinct life stage between adolescence and full adult responsibility.",
+            "Several converging factors explain the shift. Higher education has become both more accessible and more prolonged, with post-graduate degrees now common requirements for white-collar work. The cost of housing has risen sharply relative to incomes, making independent living difficult to achieve early. And labor markets favor specialized expertise that takes years to develop.",
+            "The consequences are mixed. Young adults report greater freedom to explore identity, relationships, and career paths, and many use this period for travel and unpaid creative work that would have been impossible under earlier expectations. At the same time, mental health professionals have noted rising rates of anxiety and a persistent sense of incompleteness in this cohort, exacerbated by social media comparisons."
+          ],
+          "headings": [
+            "Defining a new stage of life",
+            "Government policies promoting independence",
+            "Why milestones are delayed",
+            "The biological aging process",
+            "Mixed outcomes for those affected",
+            "Generational comparisons across centuries"
+          ],
+          "answer": [
+            0,
+            2,
+            4
+          ],
+          "explanation": "Para 1 → 0 (introduces 'emerging adulthood' as a new life stage). Para 2 → 2 (explains why milestones happen later: education, housing, labor). Para 3 → 4 (describes mixed outcomes: freedom + mental health). Distractors include government policies (not mentioned), biology (not relevant), historical comparison (only modern context discussed).",
+          "trap": "Heading 5 ('generational comparisons') sounds related — the passage compares 'now' to 'once' — but the focus is on the present, not on systematic generational analysis. Heading must capture the WHOLE paragraph's focus."
+        },
+        {
+          "section": "reading",
+          "type": "matching_headings",
+          "id": "i-mh-003",
+          "topic": "technology adoption",
+          "instructions": "Choose the best heading for each paragraph from the list of headings below.",
+          "paragraphs": [
+            "Voice assistants like Siri, Alexa, and Google Assistant were initially marketed as transformative tools that would change how we interact with computers. A decade after their widespread introduction, the reality is more modest: most users employ them for a narrow set of tasks — playing music, setting timers, checking weather — and ignore their broader capabilities entirely.",
+            "Researchers studying this 'shallow adoption' point to several causes. Voice interfaces struggle with anything that requires precision, nuance, or memory across interactions; users quickly learn the boundaries of what works and avoid the rest. Privacy concerns also limit adoption: users hesitate to issue voice commands containing sensitive information, especially in shared spaces.",
+            "The gap between marketing promise and actual use offers a broader lesson about predicting technology adoption. Capabilities matter less than the friction users encounter at the margin: an extra word to remember, a privacy worry, an unreliable result. Tools that quietly remove friction tend to expand into daily life; tools that promise great things while creating small annoyances tend to plateau."
+          ],
+          "headings": [
+            "The gap between hype and reality",
+            "Predicting future voice technology",
+            "Why users limit their usage",
+            "The role of marketing in product launches",
+            "A general principle of technology adoption",
+            "The competitive landscape of voice assistants"
+          ],
+          "answer": [
+            0,
+            2,
+            4
+          ],
+          "explanation": "Para 1 → 0 (contrast between marketing promise and modest reality). Para 2 → 2 (causes of shallow adoption: precision limits, privacy). Para 3 → 4 (broader principle about technology adoption generally). Distractors include marketing tactics (not discussed), competitive landscape (not discussed), future prediction (not the topic).",
+          "trap": "Heading 3 ('role of marketing') sounds related because marketing is mentioned in para 1 — but the paragraph isn't ABOUT marketing, it's about the gap between promise and reality. Focus on the paragraph's MAIN claim, not a single referenced concept."
+        },
+        {
+          "section": "reading",
+          "type": "matching_headings",
+          "id": "i-mh-004",
+          "topic": "environmental science",
+          "instructions": "Choose the best heading for each paragraph from the list of headings below.",
+          "paragraphs": [
+            "Soil is far more than a substrate for plant roots; it is a complex living system containing more microorganisms in a single teaspoon than there are humans on Earth. These microbial communities perform essential functions: decomposing organic matter, fixing atmospheric nitrogen, recycling nutrients, and forming symbiotic relationships with plants that vastly extend their access to water and minerals.",
+            "Modern industrial agriculture, however, has systematically degraded these communities. Heavy tillage destroys soil structure; synthetic fertilizers reduce the need for nitrogen-fixing bacteria and so reduce their populations; pesticides eliminate beneficial organisms alongside pests; and monocropping starves the diverse microbial communities that depend on diverse plant inputs.",
+            "Regenerative agriculture seeks to reverse this damage through practices designed to rebuild soil biology. Cover crops keep soils planted year-round, providing continuous food for microbes. Reduced or zero tillage preserves soil structure and fungal networks. Diverse crop rotations support more varied microbial communities. Early evidence suggests these practices can rebuild soil carbon while maintaining yields."
+          ],
+          "headings": [
+            "The hidden life beneath our feet",
+            "How modern farming damages soil ecology",
+            "The history of agricultural science",
+            "Practices for restoring soil health",
+            "Government subsidies for farmers",
+            "Soil composition in different climates"
+          ],
+          "answer": [
+            0,
+            1,
+            3
+          ],
+          "explanation": "Para 1 → 0 (introduces the hidden microbial life in soil). Para 2 → 1 (how industrial agriculture damages soil). Para 3 → 3 (regenerative practices to restore soil). The other headings (history, subsidies, climate variation) are not addressed.",
+          "trap": "Heading 5 ('soil composition in different climates') seems vaguely related but the paragraphs are about microbial communities and agricultural practices, not climate-specific composition."
+        },
+        {
+          "section": "reading",
+          "type": "matching_headings",
+          "id": "i-mh-005",
+          "topic": "psychology",
+          "instructions": "Choose the best heading for each paragraph from the list of headings below.",
+          "paragraphs": [
+            "When two people witness the same event, their accounts often diverge in surprising ways. Memory research has consistently shown that what people 'remember' is not a faithful recording of the past but an active reconstruction shaped by expectations, prior knowledge, and subsequent experiences. Even confident, detailed memories can be entirely false.",
+            "The implications for the legal system are significant. Eyewitness testimony was long considered among the strongest forms of evidence, but studies have shown that wrongful convictions disproportionately involve cases relying heavily on eyewitness accounts. DNA exoneration projects in the United States have demonstrated that mistaken identification by sincere, confident witnesses was the leading cause of false convictions in their database.",
+            "Several reforms have been proposed and partially adopted. Identification procedures can be modified to reduce suggestion: showing witnesses photos sequentially rather than in groups, ensuring administrators do not know which photo is the suspect, and recording confidence levels at the moment of identification rather than later. These changes do not eliminate the problem but measurably reduce error rates."
+          ],
+          "headings": [
+            "The reconstructive nature of memory",
+            "How memory improves with age",
+            "Eyewitness testimony in court",
+            "Famous historical legal cases",
+            "Reforms to identification procedures",
+            "Brain regions involved in memory"
+          ],
+          "answer": [
+            0,
+            2,
+            4
+          ],
+          "explanation": "Para 1 → 0 (memory as active reconstruction, not faithful recording). Para 2 → 2 (problems with eyewitness testimony in the legal system). Para 3 → 4 (specific reform proposals). Distractors include memory improving (not stated), historical cases (none cited), brain regions (not the focus).",
+          "trap": "Heading 3 ('famous historical cases') might draw you if you recall DNA exonerations as a 'case' — but the passage refers to a body of evidence, not specific famous cases."
         }
       ]
     }
