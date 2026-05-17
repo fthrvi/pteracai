@@ -12,8 +12,27 @@
 // See README → "Google Sign-In setup" for the 3-minute walkthrough.
 const GOOGLE_CLIENT_ID = window.PTERACAI_GOOGLE_CLIENT_ID || "";
 
+const TEST_KEY = "pteracai_test_v1";
+const TEST_LABELS = {
+  pte: { label: "PTE Academic", short: "PTE", available: true },
+  ielts: { label: "IELTS Academic", short: "IELTS", available: true },
+  toefl: { label: "TOEFL iBT", short: "TOEFL", available: false },
+  duolingo: { label: "Duolingo English Test", short: "Duolingo", available: false },
+};
+
+function loadCurrentTest() {
+  const stored = localStorage.getItem(TEST_KEY);
+  if (stored && TEST_LABELS[stored]?.available) return stored;
+  return "pte";
+}
+
+function saveCurrentTest(t) {
+  localStorage.setItem(TEST_KEY, t);
+}
+
 const state = {
   bank: null,
+  test: loadCurrentTest(),
   section: "reading",
   currentQ: null,
   currentFollowupOf: null,
@@ -50,6 +69,18 @@ function el(tag, attrs, ...children) {
 }
 
 function clear(node) { node.replaceChildren(); }
+
+// ---------- multi-test helpers ----------
+function currentBank() {
+  if (state.bank?.schema === 2) {
+    return state.bank.tests[state.test] || state.bank.tests.pte;
+  }
+  // v1 fallback shouldn't happen post-migration, but keep code safe
+  return { questions: state.bank?.questions || [], tips: state.bank?.tips || {} };
+}
+
+function currentQuestions() { return currentBank().questions || []; }
+function currentTips() { return currentBank().tips || {}; }
 
 // ---------- bootstrap ----------
 async function boot() {
@@ -169,6 +200,61 @@ function bindSectionButtons() {
     $$(".section-btn").forEach((x) => x.classList.remove("active"));
     $("#settings-nav").classList.add("active");
     renderSettingsView();
+  });
+  bindTestPill();
+}
+
+function bindTestPill() {
+  const pill = $("#test-pill");
+  const menu = $("#test-pill-menu");
+  const label = $("#test-pill-label");
+  label.textContent = TEST_LABELS[state.test]?.short || "PTE";
+
+  function openMenu() {
+    clear(menu);
+    for (const [id, info] of Object.entries(TEST_LABELS)) {
+      const opt = el(
+        "div",
+        {
+          class: "test-pill-option" + (id === state.test ? " active" : "") + (info.available ? "" : " disabled"),
+          role: "option",
+        },
+        el("span", { class: "test-pill-dot" }),
+        info.label,
+        info.available ? null : el("span", { class: "test-pill-meta" }, "soon")
+      );
+      if (info.available && id !== state.test) {
+        opt.addEventListener("click", () => {
+          state.test = id;
+          saveCurrentTest(id);
+          label.textContent = info.short;
+          closeMenu();
+          state.section = "reading";
+          $$(".section-btn[data-section]").forEach((b) => b.classList.toggle("active", b.dataset.section === "reading"));
+          renderPicker();
+        });
+      }
+      menu.appendChild(opt);
+    }
+    menu.classList.remove("hidden");
+    setTimeout(() => document.addEventListener("click", outsideClick), 0);
+  }
+  function closeMenu() {
+    menu.classList.add("hidden");
+    document.removeEventListener("click", outsideClick);
+  }
+  function outsideClick(e) {
+    if (!menu.contains(e.target) && !pill.contains(e.target)) closeMenu();
+  }
+  pill.addEventListener("click", (e) => {
+    e.stopPropagation();
+    menu.classList.contains("hidden") ? openMenu() : closeMenu();
+  });
+  pill.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      pill.click();
+    }
   });
 }
 
@@ -313,6 +399,17 @@ function scheduleSR(prev, correct) {
   return { interval_days: 1, next_due_ts: now + day, repetitions: 0, ease: Math.max(1.3, prev.ease - 0.2) };
 }
 
+function bumpStreakChip() {
+  const chip = $("#stat-streak-chip");
+  if (!chip) return;
+  chip.classList.toggle("active", state.streak > 0);
+  chip.classList.remove("bump");
+  // force reflow then re-add for animation restart
+  void chip.offsetWidth;
+  chip.classList.add("bump");
+  setTimeout(() => chip.classList.remove("bump"), 220);
+}
+
 function dueQuestionIds() {
   const p = loadProgress();
   const now = Date.now();
@@ -379,6 +476,9 @@ const TYPE_NAMES = {
   wfd: ["Write From Dictation", "Listen and type the sentence exactly"],
   swt: ["Summarize Written Text", "One sentence, 5-75 words"],
   essay: ["Write Essay", "200-300 words, structured argument"],
+  // IELTS-specific
+  tfng: ["True / False / Not Given", "Decide if a statement matches the passage"],
+  task1: ["Writing Task 1", "150-word description of a chart, graph, or process"],
 };
 
 function renderPicker() {
@@ -388,29 +488,85 @@ function renderPicker() {
   $("#tips-view").classList.add("hidden");
   $("#settings-view").classList.add("hidden");
   $("#picker").classList.remove("hidden");
-  $("#picker-title").textContent = `Pick a ${state.section} task type`;
 
+  const picker = $("#picker");
+  clear(picker);
+
+  const sectionLabel = state.section.charAt(0).toUpperCase() + state.section.slice(1);
+  picker.appendChild(el("h2", { id: "picker-title" }, `Pick a ${state.section} task type`));
+
+  // Per-section tips (top 3 from any category, plus link to full Tips)
+  const sectionTips = collectSectionTips(state.section);
+  if (sectionTips.length) {
+    const tipsBox = el("div", { class: "section-tips" });
+    tipsBox.appendChild(el("div", { class: "section-tips-header" },
+      el("span", null, `${sectionLabel} strategy notes`),
+      el("a", {
+        href: "#",
+        class: "section-tips-link",
+        onclick: (e) => { e.preventDefault(); $("#tips-nav").click(); },
+      }, "See all tips →"),
+    ));
+    const ul = el("ul", null);
+    sectionTips.slice(0, 4).forEach((t) => ul.appendChild(el("li", null, t)));
+    tipsBox.appendChild(ul);
+    picker.appendChild(tipsBox);
+  }
+
+  // Task type grid
   const types = new Set(
-    state.bank.questions.filter((q) => q.section === state.section).map((q) => q.type)
+    currentQuestions().filter((q) => q.section === state.section).map((q) => q.type)
   );
+  const list = el("div", { id: "picker-list", class: "picker-list" });
+  if (types.size === 0) {
+    list.appendChild(el("div", { class: "picker-empty" },
+      el("div", { class: "picker-empty-mark" }, "—"),
+      el("div", { class: "picker-empty-title" }, `No ${state.section} questions yet for ${TEST_LABELS[state.test]?.short || "this test"}`),
+      el("div", { class: "picker-empty-sub" }, "Content for this section is coming soon. Try a different section or switch tests via the pill in the top-left.")
+    ));
+  } else {
+    for (const t of types) {
+      const [name, desc] = TYPE_NAMES[t] || [t, ""];
+      const count = currentQuestions().filter((q) => q.section === state.section && q.type === t).length;
+      list.appendChild(
+        el(
+          "div",
+          { class: "picker-item", onclick: () => pickByType(t) },
+          el("div", { class: "picker-item-row" },
+            el("div", { class: "pname" }, name),
+            el("div", { class: "picker-count" }, `${count}`),
+          ),
+          el("div", { class: "pdesc" }, desc)
+        )
+      );
+    }
+  }
+  picker.appendChild(list);
 
-  const list = $("#picker-list");
-  clear(list);
-  for (const t of types) {
-    const [name, desc] = TYPE_NAMES[t] || [t, ""];
-    list.appendChild(
-      el(
-        "div",
-        { class: "picker-item", onclick: () => pickByType(t) },
-        el("div", { class: "pname" }, name),
-        el("div", { class: "pdesc" }, desc)
-      )
-    );
+  if (types.size > 0) {
+    const randomBtn = el("button", { id: "random-btn", class: "primary", onclick: () => pickRandom() }, "Random question");
+    picker.appendChild(randomBtn);
   }
 }
 
+// Collect top per-section tips (best-of-section from the tips structure).
+// Strategy: pick first 'Strategy' or 'Tricks' tip from each task-type sub-section.
+function collectSectionTips(section) {
+  const tips = currentTips();
+  const out = [];
+  for (const [key, items] of Object.entries(tips)) {
+    if (!key.startsWith(section + "_")) continue;
+    const arr = Array.isArray(items) ? items : [];
+    // Prefer Strategy or Tricks categories first
+    const strategy = arr.find((t) => t && typeof t === "object" && (t.cat === "Strategy" || t.cat === "Tricks"));
+    if (strategy) out.push(strategy.tip || strategy);
+    else if (arr[0]) out.push(typeof arr[0] === "string" ? arr[0] : arr[0].tip);
+  }
+  return out;
+}
+
 function pickByType(type) {
-  const candidates = state.bank.questions.filter(
+  const candidates = currentQuestions().filter(
     (q) => q.section === state.section && q.type === type
   );
   const q = candidates[Math.floor(Math.random() * candidates.length)];
@@ -418,7 +574,7 @@ function pickByType(type) {
 }
 
 function pickRandom() {
-  const candidates = state.bank.questions.filter((q) => q.section === state.section);
+  const candidates = currentQuestions().filter((q) => q.section === state.section);
   const q = candidates[Math.floor(Math.random() * candidates.length)];
   renderQuestion(q);
 }
@@ -447,7 +603,7 @@ function renderQuestion(q) {
 
 function renderTips(type) {
   const key = `${state.section}_${type}`;
-  const tips = state.bank.tips[key];
+  const tips = currentTips()[key];
   const aside = $("#tips");
   if (!tips || !tips.length) {
     aside.classList.add("hidden");
@@ -488,14 +644,17 @@ function groupByCategory(tips) {
 // ---------- full tips browser ----------
 const TIPS_SECTION_META = {
   exam: { title: "Exam Strategy & Test Day", subtitle: "Overall scoring logic, time management, what to do on test day, and how to target your score band." },
-  reading_mcq_single: { title: "Reading — Multiple Choice (Single Answer)", subtitle: "Strategy for skimming, eliminating distractors, and avoiding paraphrase traps." },
+  reading_mcq_single: { title: "Reading — Multiple Choice", subtitle: "Strategy for skimming, eliminating distractors, and avoiding paraphrase traps." },
   reading_reorder: { title: "Reading — Re-order Paragraphs", subtitle: "How to find the topic sentence and sequence using connectors, pronouns, and time markers." },
   reading_fib: { title: "Reading — Fill in the Blanks", subtitle: "Collocations, grammar matching, and high-leverage scoring across Reading + Writing." },
-  listening_wfd: { title: "Listening — Write From Dictation", subtitle: "The single highest-leverage task in the exam. Dual-scores Listening + Writing." },
+  reading_tfng: { title: "Reading — True / False / Not Given", subtitle: "The classic IELTS task. Mastering the False vs Not Given distinction is worth 2-3 band points." },
+  listening_wfd: { title: "Listening — Dictation & Sentence Completion", subtitle: "Type what you hear. The highest-leverage task in any English test — dual-scores Listening + Writing." },
+  listening_sc: { title: "Listening — Sentence Completion", subtitle: "IELTS-style fill-in-blanks during a played audio. Preparation in the 30-second prep window is decisive." },
   listening_general: { title: "Listening — Other Tasks", subtitle: "Strategy for Summarize Spoken Text, Highlight Correct Summary, Fill in Blanks, and more." },
   writing_swt: { title: "Writing — Summarize Written Text", subtitle: "One-sentence summaries: templates, grammar structures, and PTE rubric breakdown." },
+  writing_task1: { title: "Writing — Task 1 (Chart Description)", subtitle: "Describe a chart, graph, map, or process in 150+ words. The overview paragraph is critical." },
   writing_essay: { title: "Writing — Essay", subtitle: "5-paragraph templates, question-type identification, and connector rotation." },
-  speaking_general: { title: "Speaking — All Tasks (Real Exam)", subtitle: "Not yet practiced in PteracAI — strategy reference for Read Aloud, Repeat Sentence, Describe Image, Re-tell Lecture, and Answer Short Question." },
+  speaking_general: { title: "Speaking — All Tasks (Real Exam)", subtitle: "Not yet practiced here — strategy reference for live exam day. Read Aloud, Repeat Sentence, Describe Image, Re-tell Lecture, Answer Short Question." },
 };
 
 const TIPS_ORDER = [
@@ -503,9 +662,12 @@ const TIPS_ORDER = [
   "reading_mcq_single",
   "reading_reorder",
   "reading_fib",
+  "reading_tfng",
   "listening_wfd",
+  "listening_sc",
   "listening_general",
   "writing_swt",
+  "writing_task1",
   "writing_essay",
   "speaking_general",
 ];
@@ -523,17 +685,18 @@ function renderTipsView() {
   view.classList.remove("hidden");
   clear(view);
 
-  view.appendChild(el("h2", null, "PTE Tips & Strategy"));
+  const testLabel = TEST_LABELS[state.test]?.short || "PTE";
+  view.appendChild(el("h2", null, `${testLabel} Tips & Strategy`));
   view.appendChild(el(
     "div",
     { class: "subtitle" },
-    "High-leverage, PTE-specific guidance for each phase of the exam. Click a section below to jump."
+    `High-leverage, ${testLabel}-specific guidance for each phase of the exam. Click a section below to jump.`
   ));
 
   // table of contents
   const toc = el("div", { class: "tips-toc" });
   for (const key of TIPS_ORDER) {
-    if (!state.bank.tips[key]) continue;
+    if (!currentTips()[key]) continue;
     const meta = TIPS_SECTION_META[key] || { title: key };
     toc.appendChild(el(
       "button",
@@ -547,7 +710,7 @@ function renderTipsView() {
 
   // sections
   for (const key of TIPS_ORDER) {
-    const tips = state.bank.tips[key];
+    const tips = currentTips()[key];
     if (!tips) continue;
     const meta = TIPS_SECTION_META[key] || { title: key, subtitle: "" };
 
@@ -700,15 +863,64 @@ const RENDERERS = {
     card.appendChild(el("div", { class: "qprompt" }, q.prompt));
     const input = el("textarea", { class: "essay-input", placeholder: "Write your essay here..." });
     const count = el("div", { class: "word-count" }, "0 words");
+    // IELTS essays want 250+, PTE wants 200-300; accept either as ok at 200+
     input.addEventListener("input", () => {
       const n = countWords(input.value);
       count.textContent = `${n} words`;
-      count.className = "word-count " + (n >= 200 && n <= 300 ? "ok" : "bad");
+      count.className = "word-count " + (n >= 200 && n <= 320 ? "ok" : "bad");
     });
     card.appendChild(input);
     card.appendChild(count);
     card.appendChild(actionsBar(() => {
       if (countWords(input.value) < 50) return alert("Write at least a few paragraphs first.");
+      submitForLLMGrading(q, input.value.trim());
+    }));
+  },
+
+  // IELTS True / False / Not Given
+  tfng(card, q) {
+    card.appendChild(el("div", { class: "passage" }, q.passage));
+    card.appendChild(el("div", { class: "qprompt" }, "Statement: ", el("em", null, q.statement)));
+    card.appendChild(el("div", { class: "tfng-hint" }, "Is this statement TRUE according to the passage, FALSE according to the passage, or NOT GIVEN (not addressed)?"));
+    let selected = null;
+    const opts = el("div", { class: "options tfng-options" });
+    [
+      { value: "true", label: "True", note: "passage confirms it" },
+      { value: "false", label: "False", note: "passage contradicts it" },
+      { value: "not given", label: "Not Given", note: "passage doesn't address it" },
+    ].forEach((entry) => {
+      const o = el("div", { class: "option tfng-option" },
+        el("div", { class: "tfng-label" }, entry.label),
+        el("div", { class: "tfng-note" }, entry.note),
+      );
+      o.addEventListener("click", () => {
+        opts.querySelectorAll(".option").forEach((x) => x.classList.remove("selected"));
+        o.classList.add("selected");
+        selected = entry.value;
+      });
+      opts.appendChild(o);
+    });
+    card.appendChild(opts);
+    card.appendChild(actionsBar(() => {
+      if (selected == null) return alert("Pick True, False, or Not Given.");
+      gradeAuto(q, selected);
+    }));
+  },
+
+  // IELTS Writing Task 1 — same UX as essay but lower word floor
+  task1(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, q.prompt));
+    const input = el("textarea", { class: "essay-input", placeholder: "Write your description here (150+ words)..." });
+    const count = el("div", { class: "word-count" }, "0 words");
+    input.addEventListener("input", () => {
+      const n = countWords(input.value);
+      count.textContent = `${n} words`;
+      count.className = "word-count " + (n >= 150 && n <= 220 ? "ok" : "bad");
+    });
+    card.appendChild(input);
+    card.appendChild(count);
+    card.appendChild(actionsBar(() => {
+      if (countWords(input.value) < 50) return alert("Write at least 50 words first.");
       submitForLLMGrading(q, input.value.trim());
     }));
   },
@@ -758,6 +970,9 @@ function checkAnswer(q, ans) {
     const norm = (s) => s.toLowerCase().replace(/[.,!?;:]/g, "").replace(/\s+/g, " ").trim();
     return norm(ans) === norm(q.answer);
   }
+  if (q.type === "tfng") {
+    return String(ans).toLowerCase() === String(q.answer).toLowerCase();
+  }
   return false;
 }
 
@@ -772,6 +987,7 @@ function recordAttempt(q, userAnswer, correct) {
   $("#stat-attempted").textContent = state.attempted;
   $("#stat-correct").textContent = state.correct;
   $("#stat-streak").textContent = state.streak;
+  bumpStreakChip();
 
   // Local + Drive-synced persistence
   const streakInfo = appendAttempt({
@@ -873,7 +1089,7 @@ function requestCoaching(q, streak) {
     .filter((a) => a.section === q.section && a.type === q.type && a.topic === q.topic)
     .slice(-5);
   const recentWithQ = recent.map((a) => {
-    const fullQ = state.bank.questions.find((x) => x.id === a.qid) || { id: a.qid };
+    const fullQ = currentQuestions().find((x) => x.id === a.qid) || { id: a.qid };
     return { question: fullQ, user_answer: a.user_answer, correct: a.correct };
   });
   postRequest(
@@ -924,7 +1140,9 @@ function showCoaching(q, coaching) {
 function answerDisplay(q) {
   const wrap = el("div", { class: "feedback-explanation" });
   wrap.appendChild(el("div", { class: "feedback-label" }, "Correct answer"));
-  if (q.type === "mcq_single") {
+  if (q.type === "tfng") {
+    wrap.appendChild(el("div", null, String(q.answer).toUpperCase()));
+  } else if (q.type === "mcq_single") {
     wrap.appendChild(el("div", null, q.options[q.answer]));
   } else if (q.type === "reorder") {
     const ol = el("ol", null);

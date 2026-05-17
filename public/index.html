@@ -34,17 +34,29 @@
 </section>
 
 <header class="topbar hidden" id="main-header">
-  <div class="brand">PteracAI</div>
+  <div class="brand-group">
+    <div class="brand">PteracAI</div>
+    <div id="test-pill" class="test-pill" role="button" tabindex="0" aria-haspopup="listbox">
+      <span id="test-pill-label">PTE</span>
+      <svg class="test-pill-caret" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div id="test-pill-menu" class="test-pill-menu hidden" role="listbox"></div>
+  </div>
   <nav class="sections">
     <button data-section="reading" class="section-btn active">Reading</button>
     <button data-section="listening" class="section-btn">Listening</button>
     <button data-section="writing" class="section-btn">Writing</button>
+  </nav>
+  <nav class="utility-nav">
     <button id="tips-nav" class="section-btn tips-nav-btn">Tips</button>
     <button id="settings-nav" class="section-btn settings-nav-btn">Settings</button>
   </nav>
+  <div id="stat-streak-chip" class="streak-chip" title="Current streak">
+    <span class="streak-flame" aria-hidden="true">·</span>
+    <span id="stat-streak">0</span>
+  </div>
   <div class="stats">
-    <span id="stat-correct">0</span>/<span id="stat-attempted">0</span>
-    <span class="muted">streak</span> <span id="stat-streak">0</span>
+    <span id="stat-correct">0</span><span class="muted">/</span><span id="stat-attempted">0</span>
   </div>
 </header>
 
