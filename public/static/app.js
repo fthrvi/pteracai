@@ -636,7 +636,30 @@ function renderTips(type) {
   }
   const list = $("#tips-list");
   clear(list);
-  // tips can be either array of strings (legacy) or array of {cat, tip} (new)
+
+  // 1. Tailored-for-this-question section at the TOP (if API key set)
+  if (state.currentQ && loadSettings()) {
+    const tailoredBox = el("div", { class: "tailored-tips-box", id: "tailored-tips-box" });
+    tailoredBox.appendChild(el("div", { class: "cat-label tailored-label" }, "For this question"));
+    const cached = getCachedTailoredTips(state.currentQ.id);
+    if (cached) {
+      renderTailoredTipsInto(tailoredBox, cached);
+    } else {
+      tailoredBox.appendChild(el("div", { class: "tailored-status" },
+        el("span", { class: "spinner spinner-sm" }),
+        document.createTextNode(" Generating tips for this question..."),
+      ));
+      requestTailoredTips(state.currentQ, tailoredBox);
+    }
+    list.appendChild(tailoredBox);
+  }
+
+  // 2. Static task-type tips
+  const staticLabel = loadSettings()
+    ? el("div", { class: "cat-label static-tips-divider" }, "General strategy")
+    : null;
+  if (staticLabel) list.appendChild(staticLabel);
+
   const isGrouped = typeof tips[0] === "object" && tips[0] !== null;
   if (!isGrouped) {
     for (const t of tips) list.appendChild(el("li", null, t));
@@ -650,6 +673,54 @@ function renderTips(type) {
     }
   }
   aside.classList.remove("hidden");
+}
+
+// ---------- tailored tips (per-question LLM) ----------
+const TAILORED_TIPS_CACHE = "pteracai_tailored_tips_cache_v1";
+const TAILORED_TIPS_MAX = 50;
+
+function getCachedTailoredTips(qid) {
+  try {
+    const all = JSON.parse(sessionStorage.getItem(TAILORED_TIPS_CACHE) || "{}");
+    return all[qid] || null;
+  } catch {
+    return null;
+  }
+}
+
+function cacheTailoredTips(qid, tipsArr) {
+  try {
+    let all = JSON.parse(sessionStorage.getItem(TAILORED_TIPS_CACHE) || "{}");
+    all[qid] = tipsArr;
+    // simple FIFO eviction
+    const keys = Object.keys(all);
+    if (keys.length > TAILORED_TIPS_MAX) {
+      for (const k of keys.slice(0, keys.length - TAILORED_TIPS_MAX)) delete all[k];
+    }
+    sessionStorage.setItem(TAILORED_TIPS_CACHE, JSON.stringify(all));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+function requestTailoredTips(q, container) {
+  postRequest({ kind: "tips", question: q }, (resp) => {
+    if (resp.tailored_tips?.tips) {
+      cacheTailoredTips(q.id, resp.tailored_tips.tips);
+      renderTailoredTipsInto(container, resp.tailored_tips.tips);
+    } else if (resp.error) {
+      container.querySelector(".tailored-status")?.replaceWith(
+        el("div", { class: "tailored-error" }, "Couldn't generate tailored tips.")
+      );
+    }
+  });
+}
+
+function renderTailoredTipsInto(container, tipsArr) {
+  container.querySelector(".tailored-status")?.remove();
+  const ul = el("ul", { class: "tailored-list" });
+  for (const t of tipsArr) ul.appendChild(el("li", null, t));
+  container.appendChild(ul);
 }
 
 function groupByCategory(tips) {

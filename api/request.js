@@ -154,6 +154,28 @@ Improvements must be SPECIFIC. BAD: "Improve vocabulary." GOOD: "Replace 'good' 
 
 Output ONLY the JSON object.`;
 
+const TIPS_SYSTEM = `You are an expert PTE/IELTS coach. Given a specific question (passage, prompt, options, etc.), generate 2-3 STRATEGIC tips tailored to THIS specific question — things the user should notice or watch for to solve THIS question well.
+
+IMPORTANT: tips must be STRATEGIC, not answer-revealing. Don't say "the answer is C" or "pick the option about X". DO say things like "this passage uses contrast structure — find the 'however' transition" or "watch for the dates that pin the chronological order" or "the options here all share keywords; the discriminator is the qualifier word ('always' vs 'often')".
+
+Tips should be:
+1. Specific to the passage/prompt's STRUCTURE, vocabulary register, or trap pattern
+2. Actionable as a reading/approach habit
+3. Different from generic task-type tips like "find the topic sentence"
+4. Under 25 words each
+
+Output a single JSON object — NO markdown, NO commentary:
+
+{
+  "tips": [
+    "<tip 1 — strategic observation about THIS passage/question>",
+    "<tip 2>",
+    "<tip 3 optional>"
+  ]
+}
+
+Output ONLY the JSON object.`;
+
 const ANALYZE_SYSTEM = `You are an expert English-test coach analyzing a SINGLE wrong answer in detail. The user just got a question wrong and wants specific feedback on THEIR exact answer.
 
 You receive: the question (with passage/prompt/options/correct answer) and what the user picked or wrote.
@@ -262,6 +284,14 @@ export default async function handler(req, res) {
       const userMsg = buildAnalyzeUserMsg(payload);
       const text = await callLLM({ provider, apiKey, model, system: ANALYZE_SYSTEM, userMsg });
       return res.status(200).json({ ok: true, analysis: parseJSON(text) });
+    }
+    if (kind === 'tips') {
+      const userMsg = JSON.stringify({
+        question: payload.question,
+        instruction: 'Generate 2-3 strategic tips specific to this question. NEVER reveal the answer. Output ONLY the JSON.',
+      });
+      const text = await callLLM({ provider, apiKey, model, system: TIPS_SYSTEM, userMsg });
+      return res.status(200).json({ ok: true, tailored_tips: parseJSON(text) });
     }
     return res.status(400).json({ error: `unknown kind: ${kind}` });
   } catch (err) {
