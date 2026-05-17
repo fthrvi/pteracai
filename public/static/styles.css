@@ -839,6 +839,48 @@ button.ghost {
   border-top: 1px solid var(--border);
 }
 
+/* Compact quick-reminders panel — replaces the long static tip wall */
+.quick-tips-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+.quick-tips-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.quick-tips-link {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  text-decoration: none;
+}
+.quick-tips-link:hover { text-decoration: underline; }
+.quick-tips-list {
+  margin: 0;
+  padding-left: 18px;
+}
+.quick-tips-list li {
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.quick-tips-list li:last-child { margin-bottom: 0; }
+
 .tips-nav-btn, .settings-nav-btn { font-weight: 600; }
 
 /* ---------- landing gate ---------- */

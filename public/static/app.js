@@ -751,25 +751,53 @@ function renderTips(type) {
     list.appendChild(tailoredBox);
   }
 
-  // 2. Static task-type tips
-  const staticLabel = aiAvailable()
-    ? el("div", { class: "cat-label static-tips-divider" }, "General strategy")
-    : null;
-  if (staticLabel) list.appendChild(staticLabel);
-
+  // 2. Quick reminders — top 3 most useful tips, compactly. Eye-catching.
+  // Skip if AI tailored tips already cover it (richer signal). Show 'See all'
+  // link to drill into the full Tips browser for the complete list.
   const isGrouped = typeof tips[0] === "object" && tips[0] !== null;
-  if (!isGrouped) {
-    for (const t of tips) list.appendChild(el("li", null, t));
-  } else {
-    const groups = groupByCategory(tips);
-    for (const [cat, items] of groups) {
-      list.appendChild(el("div", { class: "cat-label" }, cat));
-      const ul = el("ul", null);
-      for (const item of items) ul.appendChild(el("li", null, item));
-      list.appendChild(ul);
-    }
+  const quickTips = pickQuickTips(tips, isGrouped, 3);
+  if (quickTips.length) {
+    const quickBox = el("div", { class: "quick-tips-box" });
+    quickBox.appendChild(el("div", { class: "quick-tips-header" },
+      el("span", null, "Quick reminders"),
+      el("a", {
+        href: "#",
+        class: "quick-tips-link",
+        onclick: (e) => { e.preventDefault(); $("#tips-nav").click(); },
+      }, "See all →"),
+    ));
+    const ul = el("ul", { class: "quick-tips-list" });
+    for (const t of quickTips) ul.appendChild(el("li", null, t));
+    quickBox.appendChild(ul);
+    list.appendChild(quickBox);
   }
   aside.classList.remove("hidden");
+}
+
+// Pick the most actionable 1-N tips from a tips array (grouped or flat).
+// Prefer 'Tricks' then 'Strategy' categories — those are the ones with the
+// best "do this right now" advice. Skip 'Templates', 'Time', 'Scoring' which
+// are reference material better served by the full Tips browser.
+function pickQuickTips(tips, isGrouped, n) {
+  if (!isGrouped) return tips.slice(0, n);
+  const preferred = ["Tricks", "Strategy", "Traps"];
+  const picks = [];
+  for (const cat of preferred) {
+    for (const t of tips) {
+      if (t.cat === cat && !picks.includes(t.tip)) {
+        picks.push(t.tip);
+        if (picks.length >= n) return picks;
+      }
+    }
+  }
+  // Top up with anything remaining
+  for (const t of tips) {
+    if (t.tip && !picks.includes(t.tip)) {
+      picks.push(t.tip);
+      if (picks.length >= n) break;
+    }
+  }
+  return picks;
 }
 
 // ---------- tailored tips (per-question LLM) ----------

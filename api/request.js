@@ -326,13 +326,13 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, analysis: parseJSON(text) });
     }
     if (kind === 'tips') {
-      const qid = payload.question?.id;
-      // Try cache first — if any user has ever generated tips for this question,
-      // serve them instantly with no LLM cost.
-      if (qid) {
-        const cached = await getCachedTips(qid);
+      // Use content hash as cache key — same passage/options = same tips,
+      // regardless of which id system the question came through (LLM-generated
+      // 'fu-xxx', community 'c-uuid', or seed bank 'r-mcq-001').
+      const cacheKey = questionContentHash(payload.question);
+      if (cacheKey) {
+        const cached = await getCachedTips(cacheKey);
         if (cached) {
-          incrementTipsHit(qid).catch(() => {});
           return res.status(200).json({ ok: true, tailored_tips: cached, cached: true });
         }
       }
@@ -342,9 +342,8 @@ export default async function handler(req, res) {
       });
       const text = await callLLM({ provider, apiKey, model, system: TIPS_SYSTEM, userMsg });
       const tipsObj = parseJSON(text);
-      // Save to global cache for next user
-      if (qid && tipsObj?.tips) {
-        saveTipsToCache(qid, tipsObj).catch((e) =>
+      if (cacheKey && tipsObj?.tips) {
+        saveTipsToCache(cacheKey, tipsObj).catch((e) =>
           console.warn('tips cache save failed:', e?.message || e)
         );
       }
@@ -564,7 +563,26 @@ async function saveToCommunityBank(payload, question) {
   });
 }
 
-// Tip cache helpers — global tailored-tips memoization keyed by question id.
+// Stable content hash for a question. Same content = same hash regardless of
+// id system. Used as the cache key for tailored_tips so all users (generator,
+// community fetchers, seed-bank users) share the same cached tips.
+function questionContentHash(q) {
+  if (!q || typeof q !== 'object') return null;
+  const canonical = JSON.stringify({
+    passage: q.passage || '',
+    question: q.question || '',
+    options: q.options || [],
+    prompt: q.prompt || '',
+    paragraphs: q.paragraphs || [],
+    text_parts: q.text_parts || [],
+    audio_text: q.audio_text || '',
+    statement: q.statement || '',
+    headings: q.headings || [],
+  });
+  return createHash('sha256').update(canonical).digest('hex');
+}
+
+// Tip cache helpers — global tailored-tips memoization keyed by content hash.
 function _supabaseCreds() {
   return {
     url: process.env.SUPABASE_URL,
