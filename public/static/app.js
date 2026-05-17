@@ -64,32 +64,46 @@ async function boot() {
   showAppropriateInitialView();
 }
 
+const SKIP_LOGIN_KEY = "pteracai_skip_login_v1";
+
 function bindLanding() {
   const btn = $("#landing-signin");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    const err = $("#landing-error");
-    err.classList.add("hidden");
-    btn.disabled = true;
-    btn.textContent = "Opening Google sign-in...";
-    try {
-      if (!window.PteracaiSync || !PteracaiSync.configured()) {
-        throw new Error("Sync is not configured. Set window.PTERACAI_GOOGLE_CLIENT_ID.");
+  if (btn) {
+    btn.addEventListener("click", async () => {
+      const err = $("#landing-error");
+      err.classList.add("hidden");
+      btn.disabled = true;
+      btn.textContent = "Opening Google sign-in...";
+      try {
+        if (!window.PteracaiSync || !PteracaiSync.configured()) {
+          throw new Error("Sync is not configured. Set window.PTERACAI_GOOGLE_CLIENT_ID.");
+        }
+        await PteracaiSync.signIn();
+        // signing in clears the skip flag — they opted into sync
+        localStorage.removeItem(SKIP_LOGIN_KEY);
+        // onSignInChange will call showMainApp
+      } catch (e) {
+        err.textContent = "Sign-in failed: " + (e.message || "unknown error");
+        err.classList.remove("hidden");
+        btn.disabled = false;
+        btn.textContent = "Sign in with Google to start";
       }
-      await PteracaiSync.signIn();
-      // onSignInChange will call showMainApp
-    } catch (e) {
-      err.textContent = "Sign-in failed: " + (e.message || "unknown error");
-      err.classList.remove("hidden");
-      btn.disabled = false;
-      btn.textContent = "Sign in with Google to start";
-    }
-  });
+    });
+  }
+  const skip = $("#landing-skip");
+  if (skip) {
+    skip.addEventListener("click", (e) => {
+      e.preventDefault();
+      localStorage.setItem(SKIP_LOGIN_KEY, "1");
+      showMainApp();
+    });
+  }
 }
 
 function showAppropriateInitialView() {
   const syncReady = window.PteracaiSync && PteracaiSync.configured();
-  if (syncReady && !PteracaiSync.signedIn()) {
+  const skipped = localStorage.getItem(SKIP_LOGIN_KEY) === "1";
+  if (syncReady && !PteracaiSync.signedIn() && !skipped) {
     showLanding();
   } else {
     showMainApp();
