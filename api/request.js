@@ -376,31 +376,44 @@ function buildCoachUserMsg(payload) {
 
 async function callLLM({ provider, apiKey, model, system, userMsg }) {
   if (provider === 'openrouter_free') {
-    // OpenRouter with a model cascade — falls back automatically on rate-limit.
-    const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://pteracai.vercel.app',
-        'X-Title': 'PteracAI (free tier)',
-      },
-      body: JSON.stringify({
-        model: FREE_TIER_MODELS[0],
-        models: FREE_TIER_MODELS, // OpenRouter cascade
-        max_tokens: 2000,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: userMsg },
-        ],
-      }),
-    });
-    if (!resp.ok) {
-      const errText = await resp.text();
-      throw new Error(`openrouter free tier ${resp.status}: ${errText.slice(0, 200)}`);
+    // Explicit per-model retry — OpenRouter's built-in cascade doesn't fall
+    // through reliably on 429s. We try each free model in sequence.
+    const errors = [];
+    for (const m of FREE_TIER_MODELS) {
+      try {
+        const resp = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://pteracai.vercel.app',
+            'X-Title': 'PteracAI (free tier)',
+          },
+          body: JSON.stringify({
+            model: m,
+            max_tokens: 2000,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: userMsg },
+            ],
+          }),
+        });
+        if (!resp.ok) {
+          const errText = await resp.text();
+          errors.push(`${m}: ${resp.status}`);
+          // Retry next model on rate-limit or upstream error
+          if (resp.status === 429 || resp.status === 502 || resp.status === 503) continue;
+          throw new Error(`openrouter ${resp.status}: ${errText.slice(0, 200)}`);
+        }
+        const data = await resp.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) return content;
+        errors.push(`${m}: empty response`);
+      } catch (e) {
+        errors.push(`${m}: ${e.message}`);
+      }
     }
-    const data = await resp.json();
-    return data.choices?.[0]?.message?.content || '';
+    throw new Error(`All free-tier models failed. ${errors.join(' | ')}`);
   }
 
   if (provider === 'anthropic') {
