@@ -47,6 +47,30 @@ vercel --prod    # promote to production
 
 Visit your URL → click **Settings** → pick provider → paste key → Save.
 
+## Optional: shared free-tier AI
+
+You can offer visitors a small daily quota of free AI requests so they
+can try the app before adding their own key. PteracAI routes free-tier
+requests to OpenRouter's `:free` models (Llama 3.3 70B, Gemma 2, Mistral 7B,
+Phi-3) with automatic cascade if one is rate-limited.
+
+To enable:
+
+1. Sign up free at https://openrouter.ai/ and create an API key.
+2. In Vercel: Project → Settings → Environment Variables → add `OPENROUTER_FREE_KEY` with your OpenRouter key.
+3. Redeploy: `vercel --prod`.
+
+Visitors now see a "Free AI: 20/20" badge in the topbar and can use the
+AI features without configuring anything. After 20 requests/day per
+visitor (tracked in their browser's localStorage), they're prompted to
+add their own key.
+
+**Note:** the shared free key has OpenRouter's per-key rate limits
+(~200 requests/day across all visitors combined). For hobby / friends
+use this works fine. For wider distribution, lower the per-visitor cap
+in `app.js` (`FREE_TIER_QUOTA`), or skip the shared tier entirely and
+rely on BYOK with documented free-signup paths for each provider.
+
 ## Local development
 
 If you have Claude Code installed (claude.com/claude-code), you can
