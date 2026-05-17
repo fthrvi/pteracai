@@ -728,24 +728,16 @@ button.ghost {
   margin: 12px 0 0;
   font-size: 14px;
 }
-.landing-skip {
+.landing-skip-link {
+  display: block;
   text-align: center;
-  margin-top: 20px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
+  margin-top: 10px;
   font-size: 13px;
-}
-.landing-skip a {
   color: var(--muted);
   text-decoration: underline;
+  text-underline-offset: 3px;
 }
-.landing-skip a:hover { color: var(--accent); }
-.landing-skip-note {
-  display: block;
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 12px;
-}
+.landing-skip-link:hover { color: var(--accent); }
 
 .settings-view { padding: 32px; }
 .settings-view h2 {
