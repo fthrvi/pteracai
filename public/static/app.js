@@ -2209,9 +2209,21 @@ function showBridgeStatus(visible) {
     hint.classList.add("hidden");
     return;
   }
+  // Update label to reflect what's actually being used
+  const txt = $("#bridge-text");
+  if (txt) {
+    const s = loadSettings();
+    if (s) {
+      const label = { anthropic: "Claude", openai: "GPT", openrouter: "OpenRouter" }[s.provider] || "AI";
+      txt.textContent = `Generating with ${label}...`;
+    } else if (state.freeTierAvailable) {
+      txt.textContent = "Generating with free AI...";
+    } else {
+      txt.textContent = "Generating...";
+    }
+  }
   hint.classList.add("hidden");
-  // Only show the "tell Claude Code in your terminal" hint on localhost —
-  // that's the only environment where the file-bridge path is in use.
+  // Only show the "tell Claude Code in your terminal" hint on localhost.
   const isLocalhost = ["localhost", "127.0.0.1"].includes(location.hostname);
   if (!isLocalhost) return;
   state.bridgeHintTimer = setTimeout(() => {
