@@ -810,7 +810,7 @@ function requestTailoredTips(q, container) {
         el("div", { class: "tailored-error" }, "Couldn't generate tailored tips.")
       );
     }
-  });
+  }, { silent: true });
 }
 
 function renderTailoredTipsInto(container, tipsArr) {
@@ -1897,7 +1897,7 @@ function requestAnalysis(q, userAnswer, container) {
         el("div", { class: "analyze-error" }, "Analysis failed: " + resp.error)
       );
     }
-  });
+  }, { silent: true });
 }
 
 function renderAnalysis(container, a) {
@@ -2085,7 +2085,10 @@ function showLLMGrading(q, userAnswer, g) {
   fb.appendChild(actions);
 }
 
-async function postRequest(request, handler) {
+async function postRequest(request, handler, opts = {}) {
+  // opts.silent = true → skip the full-screen bridge spinner. Use for
+  // background calls (tips, analysis) that have their own inline indicators.
+  const silent = !!opts.silent;
   const settings = loadSettings();
   const headers = { "Content-Type": "application/json" };
   let usingFreeTier = false;
@@ -2120,7 +2123,7 @@ async function postRequest(request, handler) {
     return;
   }
 
-  showBridgeStatus(true);
+  if (!silent) showBridgeStatus(true);
   let res;
   try {
     res = await fetch("/api/request", {
@@ -2129,27 +2132,32 @@ async function postRequest(request, handler) {
       body: JSON.stringify(request),
     });
   } catch (e) {
-    showBridgeStatus(false);
-    alert("Network error: " + e.message);
+    if (!silent) showBridgeStatus(false);
+    if (!silent) alert("Network error: " + e.message);
     return;
   }
 
   if (!res.ok) {
-    showBridgeStatus(false);
+    if (!silent) showBridgeStatus(false);
     let msg = `HTTP ${res.status}`;
     try {
       const body = await res.json();
       if (body?.error) msg = body.error;
     } catch (_) {}
-    alert("Request failed: " + msg);
+    if (silent) {
+      // surface error via handler so caller can render it inline
+      handler({ error: msg });
+    } else {
+      alert("Request failed: " + msg);
+    }
     return;
   }
 
   const body = await res.json();
 
   // Vercel mode: response contains the full payload synchronously.
-  if (body.question || body.grading) {
-    showBridgeStatus(false);
+  if (body.question || body.grading || body.tailored_tips || body.analysis || body.coaching) {
+    if (!silent) showBridgeStatus(false);
     handler(body);
     return;
   }
@@ -2160,8 +2168,9 @@ async function postRequest(request, handler) {
     return;
   }
 
-  showBridgeStatus(false);
-  alert("Unexpected response from /api/request.");
+  if (!silent) showBridgeStatus(false);
+  if (silent) handler({ error: "Unexpected response shape" });
+  else alert("Unexpected response from /api/request.");
 }
 
 function showBridgeStatus(visible) {
@@ -2173,6 +2182,10 @@ function showBridgeStatus(visible) {
     return;
   }
   hint.classList.add("hidden");
+  // Only show the "tell Claude Code in your terminal" hint on localhost —
+  // that's the only environment where the file-bridge path is in use.
+  const isLocalhost = ["localhost", "127.0.0.1"].includes(location.hostname);
+  if (!isLocalhost) return;
   state.bridgeHintTimer = setTimeout(() => {
     if (!$("#bridge-status").classList.contains("hidden")) {
       hint.classList.remove("hidden");
