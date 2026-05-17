@@ -231,12 +231,11 @@ const DEFAULT_MODELS = {
 
 // Free-tier model cascade: OpenRouter falls back automatically if the
 // first is rate-limited. All marked :free, no token cost.
+// OpenRouter's `models` cascade param accepts UP TO 3 alternates.
 const FREE_TIER_MODELS = [
   'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemma-2-9b-it:free',
   'mistralai/mistral-7b-instruct:free',
-  'meta-llama/llama-3.1-8b-instruct:free',
-  'microsoft/phi-3-medium-128k-instruct:free',
 ];
 
 export default async function handler(req, res) {
