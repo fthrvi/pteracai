@@ -1614,6 +1614,76 @@ button.ghost {
 }
 .learn-resource-link.video .learn-resource-icon { color: var(--wrong); }
 
+/* Embedded video card (thumbnail until clicked, then iframe) */
+.video-card {
+  margin: 8px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.video-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  display: block;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  background: black;
+  overflow: hidden;
+}
+.video-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.video-thumb:hover img { transform: scale(1.04); opacity: 0.9; }
+.video-play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.72);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  padding-left: 3px; /* visual centering for triangle */
+  transition: background 0.15s, transform 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.video-thumb:hover .video-play-overlay {
+  background: var(--wrong);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+.video-iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  display: block;
+}
+.video-meta {
+  padding: 8px 10px;
+}
+.video-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.video-channel {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 /* AI mini-lesson button + rendered content */
 .explainer-box {
   margin-top: 10px;

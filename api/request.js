@@ -310,6 +310,8 @@ Output ONLY the JSON object. Keep total length under 100 words.`;
 
 const COACH_SYSTEM = `You are an expert PTE Academic coach. The user has missed 3+ questions in a row on the SAME task type and topic. Your job: diagnose WHY they're failing, then give them targeted, surgical guidance.
 
+CRITICAL — NEVER reveal internal question IDs in your output. Question objects in the input have 'id' fields like 'r-mcq-238', 'fu-abc12345', or 'c-uuid-...'. These are internal database identifiers the USER NEVER SEES and they look like bugs leaking through. When referencing a specific attempt, describe it by its TOPIC or first few words instead (e.g., "the climate change passage", "the urban planning question", "the question where you picked 'always increases'"). Never write 'r-mcq-XXX' or any similar internal ID in any field of your output.
+
 You receive: the task type, the topic, and 3+ recent attempts (each with the original question and the user's wrong answer).
 
 Diagnose:

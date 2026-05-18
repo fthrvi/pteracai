@@ -1083,26 +1083,59 @@ function renderTips(type) {
     list.appendChild(tailoredBox);
   }
 
-  // 2. Learning resources for this task type (curated videos + articles + AI explainer)
+  // 2. Learning resources for this task type — embedded videos + articles + AI explainer
+  const videos = VIDEO_LIBRARY[key];
   const resources = LEARNING_RESOURCES[key];
-  if ((resources && resources.length) || aiAvailable()) {
+  const hasContent = (videos && videos.length) || (resources && resources.length) || aiAvailable();
+  if (hasContent) {
     const resBox = el("div", { class: "learn-resources-box" });
     resBox.appendChild(el("div", { class: "learn-resources-header" }, "Learn this concept"));
-    if (resources && resources.length) {
-      const resList = el("ul", { class: "learn-resources-list" });
-      resources.forEach((r) => {
-        const link = el("a", {
-          href: r.url,
-          target: "_blank",
-          rel: "noopener",
-          class: "learn-resource-link " + r.type,
-        });
-        link.appendChild(el("span", { class: "learn-resource-icon" }, r.type === "video" ? "▶" : "★"));
-        link.appendChild(el("span", { class: "learn-resource-title" }, r.title));
-        resList.appendChild(el("li", null, link));
-      });
-      resBox.appendChild(resList);
+
+    // Embedded video cards (click thumbnail to play in place)
+    if (videos && videos.length) {
+      videos.forEach((v) => resBox.appendChild(buildVideoCard(v)));
     }
+
+    // Article links (kept as-is)
+    if (resources && resources.length) {
+      const articles = resources.filter((r) => r.type === "article");
+      if (articles.length) {
+        const resList = el("ul", { class: "learn-resources-list" });
+        articles.forEach((r) => {
+          const link = el("a", {
+            href: r.url,
+            target: "_blank",
+            rel: "noopener",
+            class: "learn-resource-link article",
+          });
+          link.appendChild(el("span", { class: "learn-resource-icon" }, "★"));
+          link.appendChild(el("span", { class: "learn-resource-title" }, r.title));
+          resList.appendChild(el("li", null, link));
+        });
+        resBox.appendChild(resList);
+      }
+      // If no video library entry exists but the legacy resources have video
+      // search links, surface them as fallback links
+      if (!videos || !videos.length) {
+        const fallbackVideos = resources.filter((r) => r.type === "video");
+        if (fallbackVideos.length) {
+          const resList = el("ul", { class: "learn-resources-list" });
+          fallbackVideos.forEach((r) => {
+            const link = el("a", {
+              href: r.url,
+              target: "_blank",
+              rel: "noopener",
+              class: "learn-resource-link video",
+            });
+            link.appendChild(el("span", { class: "learn-resource-icon" }, "▶"));
+            link.appendChild(el("span", { class: "learn-resource-title" }, r.title));
+            resList.appendChild(el("li", null, link));
+          });
+          resBox.appendChild(resList);
+        }
+      }
+    }
+
     // AI explainer button (only when AI is available)
     if (state.currentQ && aiAvailable()) {
       const explainBox = el("div", { class: "explainer-box" });
@@ -1168,6 +1201,26 @@ function pickQuickTips(tips, isGrouped, n) {
   }
   return picks;
 }
+
+// ---------- Curated video library (embedded) ----------
+// Hand-picked popular YouTube videos per task type. Stored as IDs so we can
+// embed them via lite-youtube pattern (thumbnail → click → iframe).
+// Videos rot eventually; popular high-view videos last longer. Replace
+// individual entries as they go down — channels matter more than specific IDs.
+const VIDEO_LIBRARY = {
+  reading_reorder: [
+    { id: "M5YK09URtdo", title: "Reorder Paragraph Masterclass 2026 — 8 Rules", channel: "PTE Magic" },
+    { id: "NPQsMaJVz8w", title: "5 Easy Tricks — 90/90 Guaranteed", channel: "VLE" },
+  ],
+  listening_wfd: [
+    { id: "dLMPdZEJaKo", title: "Write From Dictation Strategy 2026", channel: "PTE Coaching" },
+    { id: "QjIpih-4JC0", title: "WFD — 21 Writing + 12 Listening Marks", channel: "PTE Pro" },
+  ],
+  reading_tfng: [
+    { id: "JkWwZt8UwA4", title: "Band 9 IELTS Reading TRUE/FALSE/NOT GIVEN", channel: "IELTS Advantage" },
+    { id: "aLLTq-l0IeY", title: "T/F/NG Tips & Strategies", channel: "IELTS Tutorials" },
+  ],
+};
 
 // ---------- Curated learning resources per task type ----------
 // Hand-picked links to reputable YouTube channels / strategy pages that
@@ -1271,6 +1324,53 @@ function cacheTailoredTips(qid, tipsArr) {
   } catch {
     /* ignore quota */
   }
+}
+
+function buildVideoCard(v) {
+  const card = document.createElement("div");
+  card.className = "video-card";
+  const thumb = document.createElement("button");
+  thumb.type = "button";
+  thumb.className = "video-thumb";
+  thumb.setAttribute("aria-label", "Play " + v.title);
+  const img = document.createElement("img");
+  img.src = `https://img.youtube.com/vi/${v.id}/mqdefault.jpg`;
+  img.alt = "";
+  img.loading = "lazy";
+  img.referrerPolicy = "no-referrer";
+  // If thumbnail fails (deleted video), hide the whole card
+  img.addEventListener("error", () => card.remove());
+  thumb.appendChild(img);
+  const play = document.createElement("span");
+  play.className = "video-play-overlay";
+  play.textContent = "▶";
+  thumb.appendChild(play);
+  card.appendChild(thumb);
+  const meta = document.createElement("div");
+  meta.className = "video-meta";
+  const title = document.createElement("div");
+  title.className = "video-title";
+  title.textContent = v.title;
+  meta.appendChild(title);
+  if (v.channel) {
+    const ch = document.createElement("div");
+    ch.className = "video-channel";
+    ch.textContent = v.channel;
+    meta.appendChild(ch);
+  }
+  card.appendChild(meta);
+  thumb.addEventListener("click", () => {
+    // Swap thumbnail with privacy-enhanced iframe autoplaying
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://www.youtube-nocookie.com/embed/${v.id}?autoplay=1&rel=0`;
+    iframe.title = v.title;
+    iframe.setAttribute("frameborder", "0");
+    iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+    iframe.setAttribute("allowfullscreen", "");
+    iframe.className = "video-iframe";
+    thumb.replaceWith(iframe);
+  });
+  return card;
 }
 
 function requestExplainer(q, cacheKey, container) {
