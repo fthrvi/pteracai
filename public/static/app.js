@@ -3844,18 +3844,67 @@ function renderSyncSection(view) {
     actions.appendChild(signOutBtn);
     wrap.appendChild(actions);
   } else {
+    // Not signed in. Distinguish two sub-cases:
+    //  (a) Skipped — user explicitly chose "Continue without signing in"
+    //      from the landing. Show a clear "you're not signed in" status
+    //      and give them a way back to the landing in addition to sign-in.
+    //  (b) Clean — first load, never seen the landing. Just show sign-in.
+    const skipped = localStorage.getItem(SKIP_LOGIN_KEY) === "1";
+
+    if (skipped) {
+      const status = el("div", { class: "settings-status show info" });
+      status.appendChild(document.createTextNode(
+        "You chose to use PteracAI without an account. Progress saves only in this browser and won't sync to other devices."
+      ));
+      wrap.appendChild(status);
+    }
+
+    const actions = el("div", { class: "settings-actions" });
+
     const signInBtn = el("button", { class: "primary" }, "Sign in with Google");
     signInBtn.addEventListener("click", async () => {
       try {
         await PteracaiSync.signIn();
+        localStorage.removeItem(SKIP_LOGIN_KEY);
         renderSettingsView();
       } catch (e) {
-        await modalAlert("Google sign-in failed: " + (e.message || "unknown error"), {
+        const raw = (e && e.message) || "unknown error";
+        const looksLikeBlock = /access[_ ]?denied|not.*test.*user|verification|unauthorized|invalid_grant|consent/i.test(raw);
+        await modalConfirm({
           title: "Sign-in failed",
+          body: looksLikeBlock
+            ? `Google blocked this email because it isn't yet on the approved testers list. Click 'Request access' to submit your email for approval — you'll be added within a day.\n\n(${raw})`
+            : `Google sign-in failed: ${raw}`,
+          confirmLabel: looksLikeBlock ? "Request access" : "Try again",
+          cancelLabel: "Cancel",
+        }).then((wantsRequest) => {
+          if (wantsRequest && looksLikeBlock) openRequestAccess();
         });
       }
     });
-    wrap.appendChild(signInBtn);
+    actions.appendChild(signInBtn);
+
+    const requestBtn = el("button", { class: "ghost" }, "Request access");
+    requestBtn.addEventListener("click", () => openRequestAccess());
+    actions.appendChild(requestBtn);
+
+    if (skipped) {
+      const resetBtn = el("button", { class: "ghost" }, "Back to landing page");
+      resetBtn.addEventListener("click", async () => {
+        const ok = await modalConfirm({
+          title: "Back to landing page?",
+          body: "Clears the 'skip sign-in' preference and shows the landing page the next time you load the app. Your practice progress in this browser is unaffected.",
+          confirmLabel: "Go to landing",
+          cancelLabel: "Cancel",
+        });
+        if (!ok) return;
+        localStorage.removeItem(SKIP_LOGIN_KEY);
+        window.location.reload();
+      });
+      actions.appendChild(resetBtn);
+    }
+
+    wrap.appendChild(actions);
   }
 
   // Privacy disclosure for sync
@@ -3872,6 +3921,41 @@ function renderSyncSection(view) {
     "Note: Your API key is included in the synced data. Anyone with access to your Google account can read it via Drive. The app owner cannot see it — data lives in YOUR Drive's hidden app folder."
   ));
   wrap.appendChild(syncPrivacy);
+
+  // Always-available reset escape hatch — clears every piece of login state
+  // (token, cached user, skip flag). Shown only if ANY of those exist so a
+  // pristine first-load page doesn't render an irrelevant control.
+  const hasAnyLoginState = !!(
+    PteracaiSync.signedIn() ||
+    (PteracaiSync.sessionExpired && PteracaiSync.sessionExpired()) ||
+    PteracaiSync.user() ||
+    localStorage.getItem(SKIP_LOGIN_KEY) === "1"
+  );
+  if (hasAnyLoginState) {
+    const escapeHatch = el("div", { class: "settings-privacy", style: "margin-top: 14px; padding: 12px 14px;" });
+    escapeHatch.appendChild(el("h4", { style: "margin: 0 0 8px;" }, "Stuck? Reset all login state"));
+    escapeHatch.appendChild(el("div", { style: "font-size: 13px; color: var(--muted); margin-bottom: 10px;" },
+      "Clears your access token, cached account info, and the 'skip sign-in' flag. Your practice progress stays. Use this if Settings is showing the wrong sign-in state."
+    ));
+    const escBtn = el("button", { class: "ghost" }, "Reset and reload");
+    escBtn.addEventListener("click", async () => {
+      const ok = await modalConfirm({
+        title: "Reset all login state?",
+        body: "Clears your cached Google account, sign-in token, and the 'skip sign-in' preference. You'll see the landing page on the next load. Practice progress and settings are unaffected.",
+        confirmLabel: "Reset and reload",
+        cancelLabel: "Cancel",
+        destructive: true,
+      });
+      if (!ok) return;
+      try { PteracaiSync.signOut(); } catch (_) {}
+      localStorage.removeItem(SKIP_LOGIN_KEY);
+      localStorage.removeItem("pteracai_google_auth_v1");
+      localStorage.removeItem("pteracai_google_user_v1");
+      window.location.reload();
+    });
+    escapeHatch.appendChild(escBtn);
+    wrap.appendChild(escapeHatch);
+  }
 
   view.appendChild(wrap);
 }
