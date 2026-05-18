@@ -391,7 +391,7 @@ function showLanding() {
 function showMainApp() {
   $("#landing-view").classList.add("hidden");
   $("#main-header").classList.remove("hidden");
-  $("#main-content").classList.remove("hidden");
+  $("#app-layout").classList.remove("hidden");
   updateFreeTierBadge();
   // Dashboard is the new default landing view — Home tab is active by default
   $$(".section-btn").forEach((x) => x.classList.remove("active"));
@@ -1373,9 +1373,24 @@ function buildVideoCard(v) {
   return card;
 }
 
+// Strip answer-revealing fields before sending a question to the LLM for
+// teaching purposes. The LLM should only know what the student knows.
+function sanitizeQuestionForLLM(q) {
+  if (!q || typeof q !== "object") return q;
+  const safe = { ...q };
+  delete safe.answer;     // mcq, reorder, fib, tfng, wfd, matching_headings, lst_sc, lst_mcq
+  delete safe.sample;     // swt, lst_summary
+  delete safe.expected;   // repeat_sentence
+  delete safe.explanation;
+  delete safe.trap;
+  delete safe.grading_notes;
+  return safe;
+}
+
 function requestExplainer(q, cacheKey, container) {
-  // Check session cache first
-  const memKey = "explainer:" + cacheKey;
+  // Per-question session cache (keyed by qid so each question gets its own
+  // walkthrough — different questions need different worked examples)
+  const memKey = "explainer:q:" + (q.id || cacheKey);
   if (state[memKey]) {
     renderExplainerInto(container, state[memKey]);
     return;
@@ -1386,6 +1401,7 @@ function requestExplainer(q, cacheKey, container) {
     section: q.section,
     type: q.type,
     type_label: TYPE_NAMES[q.type]?.[0] || q.type,
+    current_question: sanitizeQuestionForLLM(q),
   }, (resp) => {
     if (resp.explainer) {
       state[memKey] = resp.explainer;

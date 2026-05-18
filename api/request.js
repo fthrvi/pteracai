@@ -206,9 +206,11 @@ STRICT rules:
 
 Output ONLY the JSON object.`;
 
-const EXPLAIN_SYSTEM = `You are a PTE/IELTS coach giving a short, clear mini-lesson on a specific task type.
+const EXPLAIN_SYSTEM = `You are a PTE/IELTS coach giving a short, clear mini-lesson on a specific task type. The user is staring at a specific question and needs to learn the technique.
 
-Goal: in ~200 words, teach the user the core technique for this task type. Imagine you're explaining to a student who's failed at it a few times and needs a clear mental model.
+You receive: the test type, section, task type, and the CURRENT question the user is looking at (with the answer field deliberately stripped — you cannot reveal what you don't know).
+
+Goal: ~200 words total. Teach the technique, then walk through the FIRST STEP of analyzing THIS specific question — but STOP before solving it. Let the learner apply the technique themselves.
 
 Output a single JSON object — NO markdown, NO commentary:
 
@@ -220,15 +222,15 @@ Output a single JSON object — NO markdown, NO commentary:
     "<step 3>"
   ],
   "common_mistake": "<the #1 mistake students make on this task, and how to avoid it. 1-2 sentences.>",
-  "worked_example": "<a brief 2-3 sentence walkthrough of how to solve a sample problem of this type. Make up a plausible example.>"
+  "worked_example": "<Apply the approach above to THIS specific question. Walk through the first 1-2 steps of analysis — quote specific words/sentences from the passage they're reading. END with a question that invites them to apply step 2 or 3 themselves. Example endings: 'Now apply that — which paragraph fits next?' or 'Use that pattern to spot the contrast — which option is contradicted?'. STOP before revealing the answer.>"
 }
 
 STRICT rules:
 - Plain English. No jargon like 'discriminator', 'prosody', 'paraphrase trap'.
-- Each field under 40 words.
-- The approach steps must be specific and actionable, not generic ('Read carefully' is banned).
-- The worked example should reference SPECIFIC text/options/structure, not just describe abstractly.
-- NEVER include the literal answers to seed-bank questions.
+- Each field under 50 words.
+- approach steps must be specific and actionable, not generic.
+- worked_example MUST quote specific words/phrases from the current question. NEVER state the actual answer. END with a 'now you try' prompt.
+- If you don't actually know the answer (because we stripped it), that's fine — your job is to coach the technique, not solve the question.
 
 Output ONLY the JSON object.`;
 
@@ -449,27 +451,19 @@ export default async function handler(req, res) {
       return res.status(200).json({ ok: true, definition: parseJSON(text) });
     }
     if (kind === 'explain') {
-      // Task-type-level concept explainer. Cached globally per (test, section, type)
-      // via the tailored_tips table with a synthetic key prefix.
-      const cacheKey = `explainer:${payload.test || 'unknown'}:${payload.section || ''}:${payload.type || ''}`;
-      const cached = await getCachedTips(cacheKey);
-      if (cached) {
-        return res.status(200).json({ ok: true, explainer: cached, cached: true });
-      }
+      // Per-question mini-lesson: principle + approach + walkthrough of THIS
+      // specific question with the answer field stripped. Not cached globally
+      // because the walkthrough is question-specific.
       const userMsg = JSON.stringify({
         test: payload.test,
         section: payload.section,
         type: payload.type,
         type_label: payload.type_label,
-        instruction: 'Give a clear, short mini-lesson on this task type. Output ONLY the JSON.',
+        current_question: payload.current_question || null,
+        instruction: 'Teach the technique, then walk through step 1-2 of analyzing this specific question. STOP before the answer.',
       });
       const text = await callLLM({ provider, apiKey, model, system: EXPLAIN_SYSTEM, userMsg });
       const explainer = parseJSON(text);
-      if (explainer) {
-        saveTipsToCache(cacheKey, explainer).catch((e) =>
-          console.warn('explainer cache save failed:', e?.message || e)
-        );
-      }
       return res.status(200).json({ ok: true, explainer });
     }
     if (kind === 'tips') {
