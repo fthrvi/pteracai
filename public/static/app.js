@@ -2341,7 +2341,7 @@ async function postRequest(request, handler, opts = {}) {
   const body = await res.json();
 
   // Vercel mode: response contains the full payload synchronously.
-  if (body.question || body.grading || body.tailored_tips || body.analysis || body.coaching) {
+  if (body.question || body.grading || body.tailored_tips || body.analysis || body.coaching || body.score_analysis) {
     if (!silent) showBridgeStatus(false);
     handler(body);
     return;
