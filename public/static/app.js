@@ -435,6 +435,37 @@ function clearScoreProfile() {
   scheduleSyncPush();
 }
 
+// ---------- Test date (countdown) ----------
+const TEST_DATE_KEY = "pteracai_test_date_v1";
+
+function loadTestDate() {
+  try {
+    const raw = localStorage.getItem(TEST_DATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveTestDate(d) {
+  localStorage.setItem(TEST_DATE_KEY, JSON.stringify(d));
+  scheduleSyncPush();
+}
+
+function clearTestDate() {
+  localStorage.removeItem(TEST_DATE_KEY);
+  scheduleSyncPush();
+}
+
+function daysUntil(isoDate) {
+  if (!isoDate) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(isoDate + "T00:00:00");
+  const diff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return diff;
+}
+
 // Extract text from an uploaded PDF using pdf.js (loaded via index.html).
 async function extractTextFromPDF(file) {
   if (!window.PteracaiPdf) throw new Error("PDF parser not loaded yet — try again in a moment.");
@@ -2615,6 +2646,15 @@ function renderSettingsView() {
   privacy.appendChild(sourceLink);
   view.appendChild(privacy);
 
+  // --- Test date section ---
+  view.appendChild(el("h2", { style: "margin-top: 36px;" }, "Your next test date"));
+  view.appendChild(el(
+    "div",
+    { class: "subtitle" },
+    "Add when you're sitting the exam and you'll see a countdown on your dashboard with a study suggestion."
+  ));
+  renderTestDateSection(view);
+
   // --- Score profile section ---
   view.appendChild(el("h2", { style: "margin-top: 36px;" }, "Test score profile"));
   view.appendChild(el(
@@ -2632,6 +2672,69 @@ function renderSettingsView() {
     "Sign in with Google to sync your settings, attempt history, and spaced-repetition queue across devices. Data is stored in a hidden folder in YOUR Google Drive — the app owner never sees it."
   ));
   renderSyncSection(view);
+}
+
+function renderTestDateSection(view) {
+  const wrap = el("div", null);
+  const existing = loadTestDate();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const testSel = el("select", null,
+    el("option", { value: "pte" }, "PTE Academic"),
+    el("option", { value: "ielts" }, "IELTS Academic"),
+    el("option", { value: "toefl" }, "TOEFL iBT"),
+    el("option", { value: "duolingo" }, "Duolingo English Test"),
+    el("option", { value: "other" }, "Other English test"),
+  );
+  testSel.value = existing?.test || state.test || "pte";
+
+  const dateInput = el("input", { type: "date", min: today });
+  if (existing?.date) dateInput.value = existing.date;
+
+  const locationInput = el("input", {
+    type: "text",
+    placeholder: "Test center or location (optional)",
+  });
+  if (existing?.location) locationInput.value = existing.location;
+
+  wrap.appendChild(el("div", { class: "settings-row" }, el("label", null, "Test"), testSel));
+  wrap.appendChild(el("div", { class: "settings-row" }, el("label", null, "Date"), dateInput));
+  wrap.appendChild(el("div", { class: "settings-row" }, el("label", null, "Location"), locationInput));
+
+  const status = el("div", { class: "settings-status" });
+  wrap.appendChild(status);
+
+  const actions = el("div", { class: "settings-actions" });
+  actions.appendChild(el("button", {
+    class: "primary",
+    onclick: () => {
+      if (!dateInput.value) {
+        status.className = "settings-status show err";
+        status.textContent = "Pick a date first.";
+        return;
+      }
+      saveTestDate({
+        test: testSel.value,
+        date: dateInput.value,
+        location: locationInput.value.trim() || null,
+      });
+      status.className = "settings-status show ok";
+      status.textContent = "Saved. Open your dashboard to see the countdown.";
+    },
+  }, existing ? "Update" : "Save"));
+  if (existing) {
+    actions.appendChild(el("button", {
+      class: "ghost",
+      onclick: () => {
+        if (!confirm("Clear your saved test date?")) return;
+        clearTestDate();
+        renderSettingsView();
+      },
+    }, "Clear"));
+  }
+  wrap.appendChild(actions);
+
+  view.appendChild(wrap);
 }
 
 function renderScoreProfileSection(view) {
@@ -2978,6 +3081,58 @@ function renderDashboardView() {
     view.appendChild(actions);
   }
 
+  // ---- Test date countdown ----
+  const testDate = loadTestDate();
+  if (testDate?.date) {
+    const days = daysUntil(testDate.date);
+    const testLabel = ({
+      pte: "PTE Academic",
+      ielts: "IELTS Academic",
+      toefl: "TOEFL iBT",
+      duolingo: "Duolingo English Test",
+      other: "your test",
+    })[testDate.test] || testDate.test;
+    const urgency = days < 0 ? "past" : days <= 3 ? "imminent" : days <= 14 ? "near" : "far";
+    const countdownCard = el("div", { class: `dash-card dash-countdown ${urgency}` });
+    countdownCard.appendChild(el("div", { class: "dash-card-label" }, "Your next test"));
+    const main = el("div", { class: "dash-countdown-main" });
+    if (days < 0) {
+      main.appendChild(el("div", { class: "dash-countdown-headline" }, "Test date passed"));
+      main.appendChild(el("div", { class: "dash-countdown-sub" },
+        `Your ${testLabel} on ${formatDate(testDate.date)} has passed. Update your next test date in Settings.`));
+    } else if (days === 0) {
+      main.appendChild(el("div", { class: "dash-countdown-num" }, "Today"));
+      main.appendChild(el("div", { class: "dash-countdown-sub" },
+        `${testLabel}${testDate.location ? " at " + testDate.location : ""}. You've got this.`));
+    } else if (days === 1) {
+      main.appendChild(el("div", { class: "dash-countdown-num" }, "Tomorrow"));
+      main.appendChild(el("div", { class: "dash-countdown-sub" },
+        `${testLabel}${testDate.location ? " at " + testDate.location : ""}. Last push — review your weak areas, get some sleep.`));
+    } else {
+      main.appendChild(el("div", { class: "dash-countdown-num" }, String(days),
+        el("span", { class: "dash-countdown-unit" }, " days")));
+      main.appendChild(el("div", { class: "dash-countdown-sub" },
+        `until your ${testLabel} on ${formatDate(testDate.date)}${testDate.location ? " at " + testDate.location : ""}.`));
+    }
+    countdownCard.appendChild(main);
+    // Suggested drill based on weakest area
+    if (days >= 0 && stats.weakestType) {
+      const drill = el("button", {
+        class: "primary",
+        style: "margin-top: 14px;",
+        onclick: () => {
+          state.section = stats.weakestType.section;
+          $$(".section-btn[data-section]").forEach((b) =>
+            b.classList.toggle("active", b.dataset.section === stats.weakestType.section));
+          $("#home-nav").classList.remove("active");
+          pickByType(stats.weakestType.type);
+        },
+      }, `Drill ${TYPE_NAMES[stats.weakestType.type]?.[0] || stats.weakestType.type} now (${stats.weakestType.accuracy}%)`);
+      countdownCard.appendChild(drill);
+    }
+    view.appendChild(countdownCard);
+  }
+
   // ---- Score profile improvement plan ----
   const profile = loadScoreProfile();
   if (profile?.analysis && profile.analysis.test === state.test) {
@@ -3117,6 +3272,12 @@ function renderDashboardView() {
     empty.appendChild(ctas);
     view.appendChild(empty);
   }
+}
+
+function formatDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" });
 }
 
 function makeStat(value, label, extraClass = "") {

@@ -1481,6 +1481,55 @@ button.ghost {
 }
 .dash-plan-update:hover { text-decoration: underline; }
 
+/* Countdown card */
+.dash-countdown {
+  background: linear-gradient(135deg, white 0%, var(--accent-soft) 100%);
+  border-color: #c8dcd2;
+}
+.dash-countdown.near {
+  background: linear-gradient(135deg, white 0%, var(--gold-soft) 100%);
+  border-color: var(--gold-border);
+}
+.dash-countdown.imminent {
+  background: linear-gradient(135deg, white 0%, #fbeeec 100%);
+  border-color: #e8c0b8;
+}
+.dash-countdown.past {
+  background: var(--bg);
+  border-color: var(--border-strong);
+  opacity: 0.85;
+}
+.dash-countdown-main { text-align: center; padding: 6px 0; }
+.dash-countdown-headline {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.dash-countdown-num {
+  font-family: var(--display);
+  font-size: 56px;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.dash-countdown.near .dash-countdown-num { color: var(--gold); }
+.dash-countdown.imminent .dash-countdown-num { color: var(--wrong); }
+.dash-countdown-unit {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+.dash-countdown-sub {
+  font-size: 14px;
+  color: var(--ink);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
 /* ---------- landing gate ---------- */
 .landing-view {
   min-height: 100vh;
