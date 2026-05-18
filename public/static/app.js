@@ -2535,9 +2535,13 @@ function renderSettingsView() {
     refreshLinkRow();
   });
 
-  // Status banner
+  // Status banner + helper used by Save / Test / Clear buttons
   const status = el("div", { id: "set-status", class: "settings-status" });
   view.appendChild(status);
+  function setStatus(kind, msg) {
+    status.className = "settings-status show " + kind;
+    status.textContent = msg;
+  }
 
   // Actions
   const actions = el("div", { class: "settings-actions" });
@@ -2882,11 +2886,6 @@ function renderSyncSection(view) {
   wrap.appendChild(syncPrivacy);
 
   view.appendChild(wrap);
-
-  function setStatus(kind, msg) {
-    status.className = "settings-status show " + kind;
-    status.textContent = msg;
-  }
 }
 
 // ============================================================================
