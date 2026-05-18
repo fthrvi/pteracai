@@ -3615,6 +3615,22 @@ function _renderDashboardViewInner() {
   view.appendChild(todayCard);
   d("today card appended");
 
+  // TEMP DIAGNOSTIC: log the rendered view's computed visibility + size
+  setTimeout(() => {
+    const v = $("#dashboard-view");
+    const layout = $("#app-layout");
+    const main = $("#main-content");
+    if (!v) { d("view missing post-render"); return; }
+    const cs = getComputedStyle(v);
+    const rect = v.getBoundingClientRect();
+    const lcs = layout ? getComputedStyle(layout) : null;
+    const mcs = main ? getComputedStyle(main) : null;
+    d(`view dims: ${Math.round(rect.width)}x${Math.round(rect.height)} display=${cs.display} visibility=${cs.visibility} opacity=${cs.opacity}`);
+    if (lcs) d(`layout: display=${lcs.display} cols=${lcs.gridTemplateColumns} hidden=${layout.classList.contains("hidden")}`);
+    if (mcs) d(`main: display=${mcs.display} width=${Math.round(main.getBoundingClientRect().width)}`);
+    d(`view kids: ${v.children.length}, scrollTop=${window.scrollY}`);
+  }, 100);
+
   // ---- Next actions row ----
   if (stats.totalAttempts > 0) {
     const actions = el("div", { class: "dash-actions-row" });
