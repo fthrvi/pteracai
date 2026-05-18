@@ -367,31 +367,11 @@ function refreshMockNavIndicator() {
 }
 
 async function boot() {
-  const dbg = (msg) => {
-    // Temporary on-page diagnostic for the dashboard-blank issue
-    let panel = document.getElementById("boot-diag");
-    if (!panel) {
-      panel = document.createElement("div");
-      panel.id = "boot-diag";
-      panel.style.cssText = "position:fixed;bottom:8px;left:8px;right:8px;background:white;border:1px solid #ddd;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:11px;color:#333;z-index:9999;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);";
-      panel.innerHTML = '<div style="font-weight:600;margin-bottom:4px;display:flex;justify-content:space-between;">boot diagnostic <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:14px;">×</button></div>';
-      document.body.appendChild(panel);
-    }
-    const line = document.createElement("div");
-    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    panel.appendChild(line);
-  };
-  window._dbg = dbg;
-  try {
-    dbg("boot start");
-    const res = await fetch("/data/bank.json");
-    state.bank = await res.json();
-    dbg("bank loaded: " + (state.bank?.tests?.[state.test]?.questions?.length ?? "?") + " questions for " + state.test);
-  } catch (e) {
-    dbg("BANK FAILED: " + e.message);
-    throw e;
-  }
-  const _origRes = state.bank; // keep reference
+  // No-op dbg now that the layout bug is fixed (kept as safe stub in case
+  // other code references it)
+  window._dbg = () => {};
+  const res = await fetch("/data/bank.json");
+  state.bank = await res.json();
   // Probe the API endpoint to learn whether the shared free tier is configured.
   try {
     const probe = await fetch("/api/request").then((r) => r.json()).catch(() => null);
@@ -399,23 +379,13 @@ async function boot() {
   } catch (_) {
     /* offline / local dev — no problem */
   }
-  try {
-    window._dbg?.("binding nav");
-    bindSectionButtons();
-    bindLanding();
-    startPolling();
-    window._dbg?.("init sync");
-    initSync();
-    window._dbg?.("init select-to-explain");
-    initSelectToExplain();
-    refreshMockNavIndicator();
-    window._dbg?.("showing appropriate view (signed in or skipped)");
-    showAppropriateInitialView();
-    window._dbg?.("boot complete");
-  } catch (e) {
-    window._dbg?.("BOOT FAILED: " + e.message);
-    throw e;
-  }
+  bindSectionButtons();
+  bindLanding();
+  startPolling();
+  initSync();
+  initSelectToExplain();
+  refreshMockNavIndicator();
+  showAppropriateInitialView();
 }
 
 const SKIP_LOGIN_KEY = "pteracai_skip_login_v1";
@@ -467,7 +437,8 @@ function showAppropriateInitialView() {
 function showLanding() {
   $("#landing-view").classList.remove("hidden");
   $("#main-header").classList.add("hidden");
-  $("#main-content").classList.add("hidden");
+  // Hide the whole layout wrapper (main lives inside it now)
+  $("#app-layout").classList.add("hidden");
 }
 
 function showMainApp() {
@@ -3547,8 +3518,6 @@ function renderDashboardView() {
 }
 
 function _renderDashboardViewInner() {
-  const d = (m) => window._dbg?.("dashboard: " + m);
-  d("enter");
   $("#picker").classList.add("hidden");
   $("#card").classList.add("hidden");
   $("#feedback").classList.add("hidden");
@@ -3556,16 +3525,13 @@ function _renderDashboardViewInner() {
   $("#tips").classList.add("hidden");
   $("#tips-view").classList.add("hidden");
   $("#settings-view").classList.add("hidden");
-  d("hid siblings");
 
   const view = $("#dashboard-view");
-  if (!view) { d("ERROR: #dashboard-view not found in DOM"); return; }
+  if (!view) return;
   view.classList.remove("hidden");
   clear(view);
-  d("view shown + cleared");
 
   const stats = computeStats();
-  d("stats computed: " + stats.totalAttempts + " total, today=" + stats.todayAttempts);
   const p = loadProgress();
 
   // ---- Hero greeting ----
@@ -3589,7 +3555,6 @@ function _renderDashboardViewInner() {
       : `${stats.totalAttempts} questions practiced · ${stats.overallAccuracy}% overall accuracy`
   ));
   view.appendChild(hero);
-  d("hero appended");
 
   // ---- Today's progress card ----
   const todayCard = el("div", { class: "dash-card dash-today" });
@@ -3613,23 +3578,6 @@ function _renderDashboardViewInner() {
     ),
   ));
   view.appendChild(todayCard);
-  d("today card appended");
-
-  // TEMP DIAGNOSTIC: log the rendered view's computed visibility + size
-  setTimeout(() => {
-    const v = $("#dashboard-view");
-    const layout = $("#app-layout");
-    const main = $("#main-content");
-    if (!v) { d("view missing post-render"); return; }
-    const cs = getComputedStyle(v);
-    const rect = v.getBoundingClientRect();
-    const lcs = layout ? getComputedStyle(layout) : null;
-    const mcs = main ? getComputedStyle(main) : null;
-    d(`view dims: ${Math.round(rect.width)}x${Math.round(rect.height)} display=${cs.display} visibility=${cs.visibility} opacity=${cs.opacity}`);
-    if (lcs) d(`layout: display=${lcs.display} cols=${lcs.gridTemplateColumns} hidden=${layout.classList.contains("hidden")}`);
-    if (mcs) d(`main: display=${mcs.display} width=${Math.round(main.getBoundingClientRect().width)}`);
-    d(`view kids: ${v.children.length}, scrollTop=${window.scrollY}`);
-  }, 100);
 
   // ---- Next actions row ----
   if (stats.totalAttempts > 0) {
