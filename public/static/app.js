@@ -3547,7 +3547,8 @@ function renderDashboardView() {
 }
 
 function _renderDashboardViewInner() {
-  window._dbg?.("dashboard render: enter");
+  const d = (m) => window._dbg?.("dashboard: " + m);
+  d("enter");
   $("#picker").classList.add("hidden");
   $("#card").classList.add("hidden");
   $("#feedback").classList.add("hidden");
@@ -3555,12 +3556,16 @@ function _renderDashboardViewInner() {
   $("#tips").classList.add("hidden");
   $("#tips-view").classList.add("hidden");
   $("#settings-view").classList.add("hidden");
+  d("hid siblings");
 
   const view = $("#dashboard-view");
+  if (!view) { d("ERROR: #dashboard-view not found in DOM"); return; }
   view.classList.remove("hidden");
   clear(view);
+  d("view shown + cleared");
 
   const stats = computeStats();
+  d("stats computed: " + stats.totalAttempts + " total, today=" + stats.todayAttempts);
   const p = loadProgress();
 
   // ---- Hero greeting ----
@@ -3584,6 +3589,7 @@ function _renderDashboardViewInner() {
       : `${stats.totalAttempts} questions practiced · ${stats.overallAccuracy}% overall accuracy`
   ));
   view.appendChild(hero);
+  d("hero appended");
 
   // ---- Today's progress card ----
   const todayCard = el("div", { class: "dash-card dash-today" });
@@ -3607,6 +3613,7 @@ function _renderDashboardViewInner() {
     ),
   ));
   view.appendChild(todayCard);
+  d("today card appended");
 
   // ---- Next actions row ----
   if (stats.totalAttempts > 0) {
