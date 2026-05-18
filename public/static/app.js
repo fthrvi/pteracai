@@ -2910,7 +2910,9 @@ function renderDashboardView() {
   // ---- Hero greeting ----
   const hero = el("div", { class: "dash-hero" });
   const u = window.PteracaiSync?.user?.();
-  const greet = u?.name ? `Welcome back, ${u.name.split(" ")[0]}` : "Welcome back";
+  const profileName = loadScoreProfile()?.analysis?.candidate_name;
+  const displayName = u?.name?.split(" ")?.[0] || profileName;
+  const greet = displayName ? `Welcome back, ${displayName}` : "Welcome back";
   hero.appendChild(el("h1", { class: "dash-greeting" }, greet));
   hero.appendChild(el("div", { class: "dash-subtext" },
     stats.totalAttempts === 0

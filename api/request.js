@@ -203,6 +203,7 @@ Output a single JSON object — NO markdown, NO commentary:
 
 {
   "test": "pte" | "ielts",
+  "candidate_name": "<first name only, extracted from the report if present, else null>",
   "overall_score": <number>,
   "max_score": 90 (PTE) | 9 (IELTS),
   "skills": [
@@ -222,6 +223,8 @@ Output a single JSON object — NO markdown, NO commentary:
   ],
   "summary": "<1-2 sentence summary of the user's profile and what to focus on>"
 }
+
+For candidate_name: extract ONLY the first name from the score report (e.g., 'Naisha' from 'Naisha Karki' or 'Mr Bishwa Bastola'). If no name is identifiable, set to null. Never include surnames, titles, or full names.
 
 CRITICAL rules:
 - If the text is unparseable (not a score report), respond with {"test": null, "error": "Couldn't find a PTE or IELTS score report in this text. Try uploading the actual score report PDF or use the manual form."}.
