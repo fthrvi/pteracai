@@ -104,6 +104,13 @@
   // not by hiding this value. Forks should replace with their own Client ID.
   window.PTERACAI_GOOGLE_CLIENT_ID = "722320946055-9h3pd15f2ap7or3j7dsldvm9v33diias.apps.googleusercontent.com";
 </script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs" type="module"></script>
+<script type="module">
+  import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs";
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs";
+  window.PteracaiPdf = pdfjsLib;
+</script>
 <script src="/static/sync.js"></script>
 <script src="/static/app.js"></script>
 </body>

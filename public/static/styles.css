@@ -1230,6 +1230,171 @@ button.ghost {
   margin-bottom: 14px;
 }
 
+/* Score profile — upload zone in Settings */
+.score-upload-zone {
+  border: 2px dashed var(--border-strong);
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--bg);
+  transition: border-color 0.15s, background 0.15s;
+}
+.score-upload-zone:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.score-upload-zone.dragover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  border-style: solid;
+}
+.score-upload-icon {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+.score-upload-text {
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.score-manual {
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.score-manual summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.score-manual summary:hover { color: var(--accent); }
+.score-manual-form { margin-top: 12px; }
+
+/* Improvement plan card on dashboard */
+.dash-plan {
+  background: linear-gradient(135deg, white 0%, var(--accent-soft) 100%);
+  border-color: #c8dcd2;
+}
+.dash-plan-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+@media (max-width: 600px) {
+  .dash-plan-head { grid-template-columns: 1fr; }
+}
+.dash-plan-score {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.dash-plan-score-current,
+.dash-plan-score-target {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.dash-plan-score-current { color: var(--ink); }
+.dash-plan-score-target { color: var(--accent); }
+.dash-plan-score-arrow {
+  font-size: 22px;
+  color: var(--muted);
+  font-weight: 300;
+}
+.dash-plan-score-meta {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-align: center;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.dash-plan-skills {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 8px;
+}
+.dash-plan-skill {
+  background: white;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+}
+.dash-plan-skill.level-weak    { border-left-color: var(--wrong); }
+.dash-plan-skill.level-developing { border-left-color: var(--gold); }
+.dash-plan-skill.level-good    { border-left-color: #6aac8a; }
+.dash-plan-skill.level-strong  { border-left-color: var(--right); }
+.dash-plan-skill-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.dash-plan-skill-score {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dash-plan-summary {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  font-style: italic;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.6);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+.dash-plan-steps-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.dash-plan-steps {
+  margin: 0;
+  padding-left: 22px;
+}
+.dash-plan-steps li {
+  margin-bottom: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+.dash-plan-actions {
+  margin-top: 16px;
+  font-size: 13px;
+}
+.dash-plan-update {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.dash-plan-update:hover { text-decoration: underline; }
+
 /* ---------- landing gate ---------- */
 .landing-view {
   min-height: 100vh;

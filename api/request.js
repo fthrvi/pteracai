@@ -185,6 +185,53 @@ Output ONLY this JSON, no markdown, no preamble:
   ]
 }`;
 
+const SCORE_ANALYSIS_SYSTEM = `You are an expert English-test coach analyzing a user's previous PTE/IELTS score report and building a study plan for them.
+
+You receive: text extracted from a PTE or IELTS score report (or sometimes just manual scores). Extract the scores, identify their weakest skill, and build a specific improvement plan referencing PteracAI's task types.
+
+PteracAI offers these practice types (use these exact labels when recommending):
+- PTE Reading: Multiple Choice, Re-order Paragraphs, Fill in the Blanks
+- PTE Listening: Write From Dictation, Listening Multiple Choice, Summarize Spoken Text
+- PTE Writing: Summarize Written Text, Essay
+- PTE Speaking: Read Aloud, Repeat Sentence, Describe Image, Re-tell Lecture, Answer Short Question
+- IELTS Reading: Multiple Choice, True/False/Not Given, Matching Headings
+- IELTS Listening: Write From Dictation, Listening Sentence Completion
+- IELTS Writing: Essay (Task 2), Task 1 (chart description)
+- IELTS Speaking: Part 1, Part 2 cue card, Part 3 discussion
+
+Output a single JSON object — NO markdown, NO commentary:
+
+{
+  "test": "pte" | "ielts",
+  "overall_score": <number>,
+  "max_score": 90 (PTE) | 9 (IELTS),
+  "skills": [
+    {"name": "Reading", "score": <number>, "level": "weak"|"developing"|"good"|"strong"}
+  ],
+  "weakest_skill": "<name from skills>",
+  "target": {
+    "overall": <realistic target number>,
+    "weakest_target": <realistic target for the weakest skill>,
+    "timeline_weeks": <number, 2-12>
+  },
+  "plan": [
+    "<concrete step 1 — short, actionable, references a PteracAI task type from the list above>",
+    "<step 2>",
+    "<step 3>",
+    "<step 4 optional>"
+  ],
+  "summary": "<1-2 sentence summary of the user's profile and what to focus on>"
+}
+
+CRITICAL rules:
+- If the text is unparseable (not a score report), respond with {"test": null, "error": "Couldn't find a PTE or IELTS score report in this text. Try uploading the actual score report PDF or use the manual form."}.
+- Skill levels: PTE — weak <50, developing 50-64, good 65-78, strong 79+. IELTS — weak <5.5, developing 5.5-6.5, good 7-7.5, strong 8+.
+- Plan items must reference SPECIFIC PteracAI task types from the list. NOT generic advice.
+- Target timeline_weeks must be realistic — aiming for +5 PTE band in 2 weeks is fake; +5 in 6-8 weeks is real.
+- Keep summary under 35 words.
+
+Output ONLY the JSON object.`;
+
 const ANALYZE_SYSTEM = `You are an expert English-test coach analyzing a SINGLE wrong answer in detail. The user just got a question wrong and wants specific feedback on THEIR exact answer.
 
 You receive: the question (with passage/prompt/options/correct answer) and what the user picked or wrote.
@@ -324,6 +371,17 @@ export default async function handler(req, res) {
       const userMsg = buildAnalyzeUserMsg(payload);
       const text = await callLLM({ provider, apiKey, model, system: ANALYZE_SYSTEM, userMsg });
       return res.status(200).json({ ok: true, analysis: parseJSON(text) });
+    }
+    if (kind === 'score_analysis') {
+      const userMsg = JSON.stringify({
+        test: payload.test,
+        report_text: (payload.report_text || '').slice(0, 12000), // safety cap
+        manual_scores: payload.manual_scores || null,
+        instruction:
+          'Extract this user\'s scores from the report text (or use manual_scores if provided), then build an improvement plan tailored to PteracAI. Output ONLY the JSON.',
+      });
+      const text = await callLLM({ provider, apiKey, model, system: SCORE_ANALYSIS_SYSTEM, userMsg });
+      return res.status(200).json({ ok: true, score_analysis: parseJSON(text) });
     }
     if (kind === 'tips') {
       // Use content hash as cache key — same passage/options = same tips,

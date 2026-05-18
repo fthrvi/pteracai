@@ -410,6 +410,45 @@ function hasUsableSettings() {
   return loadSettings() != null;
 }
 
+// ---------- Score profile (PDF upload + LLM-generated improvement plan) ----------
+const SCORE_PROFILE_KEY = "pteracai_score_profile_v1";
+
+function loadScoreProfile() {
+  try {
+    const raw = localStorage.getItem(SCORE_PROFILE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveScoreProfile(profile) {
+  localStorage.setItem(SCORE_PROFILE_KEY, JSON.stringify({
+    ...profile,
+    updated_at: new Date().toISOString(),
+  }));
+  scheduleSyncPush();
+}
+
+function clearScoreProfile() {
+  localStorage.removeItem(SCORE_PROFILE_KEY);
+  scheduleSyncPush();
+}
+
+// Extract text from an uploaded PDF using pdf.js (loaded via index.html).
+async function extractTextFromPDF(file) {
+  if (!window.PteracaiPdf) throw new Error("PDF parser not loaded yet — try again in a moment.");
+  const buffer = await file.arrayBuffer();
+  const pdf = await window.PteracaiPdf.getDocument({ data: buffer }).promise;
+  const parts = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    parts.push(content.items.map((it) => it.str).join(" "));
+  }
+  return parts.join("\n\n");
+}
+
 // ---------- progress (attempts + spaced repetition) ----------
 const PROGRESS_KEY = "pteracai_progress_v1";
 const MAX_ATTEMPTS_RETAINED = 1000;
@@ -2509,6 +2548,15 @@ function renderSettingsView() {
   privacy.appendChild(sourceLink);
   view.appendChild(privacy);
 
+  // --- Score profile section ---
+  view.appendChild(el("h2", { style: "margin-top: 36px;" }, "Test score profile"));
+  view.appendChild(el(
+    "div",
+    { class: "subtitle" },
+    "Upload your latest PTE or IELTS score report PDF — the AI extracts your scores and builds a targeted improvement plan that appears on your dashboard. You can also enter scores manually if you don't have the PDF."
+  ));
+  renderScoreProfileSection(view);
+
   // --- Google Drive sync section ---
   view.appendChild(el("h2", { style: "margin-top: 36px;" }, "Cross-device sync"));
   view.appendChild(el(
@@ -2517,6 +2565,176 @@ function renderSettingsView() {
     "Sign in with Google to sync your settings, attempt history, and spaced-repetition queue across devices. Data is stored in a hidden folder in YOUR Google Drive — the app owner never sees it."
   ));
   renderSyncSection(view);
+}
+
+function renderScoreProfileSection(view) {
+  const wrap = el("div", null);
+  const profile = loadScoreProfile();
+
+  if (profile && profile.analysis) {
+    // Show current profile
+    const card = el("div", { class: "settings-status show ok" });
+    card.appendChild(document.createTextNode(
+      `Profile saved: ${profile.analysis.test?.toUpperCase()} · overall ${profile.analysis.overall_score} / ${profile.analysis.max_score} · weakest: ${profile.analysis.weakest_skill}. Improvement plan is shown on your dashboard.`
+    ));
+    wrap.appendChild(card);
+    const actions = el("div", { class: "settings-actions" });
+    actions.appendChild(el("button", {
+      class: "ghost",
+      onclick: () => {
+        if (confirm("Clear your saved score profile?")) {
+          clearScoreProfile();
+          renderSettingsView();
+        }
+      },
+    }, "Clear saved profile"));
+    actions.appendChild(el("button", {
+      class: "ghost",
+      onclick: () => {
+        // Show upload UI again to replace
+        card.classList.add("hidden");
+        actions.classList.add("hidden");
+        renderScoreProfileInput(wrap);
+      },
+    }, "Replace with new report"));
+    wrap.appendChild(actions);
+  } else {
+    renderScoreProfileInput(wrap);
+  }
+  view.appendChild(wrap);
+}
+
+function renderScoreProfileInput(wrap) {
+  const inputBox = el("div", null);
+
+  // File upload zone
+  const upload = el("div", { class: "score-upload-zone" });
+  upload.appendChild(el("div", { class: "score-upload-icon" }, "📄"));
+  upload.appendChild(el("div", { class: "score-upload-text" }, "Drop your score report PDF here, or click to browse"));
+  const fileInput = el("input", {
+    type: "file",
+    accept: "application/pdf",
+    style: "display: none;",
+  });
+  upload.appendChild(fileInput);
+  upload.addEventListener("click", () => fileInput.click());
+  upload.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    upload.classList.add("dragover");
+  });
+  upload.addEventListener("dragleave", () => upload.classList.remove("dragover"));
+  upload.addEventListener("drop", (e) => {
+    e.preventDefault();
+    upload.classList.remove("dragover");
+    const f = e.dataTransfer?.files?.[0];
+    if (f) handlePdf(f);
+  });
+  fileInput.addEventListener("change", (e) => {
+    const f = e.target.files?.[0];
+    if (f) handlePdf(f);
+  });
+  inputBox.appendChild(upload);
+
+  // Status / progress
+  const status = el("div", { class: "settings-status", id: "score-status" });
+  inputBox.appendChild(status);
+
+  // Manual fallback
+  const manualToggle = el("details", { class: "score-manual" });
+  manualToggle.appendChild(el("summary", null, "Don't have the PDF? Enter scores manually →"));
+  const form = el("div", { class: "score-manual-form" });
+  const testSel = el("select", null,
+    el("option", { value: "pte" }, "PTE Academic"),
+    el("option", { value: "ielts" }, "IELTS Academic"),
+  );
+  testSel.value = state.test;
+  form.appendChild(el("div", { class: "settings-row" },
+    el("label", null, "Test"), testSel));
+  const scoreInputs = {};
+  function rebuildScoreInputs() {
+    form.querySelectorAll(".manual-score-row").forEach((r) => r.remove());
+    const isPte = testSel.value === "pte";
+    const skills = isPte
+      ? ["Reading", "Listening", "Writing", "Speaking", "Overall"]
+      : ["Listening", "Reading", "Writing", "Speaking", "Overall"];
+    skills.forEach((s) => {
+      const input = el("input", {
+        type: "number",
+        step: isPte ? "1" : "0.5",
+        min: isPte ? "10" : "1",
+        max: isPte ? "90" : "9",
+        placeholder: isPte ? "e.g. 65" : "e.g. 6.5",
+      });
+      scoreInputs[s] = input;
+      const row = el("div", { class: "settings-row manual-score-row" },
+        el("label", null, s), input);
+      form.appendChild(row);
+    });
+  }
+  rebuildScoreInputs();
+  testSel.addEventListener("change", rebuildScoreInputs);
+  const submitManual = el("button", { class: "primary", style: "margin-top: 12px;" }, "Build my plan from these scores");
+  submitManual.addEventListener("click", () => {
+    const test = testSel.value;
+    const scores = {};
+    for (const [name, input] of Object.entries(scoreInputs)) {
+      const v = parseFloat(input.value);
+      if (!isNaN(v)) scores[name] = v;
+    }
+    if (Object.keys(scores).length === 0) return alert("Enter at least one score.");
+    analyzeScores({ test, manual_scores: scores });
+  });
+  form.appendChild(submitManual);
+  manualToggle.appendChild(form);
+  inputBox.appendChild(manualToggle);
+
+  wrap.appendChild(inputBox);
+
+  async function handlePdf(file) {
+    status.className = "settings-status show info";
+    status.textContent = "Reading PDF...";
+    try {
+      const text = await extractTextFromPDF(file);
+      if (!text || text.length < 50) {
+        status.className = "settings-status show err";
+        status.textContent = "Couldn't read meaningful text from this PDF. Try the manual form below.";
+        return;
+      }
+      status.textContent = `Extracted ${text.length} characters. Asking AI to parse and build your plan...`;
+      analyzeScores({ test: state.test, report_text: text });
+    } catch (e) {
+      status.className = "settings-status show err";
+      status.textContent = "PDF read failed: " + e.message;
+    }
+  }
+
+  function analyzeScores(payload) {
+    if (!aiAvailable()) {
+      status.className = "settings-status show err";
+      status.textContent = "Add an AI key in Settings (or use the free tier) before analyzing scores.";
+      return;
+    }
+    status.className = "settings-status show info";
+    status.textContent = "Analyzing your scores and building an improvement plan... (5-10 seconds)";
+    postRequest({ kind: "score_analysis", ...payload }, (resp) => {
+      if (resp.score_analysis) {
+        const a = resp.score_analysis;
+        if (a.error) {
+          status.className = "settings-status show err";
+          status.textContent = a.error;
+          return;
+        }
+        saveScoreProfile({ source: payload.report_text ? "pdf" : "manual", analysis: a });
+        status.className = "settings-status show ok";
+        status.textContent = "Score profile saved. Open the Home tab to see your plan.";
+        // Refresh settings view to show the saved-state card
+        setTimeout(() => renderSettingsView(), 600);
+      } else if (resp.error) {
+        status.className = "settings-status show err";
+        status.textContent = "Analysis failed: " + resp.error;
+      }
+    }, { silent: true });
+  }
 }
 
 function renderSyncSection(view) {
@@ -2694,6 +2912,47 @@ function renderDashboardView() {
       },
     }, "Pick by section →"));
     view.appendChild(actions);
+  }
+
+  // ---- Score profile improvement plan ----
+  const profile = loadScoreProfile();
+  if (profile?.analysis && profile.analysis.test === state.test) {
+    const a = profile.analysis;
+    const planCard = el("div", { class: "dash-card dash-plan" });
+    planCard.appendChild(el("div", { class: "dash-card-label" }, "Your improvement plan"));
+    const head = el("div", { class: "dash-plan-head" });
+    head.appendChild(el("div", { class: "dash-plan-score" },
+      el("div", { class: "dash-plan-score-current" }, `${a.overall_score}`),
+      el("div", { class: "dash-plan-score-arrow" }, "→"),
+      el("div", { class: "dash-plan-score-target" }, `${a.target?.overall ?? a.overall_score}`),
+      el("div", { class: "dash-plan-score-meta" }, `target in ${a.target?.timeline_weeks ?? "?"} weeks`),
+    ));
+    head.appendChild(el("div", { class: "dash-plan-skills" },
+      ...(a.skills || []).map((s) =>
+        el("div", { class: `dash-plan-skill level-${s.level}` },
+          el("div", { class: "dash-plan-skill-name" }, s.name),
+          el("div", { class: "dash-plan-skill-score" }, String(s.score)),
+        )
+      ),
+    ));
+    planCard.appendChild(head);
+    if (a.summary) {
+      planCard.appendChild(el("div", { class: "dash-plan-summary" }, a.summary));
+    }
+    if (Array.isArray(a.plan) && a.plan.length) {
+      planCard.appendChild(el("div", { class: "dash-plan-steps-label" }, "Recommended next steps"));
+      const steps = el("ol", { class: "dash-plan-steps" });
+      a.plan.forEach((step) => steps.appendChild(el("li", null, step)));
+      planCard.appendChild(steps);
+    }
+    const planActions = el("div", { class: "dash-plan-actions" });
+    planActions.appendChild(el("a", {
+      href: "#",
+      class: "dash-plan-update",
+      onclick: (e) => { e.preventDefault(); $("#settings-nav").click(); },
+    }, "Update score profile →"));
+    planCard.appendChild(planActions);
+    view.appendChild(planCard);
   }
 
   // ---- Mock Exam card ----
