@@ -1530,6 +1530,90 @@ button.ghost {
   line-height: 1.5;
 }
 
+/* Dashboard plan steps as actionable rows */
+.dash-plan-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-plan-step {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.dash-plan-step-num {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: white;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.dash-plan-step-text {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+.dash-plan-step-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+/* Learning resources box in tips sidebar */
+.learn-resources-box {
+  background: white;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 14px;
+}
+.learn-resources-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.learn-resources-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.learn-resources-list li { margin-bottom: 4px; }
+.learn-resources-list li:last-child { margin-bottom: 0; }
+.learn-resource-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 4px 0;
+  line-height: 1.45;
+}
+.learn-resource-link:hover { text-decoration: underline; }
+.learn-resource-icon {
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  color: var(--accent);
+  font-size: 11px;
+}
+.learn-resource-link.video .learn-resource-icon { color: var(--wrong); }
+
 /* ---------- landing gate ---------- */
 .landing-view {
   min-height: 100vh;

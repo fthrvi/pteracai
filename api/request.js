@@ -216,10 +216,14 @@ Output a single JSON object — NO markdown, NO commentary:
     "timeline_weeks": <number, 2-12>
   },
   "plan": [
-    "<concrete step 1 — short, actionable, references a PteracAI task type from the list above>",
-    "<step 2>",
-    "<step 3>",
-    "<step 4 optional>"
+    {
+      "text": "<concrete step 1 — short, actionable, references a PteracAI task type>",
+      "section": "<reading|listening|writing|speaking>",
+      "task_type": "<mcq_single|reorder|fib|wfd|tfng|matching_headings|swt|essay|task1|read_aloud|repeat_sentence|describe_image|retell_lecture|answer_short|ielts_part1|ielts_part2|ielts_part3|lst_mcq|lst_summary|lst_sc>"
+    },
+    {"text": "<step 2>", "section": "...", "task_type": "..."},
+    {"text": "<step 3>", "section": "...", "task_type": "..."},
+    {"text": "<step 4 optional>", "section": "...", "task_type": "..."}
   ],
   "summary": "<1-2 sentence summary of the user's profile and what to focus on>"
 }

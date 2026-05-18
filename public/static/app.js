@@ -918,7 +918,28 @@ function renderTips(type) {
     list.appendChild(tailoredBox);
   }
 
-  // 2. Quick reminders — top 3 most useful tips, compactly. Eye-catching.
+  // 2. Learning resources for this task type (curated videos + articles)
+  const resources = LEARNING_RESOURCES[key];
+  if (resources && resources.length) {
+    const resBox = el("div", { class: "learn-resources-box" });
+    resBox.appendChild(el("div", { class: "learn-resources-header" }, "Learn this concept"));
+    const resList = el("ul", { class: "learn-resources-list" });
+    resources.forEach((r) => {
+      const link = el("a", {
+        href: r.url,
+        target: "_blank",
+        rel: "noopener",
+        class: "learn-resource-link " + r.type,
+      });
+      link.appendChild(el("span", { class: "learn-resource-icon" }, r.type === "video" ? "▶" : "★"));
+      link.appendChild(el("span", { class: "learn-resource-title" }, r.title));
+      resList.appendChild(el("li", null, link));
+    });
+    resBox.appendChild(resList);
+    list.appendChild(resBox);
+  }
+
+  // 3. Quick reminders — top 3 most useful tips, compactly. Eye-catching.
   // Skip if AI tailored tips already cover it (richer signal). Show 'See all'
   // link to drill into the full Tips browser for the complete list.
   const isGrouped = typeof tips[0] === "object" && tips[0] !== null;
@@ -966,6 +987,82 @@ function pickQuickTips(tips, isGrouped, n) {
   }
   return picks;
 }
+
+// ---------- Curated learning resources per task type ----------
+// Hand-picked links to reputable YouTube channels / strategy pages that
+// teach each task type well. Shown in the tips sidebar during practice.
+// Values are stable channel/playlist URLs (not specific video IDs which rot).
+const LEARNING_RESOURCES = {
+  // PTE
+  reading_mcq_single: [
+    { type: "video", title: "PTE Reading MCQ strategy", url: "https://www.youtube.com/results?search_query=PTE+reading+multiple+choice+strategy+ApeUni" },
+    { type: "article", title: "Official PTE Reading test format", url: "https://www.pearsonpte.com/the-test/format/reading" },
+  ],
+  reading_reorder: [
+    { type: "video", title: "Re-order Paragraphs technique", url: "https://www.youtube.com/results?search_query=PTE+reorder+paragraphs+strategy" },
+    { type: "video", title: "Connectors and topic sentences", url: "https://www.youtube.com/results?search_query=topic+sentence+reorder+paragraphs+tutorial" },
+  ],
+  reading_fib: [
+    { type: "video", title: "Reading & Writing Fill in Blanks tips", url: "https://www.youtube.com/results?search_query=PTE+reading+fill+in+blanks+collocations" },
+    { type: "article", title: "Collocation reference (Cambridge)", url: "https://dictionary.cambridge.org/grammar/british-grammar/collocations" },
+  ],
+  reading_tfng: [
+    { type: "video", title: "True / False / Not Given mastery (IELTS Liz)", url: "https://www.youtube.com/@IELTSLiz/search?query=true%20false%20not%20given" },
+    { type: "article", title: "IELTS Liz blog — TFNG technique", url: "https://ieltsliz.com/ielts-true-false-not-given/" },
+  ],
+  reading_matching_headings: [
+    { type: "video", title: "Matching Headings step-by-step", url: "https://www.youtube.com/results?search_query=IELTS+matching+headings+strategy" },
+    { type: "article", title: "IELTS Liz — Matching Headings tips", url: "https://ieltsliz.com/ielts-reading-matching-headings-tips/" },
+  ],
+  listening_wfd: [
+    { type: "video", title: "Write From Dictation hacks", url: "https://www.youtube.com/results?search_query=PTE+write+from+dictation+strategy+ApeUni" },
+    { type: "video", title: "Listening + writing parallel typing", url: "https://www.youtube.com/results?search_query=PTE+WFD+type+while+listening" },
+  ],
+  listening_lst_mcq: [
+    { type: "video", title: "Listening MCQ — pre-audio reading", url: "https://www.youtube.com/results?search_query=PTE+listening+multiple+choice+strategy" },
+  ],
+  listening_lst_summary: [
+    { type: "video", title: "Summarize Spoken Text templates", url: "https://www.youtube.com/results?search_query=PTE+summarize+spoken+text+template" },
+  ],
+  listening_lst_sc: [
+    { type: "video", title: "IELTS sentence completion tips", url: "https://www.youtube.com/results?search_query=IELTS+listening+sentence+completion+tips" },
+    { type: "article", title: "IELTS Liz — Sentence Completion", url: "https://ieltsliz.com/ielts-listening-sentence-completion/" },
+  ],
+  writing_swt: [
+    { type: "video", title: "Summarize Written Text formula (1 sentence)", url: "https://www.youtube.com/results?search_query=PTE+summarize+written+text+template" },
+    { type: "article", title: "PTE Magic — SWT scoring guide", url: "https://ptemagic.com.au/summarize-written-text/" },
+  ],
+  writing_essay: [
+    { type: "video", title: "Essay structure that always scores 79+", url: "https://www.youtube.com/results?search_query=PTE+essay+structure+template+79" },
+    { type: "video", title: "IELTS Task 2 essay band 8 (E2 IELTS)", url: "https://www.youtube.com/@E2IELTS/search?query=task%202%20essay" },
+    { type: "article", title: "IELTS Liz — Task 2 question types", url: "https://ieltsliz.com/ielts-essay-question-types/" },
+  ],
+  writing_task1: [
+    { type: "video", title: "IELTS Task 1 chart/graph technique", url: "https://www.youtube.com/results?search_query=IELTS+task+1+chart+description+band+8" },
+    { type: "article", title: "IELTS Liz — Task 1 lessons", url: "https://ieltsliz.com/ielts-writing-task-1-lessons-and-tips/" },
+  ],
+  speaking_read_aloud: [
+    { type: "video", title: "Read Aloud — pace, prosody, fluency", url: "https://www.youtube.com/results?search_query=PTE+read+aloud+prosody+score" },
+  ],
+  speaking_repeat_sentence: [
+    { type: "video", title: "Repeat Sentence — memory + intonation", url: "https://www.youtube.com/results?search_query=PTE+repeat+sentence+strategy" },
+  ],
+  speaking_describe_image: [
+    { type: "video", title: "Describe Image — universal template", url: "https://www.youtube.com/results?search_query=PTE+describe+image+template+25+seconds" },
+  ],
+  speaking_retell_lecture: [
+    { type: "video", title: "Re-tell Lecture template + note-taking", url: "https://www.youtube.com/results?search_query=PTE+retell+lecture+template+notes" },
+  ],
+  speaking_ielts_part1: [
+    { type: "video", title: "IELTS Speaking Part 1 — band 8 answers", url: "https://www.youtube.com/results?search_query=IELTS+speaking+part+1+band+8" },
+  ],
+  speaking_ielts_part2: [
+    { type: "video", title: "IELTS Part 2 cue card structure", url: "https://www.youtube.com/results?search_query=IELTS+speaking+part+2+cue+card+structure" },
+  ],
+  speaking_ielts_part3: [
+    { type: "video", title: "IELTS Part 3 — abstract discussion", url: "https://www.youtube.com/results?search_query=IELTS+speaking+part+3+strategy" },
+  ],
+};
 
 // ---------- tailored tips (per-question LLM) ----------
 const TAILORED_TIPS_CACHE = "pteracai_tailored_tips_cache_v1";
@@ -3160,8 +3257,30 @@ function renderDashboardView() {
     }
     if (Array.isArray(a.plan) && a.plan.length) {
       planCard.appendChild(el("div", { class: "dash-plan-steps-label" }, "Recommended next steps"));
-      const steps = el("ol", { class: "dash-plan-steps" });
-      a.plan.forEach((step) => steps.appendChild(el("li", null, step)));
+      const steps = el("div", { class: "dash-plan-steps" });
+      a.plan.forEach((step, i) => {
+        // Step may be a string (older plan format) or {text, section, task_type}
+        const isObj = typeof step === "object" && step !== null;
+        const text = isObj ? step.text : String(step);
+        const targetSection = isObj ? step.section : null;
+        const targetType = isObj ? step.task_type : null;
+        const row = el("div", { class: "dash-plan-step" });
+        row.appendChild(el("div", { class: "dash-plan-step-num" }, String(i + 1)));
+        row.appendChild(el("div", { class: "dash-plan-step-text" }, text));
+        if (targetSection && targetType && TYPE_NAMES[targetType]) {
+          row.appendChild(el("button", {
+            class: "ghost dash-plan-step-btn",
+            onclick: () => {
+              state.section = targetSection;
+              $$(".section-btn[data-section]").forEach((b) =>
+                b.classList.toggle("active", b.dataset.section === targetSection));
+              $("#home-nav").classList.remove("active");
+              pickByType(targetType);
+            },
+          }, "Practice →"));
+        }
+        steps.appendChild(row);
+      });
       planCard.appendChild(steps);
     }
     const planActions = el("div", { class: "dash-plan-actions" });
