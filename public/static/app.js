@@ -3749,8 +3749,58 @@ function renderSyncSection(view) {
     return;
   }
 
+  // Transparent auth-state snapshot so the user can see exactly what the
+  // app thinks. Helps debug the "I signed in but it shows sign-in button"
+  // confusion — if the app says no token, the sign-in didn't actually
+  // succeed (often the Google 'Access blocked' wall for unverified apps).
+  const dbg = PteracaiSync.debugState();
+  const skipped = localStorage.getItem(SKIP_LOGIN_KEY) === "1";
+  const stateBox = el("div", { class: "settings-state-box" });
+  stateBox.appendChild(el("div", { class: "settings-state-label" }, "Current auth state"));
+  const stateRows = el("div", { class: "settings-state-rows" });
+  const mkRow = (label, value, kind) => {
+    const row = el("div", { class: "settings-state-row" });
+    row.appendChild(el("span", { class: "settings-state-row-label" }, label));
+    row.appendChild(el("span", { class: "settings-state-row-value " + (kind || "") }, value));
+    return row;
+  };
+  stateRows.appendChild(mkRow(
+    "Active token",
+    dbg.hasToken
+      ? (dbg.tokenExpiresIn > 0
+          ? `valid (${Math.floor(dbg.tokenExpiresIn / 60)} min left)`
+          : `expired ${Math.abs(Math.floor(dbg.tokenExpiresIn / 60))} min ago`)
+      : "none",
+    dbg.hasToken && dbg.tokenExpiresIn > 0 ? "ok" : (dbg.hasToken ? "warn" : "muted"),
+  ));
+  stateRows.appendChild(mkRow(
+    "Cached account",
+    dbg.cachedUser ? (dbg.cachedUser.email || dbg.cachedUser.name || "(unknown)") : "none",
+    dbg.cachedUser ? "ok" : "muted",
+  ));
+  stateRows.appendChild(mkRow(
+    "Skip-sign-in flag",
+    skipped ? "set" : "not set",
+    skipped ? "warn" : "muted",
+  ));
+  stateBox.appendChild(stateRows);
+  wrap.appendChild(stateBox);
+
   const isIn = PteracaiSync.signedIn();
   const u = PteracaiSync.user();
+
+  // Auto-retry silent refresh on Settings open if we have a cached user
+  // but no valid token. This catches the case where the initial silent
+  // refresh on page load failed (e.g., GSI script wasn't loaded yet).
+  if (!isIn && u && PteracaiSync.refreshSilent && !state._refreshAttempted) {
+    state._refreshAttempted = true;
+    PteracaiSync.refreshSilent().then(() => {
+      if (!$("#settings-view").classList.contains("hidden")) {
+        state._refreshAttempted = false;
+        renderSettingsView();
+      }
+    }).catch(() => { /* swallow; UI already shows expired state */ });
+  }
 
   if (isIn && u) {
     const status = el("div", { class: "settings-status show ok" });

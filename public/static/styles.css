@@ -2430,3 +2430,42 @@ code { font-family: var(--mono); font-size: 0.92em; }
   background: rgba(176, 127, 16, 0.08);
   border-left-color: var(--gold);
 }
+
+/* ---------- Auth state debug box (Settings → Cross-device sync) ---------- */
+.settings-state-box {
+  background: rgba(44, 95, 78, 0.04);
+  border: 1px solid rgba(44, 95, 78, 0.12);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0 0 14px;
+  font-family: var(--sans);
+}
+.settings-state-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.settings-state-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  font-size: 13px;
+}
+.settings-state-row {
+  display: contents;
+}
+.settings-state-row-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+.settings-state-row-value {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.settings-state-row-value.ok { color: var(--right); }
+.settings-state-row-value.warn { color: var(--gold); }
+.settings-state-row-value.muted { color: var(--muted); opacity: 0.7; }

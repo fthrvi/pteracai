@@ -41,6 +41,24 @@ window.PteracaiSync = (function () {
     return !!state.accessToken && Date.now() < state.tokenExpiry;
   }
 
+  // Diagnostic snapshot of current auth state — used by Settings to show
+  // the user exactly what the app sees, so failures are debuggable.
+  function debugState() {
+    return {
+      configured: !!state.clientId,
+      hasToken: !!state.accessToken,
+      tokenExpiresIn: state.accessToken
+        ? Math.round((state.tokenExpiry - Date.now()) / 1000)
+        : null,
+      cachedUser: state.user ? {
+        email: state.user.email || null,
+        name: state.user.name || null,
+      } : null,
+      tokenClientReady: !!state.tokenClient,
+      gsiLoaded: !!(window.google && window.google.accounts && window.google.accounts.oauth2),
+    };
+  }
+
   function user() {
     return state.user;
   }
@@ -270,5 +288,6 @@ window.PteracaiSync = (function () {
     refreshSilent,
     user,
     configured,
+    debugState,
   };
 })();
