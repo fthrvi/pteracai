@@ -48,6 +48,46 @@ const state = {
   mockExam: null, // {active, test, section, queue, index, startTs, durationSec, results}
 };
 
+// Persist mock state to localStorage so closing the tab / navigating away
+// doesn't lose progress. On boot we offer to resume any in-progress mock.
+const MOCK_STATE_KEY = "pteracai_mock_state_v1";
+
+function saveMockState() {
+  refreshMockNavIndicator();
+  if (!state.mockExam?.active) return;
+  // Persist a clean snapshot (drop the timerInterval handle which is non-serializable)
+  const m = state.mockExam;
+  // Compute remaining time so resume is accurate even after page reloads
+  const elapsedSec = Math.floor((Date.now() - m.startTs) / 1000);
+  const snapshot = {
+    test: m.test,
+    section: m.section,
+    label: m.label,
+    queue: m.queue,
+    index: m.index,
+    results: m.results,
+    durationSec: m.durationSec,
+    elapsedSec,
+    _beforeAttempts: m._beforeAttempts,
+    savedAt: Date.now(),
+  };
+  try {
+    localStorage.setItem(MOCK_STATE_KEY, JSON.stringify(snapshot));
+  } catch (_) {}
+}
+function loadSavedMockState() {
+  try {
+    const raw = localStorage.getItem(MOCK_STATE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+function clearSavedMockState() {
+  localStorage.removeItem(MOCK_STATE_KEY);
+  refreshMockNavIndicator();
+}
+
 // Mock exam configurations — section, item count, total duration. Reflects
 // official PTE/IELTS section timings (approximated for the local question set).
 const MOCK_CONFIGS = {
@@ -318,6 +358,14 @@ function initSelectToExplain() {
   }
 }
 
+// Indicate on the topbar Mock button whether there's a saved in-progress mock.
+function refreshMockNavIndicator() {
+  const btn = $("#mock-nav");
+  if (!btn) return;
+  const saved = loadSavedMockState();
+  btn.classList.toggle("has-saved", !!(saved && saved.queue && saved.index < saved.queue.length));
+}
+
 async function boot() {
   const res = await fetch("/data/bank.json");
   state.bank = await res.json();
@@ -333,6 +381,7 @@ async function boot() {
   startPolling();
   initSync();
   initSelectToExplain();
+  refreshMockNavIndicator();
   showAppropriateInitialView();
 }
 
@@ -440,6 +489,11 @@ function bindSectionButtons() {
     $$(".section-btn").forEach((x) => x.classList.remove("active"));
     $("#home-nav").classList.add("active");
     renderDashboardView();
+  });
+  $("#mock-nav").addEventListener("click", () => {
+    $$(".section-btn").forEach((x) => x.classList.remove("active"));
+    $("#mock-nav").classList.add("active");
+    renderMockHubView();
   });
   $("#tips-nav").addEventListener("click", () => {
     $$(".section-btn").forEach((x) => x.classList.remove("active"));
@@ -3890,9 +3944,7 @@ function startMockExam(test, section) {
   if (!cfg) return alert("Mock exam not configured for that section yet.");
   const pool = currentQuestions().filter((q) => q.section === section);
   if (pool.length === 0) return alert(`No ${section} questions available for this test.`);
-  // Shuffle and take up to count
-  const shuffled = pool.slice().sort(() => Math.random() - 0.5);
-  const queue = shuffled.slice(0, Math.min(cfg.count, pool.length));
+  const queue = curatedMockQueue(pool, section, cfg.count);
   state.mockExam = {
     active: true,
     test,
@@ -3905,7 +3957,73 @@ function startMockExam(test, section) {
     results: [],
     timerInterval: null,
   };
+  saveMockState();
   nextMockQuestion();
+}
+
+// Resume an in-progress mock loaded from localStorage. The timer continues
+// from where it left off — elapsedSec captured at save time + any wall-clock
+// time spent in the saved state is accounted for via durationSec - elapsedSec.
+function resumeMockExam(snapshot) {
+  state.mockExam = {
+    active: true,
+    test: snapshot.test,
+    section: snapshot.section,
+    label: snapshot.label,
+    queue: snapshot.queue,
+    index: snapshot.index,
+    // Recompute startTs so the live timer math (durationSec - (now-startTs))
+    // yields the same remaining time as when we saved.
+    startTs: Date.now() - (snapshot.elapsedSec * 1000),
+    durationSec: snapshot.durationSec,
+    results: snapshot.results || [],
+    timerInterval: null,
+    _beforeAttempts: snapshot._beforeAttempts,
+  };
+  nextMockQuestion();
+}
+
+// Curate the question queue by biasing toward weak areas. Uses two signals:
+//   1. Per-type accuracy from attempt history (types with <70% get extra weight)
+//   2. Score profile's weakest_skill (if it matches the current section, weight up)
+// Falls back to pure shuffle when no signals are available.
+function curatedMockQueue(pool, section, count) {
+  const stats = computeStats();
+  const profile = loadScoreProfile()?.analysis;
+  const weakestSkill = (profile?.weakest_skill || "").toLowerCase();
+  const sectionIsWeak = weakestSkill.includes(section);
+
+  // Weight each question
+  const weighted = pool.map((q) => {
+    let w = 1;
+    const ts = stats.byType[q.type];
+    if (ts && ts.total >= 3) {
+      const acc = ts.correct / ts.total;
+      if (acc < 0.5) w *= 3;
+      else if (acc < 0.7) w *= 2;
+      else if (acc < 0.85) w *= 1.4;
+    }
+    if (sectionIsWeak) w *= 1.5;
+    return { q, w };
+  });
+
+  // Weighted sample without replacement
+  const chosen = [];
+  const total = weighted.length;
+  for (let i = 0; i < Math.min(count, total); i++) {
+    const sumW = weighted.reduce((s, x) => s + x.w, 0);
+    if (sumW <= 0) break;
+    let r = Math.random() * sumW;
+    let idx = 0;
+    for (; idx < weighted.length; idx++) {
+      r -= weighted[idx].w;
+      if (r <= 0) break;
+    }
+    idx = Math.min(idx, weighted.length - 1);
+    chosen.push(weighted[idx].q);
+    weighted.splice(idx, 1);
+  }
+  return chosen;
 }
 
 function nextMockQuestion() {
@@ -3915,12 +4033,14 @@ function nextMockQuestion() {
     return finishMockExam();
   }
   const q = m.queue[m.index];
-  // Capture the BEFORE attempts count so we can know per-question outcome
-  m._beforeAttempts = (loadProgress().attempts || []).length;
+  // Capture the BEFORE attempts count if not already set (preserved across resume)
+  if (m._beforeAttempts == null) {
+    m._beforeAttempts = (loadProgress().attempts || []).length;
+  }
   renderQuestion(q);
-  // Add a banner on the card showing mock progress + timer
   setTimeout(() => decorateMockBanner(), 0);
   startMockTimer();
+  saveMockState();
 }
 
 function decorateMockBanner() {
@@ -3972,6 +4092,7 @@ function advanceMock() {
   // Called by mock-aware feedback's Next button
   const m = state.mockExam;
   if (!m) return;
+  saveMockState();
   const after = loadProgress().attempts || [];
   const justAttempted = after.slice(m._beforeAttempts || after.length);
   // Record per-question result + capture user's answer for later review
@@ -3995,6 +4116,7 @@ function finishMockExam(timeout = false) {
   const m = state.mockExam;
   if (!m) return;
   if (m.timerInterval) clearInterval(m.timerInterval);
+  clearSavedMockState();
   // Pull any final attempt we may have missed
   const after = loadProgress().attempts || [];
   const justAttempted = after.slice(m._beforeAttempts || after.length);
@@ -4165,6 +4287,85 @@ function renderMockReview(mock, idx) {
   panel.appendChild(close);
 
   panel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// Dedicated Mock Exam hub: resume in-progress + start fresh by section.
+// Reuses the dashboard-view container for layout.
+function renderMockHubView() {
+  $("#picker").classList.add("hidden");
+  $("#card").classList.add("hidden");
+  $("#feedback").classList.add("hidden");
+  $("#bridge-status").classList.add("hidden");
+  $("#tips").classList.add("hidden");
+  $("#tips-view").classList.add("hidden");
+  $("#settings-view").classList.add("hidden");
+
+  const view = $("#dashboard-view");
+  view.classList.remove("hidden");
+  clear(view);
+
+  view.appendChild(el("div", { class: "dash-hero" },
+    el("h1", { class: "dash-greeting" }, "Mock exams"),
+    el("div", { class: "dash-subtext" },
+      `Timed simulation of one section. No AI hints, no tips — just you and the clock, like the real ${TEST_LABELS[state.test]?.short || "test"}. Questions are biased toward your weak areas.`),
+  ));
+
+  // Resume card (if there's a saved in-progress mock)
+  const saved = loadSavedMockState();
+  if (saved && saved.queue && saved.queue.length > 0 && saved.index < saved.queue.length) {
+    const cfg = MOCK_CONFIGS[saved.test]?.[saved.section];
+    const remainingSec = Math.max(0, (saved.durationSec || 0) - (saved.elapsedSec || 0));
+    const remainMin = Math.round(remainingSec / 60);
+    const resumeCard = el("div", { class: "dash-card dash-mock dash-resume" });
+    resumeCard.appendChild(el("div", { class: "dash-card-label" }, "In progress"));
+    resumeCard.appendChild(el("div", { class: "dash-mock-text" },
+      `You have a mock in progress: ${TEST_LABELS[saved.test]?.short || saved.test} ${saved.label} — question ${saved.index + 1} of ${saved.queue.length}, ~${remainMin} minute(s) left on the clock.`
+    ));
+    const actions = el("div", { class: "dash-actions-row" });
+    actions.appendChild(el("button", {
+      class: "primary",
+      onclick: () => {
+        $$(".section-btn").forEach((b) => b.classList.remove("active"));
+        $("#mock-nav").classList.add("active");
+        resumeMockExam(saved);
+      },
+    }, "Resume mock"));
+    actions.appendChild(el("button", {
+      class: "ghost",
+      onclick: () => {
+        if (!confirm("Abandon the in-progress mock and remove the saved state?")) return;
+        clearSavedMockState();
+        renderMockHubView();
+      },
+    }, "Discard"));
+    resumeCard.appendChild(actions);
+    view.appendChild(resumeCard);
+  }
+
+  // Start fresh by section
+  const fresh = el("div", { class: "dash-card dash-mock" });
+  fresh.appendChild(el("div", { class: "dash-card-label" }, "Start a new mock"));
+  const cfg = MOCK_CONFIGS[state.test] || {};
+  const btns = el("div", { class: "dash-mock-btns" });
+  for (const [section, sectionCfg] of Object.entries(cfg)) {
+    const mins = Math.round(sectionCfg.durationSec / 60);
+    const btn = el("button", {
+      class: "ghost dash-mock-btn",
+      onclick: () => {
+        if (saved && !confirm("Starting a new mock will discard your in-progress mock. Continue?")) return;
+        clearSavedMockState();
+        if (confirm(`Start ${TEST_LABELS[state.test]?.short || "PTE"} ${sectionCfg.label} mock?\n\n• ${sectionCfg.count} questions (curated toward your weak areas)\n• ${mins} minute time limit\n• No tips or AI hints during the test\n• Closing the tab will save your progress for later`)) {
+          startMockExam(state.test, section);
+        }
+      },
+    },
+      el("div", { class: "dash-mock-btn-title" }, sectionCfg.label),
+      el("div", { class: "dash-mock-btn-meta" }, `${sectionCfg.count} Qs · ${mins} min`),
+    );
+    btns.appendChild(btn);
+  }
+  fresh.appendChild(btns);
+  view.appendChild(fresh);
 }
 
 function practiceDue() {

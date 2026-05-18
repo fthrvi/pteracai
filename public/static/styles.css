@@ -991,6 +991,16 @@ button.ghost {
 .quick-tips-list li:last-child { margin-bottom: 0; }
 
 .tips-nav-btn, .settings-nav-btn { font-weight: 600; }
+.mock-nav { font-weight: 600; }
+.mock-nav.active { background: var(--wrong) !important; }
+.mock-nav.has-saved::after {
+  content: "•";
+  color: var(--gold);
+  font-size: 18px;
+  line-height: 0;
+  margin-left: 4px;
+  vertical-align: middle;
+}
 .home-nav { font-weight: 600; }
 
 /* ============================================================================
