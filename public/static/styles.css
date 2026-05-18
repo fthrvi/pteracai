@@ -1614,6 +1614,70 @@ button.ghost {
 }
 .learn-resource-link.video .learn-resource-icon { color: var(--wrong); }
 
+/* AI mini-lesson button + rendered content */
+.explainer-box {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.explainer-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  transition: filter 0.15s;
+}
+.explainer-btn:hover { filter: brightness(1.08); }
+.explainer-btn:disabled {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+.explainer-icon { font-size: 14px; }
+.explainer-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 12px 0 4px;
+}
+.explainer-label:first-child { margin-top: 4px; }
+.explainer-body {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.explainer-mistake {
+  background: #fdf6e7;
+  padding: 8px 10px;
+  border-left: 2px solid var(--gold);
+  border-radius: 4px;
+}
+.explainer-example {
+  background: var(--accent-soft);
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-style: italic;
+}
+.explainer-steps {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+.explainer-steps li { margin-bottom: 4px; }
+
 /* ---------- landing gate ---------- */
 .landing-view {
   min-height: 100vh;

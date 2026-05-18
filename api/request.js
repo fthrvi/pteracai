@@ -185,6 +185,32 @@ Output ONLY this JSON, no markdown, no preamble:
   ]
 }`;
 
+const EXPLAIN_SYSTEM = `You are a PTE/IELTS coach giving a short, clear mini-lesson on a specific task type.
+
+Goal: in ~200 words, teach the user the core technique for this task type. Imagine you're explaining to a student who's failed at it a few times and needs a clear mental model.
+
+Output a single JSON object — NO markdown, NO commentary:
+
+{
+  "principle": "<1-2 sentence statement of the core principle behind this task type. Plain English.>",
+  "approach": [
+    "<step 1 — concrete action>",
+    "<step 2>",
+    "<step 3>"
+  ],
+  "common_mistake": "<the #1 mistake students make on this task, and how to avoid it. 1-2 sentences.>",
+  "worked_example": "<a brief 2-3 sentence walkthrough of how to solve a sample problem of this type. Make up a plausible example.>"
+}
+
+STRICT rules:
+- Plain English. No jargon like 'discriminator', 'prosody', 'paraphrase trap'.
+- Each field under 40 words.
+- The approach steps must be specific and actionable, not generic ('Read carefully' is banned).
+- The worked example should reference SPECIFIC text/options/structure, not just describe abstractly.
+- NEVER include the literal answers to seed-bank questions.
+
+Output ONLY the JSON object.`;
+
 const SCORE_ANALYSIS_SYSTEM = `You are an expert English-test coach analyzing a user's previous PTE/IELTS score report and building a study plan for them.
 
 You receive: text extracted from a PTE or IELTS score report (or sometimes just manual scores). Extract the scores, identify their weakest skill, and build a specific improvement plan referencing PteracAI's task types.
@@ -389,6 +415,30 @@ export default async function handler(req, res) {
       });
       const text = await callLLM({ provider, apiKey, model, system: SCORE_ANALYSIS_SYSTEM, userMsg });
       return res.status(200).json({ ok: true, score_analysis: parseJSON(text) });
+    }
+    if (kind === 'explain') {
+      // Task-type-level concept explainer. Cached globally per (test, section, type)
+      // via the tailored_tips table with a synthetic key prefix.
+      const cacheKey = `explainer:${payload.test || 'unknown'}:${payload.section || ''}:${payload.type || ''}`;
+      const cached = await getCachedTips(cacheKey);
+      if (cached) {
+        return res.status(200).json({ ok: true, explainer: cached, cached: true });
+      }
+      const userMsg = JSON.stringify({
+        test: payload.test,
+        section: payload.section,
+        type: payload.type,
+        type_label: payload.type_label,
+        instruction: 'Give a clear, short mini-lesson on this task type. Output ONLY the JSON.',
+      });
+      const text = await callLLM({ provider, apiKey, model, system: EXPLAIN_SYSTEM, userMsg });
+      const explainer = parseJSON(text);
+      if (explainer) {
+        saveTipsToCache(cacheKey, explainer).catch((e) =>
+          console.warn('explainer cache save failed:', e?.message || e)
+        );
+      }
+      return res.status(200).json({ ok: true, explainer });
     }
     if (kind === 'tips') {
       // Use content hash as cache key — same passage/options = same tips,

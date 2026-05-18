@@ -918,24 +918,40 @@ function renderTips(type) {
     list.appendChild(tailoredBox);
   }
 
-  // 2. Learning resources for this task type (curated videos + articles)
+  // 2. Learning resources for this task type (curated videos + articles + AI explainer)
   const resources = LEARNING_RESOURCES[key];
-  if (resources && resources.length) {
+  if ((resources && resources.length) || aiAvailable()) {
     const resBox = el("div", { class: "learn-resources-box" });
     resBox.appendChild(el("div", { class: "learn-resources-header" }, "Learn this concept"));
-    const resList = el("ul", { class: "learn-resources-list" });
-    resources.forEach((r) => {
-      const link = el("a", {
-        href: r.url,
-        target: "_blank",
-        rel: "noopener",
-        class: "learn-resource-link " + r.type,
+    if (resources && resources.length) {
+      const resList = el("ul", { class: "learn-resources-list" });
+      resources.forEach((r) => {
+        const link = el("a", {
+          href: r.url,
+          target: "_blank",
+          rel: "noopener",
+          class: "learn-resource-link " + r.type,
+        });
+        link.appendChild(el("span", { class: "learn-resource-icon" }, r.type === "video" ? "▶" : "★"));
+        link.appendChild(el("span", { class: "learn-resource-title" }, r.title));
+        resList.appendChild(el("li", null, link));
       });
-      link.appendChild(el("span", { class: "learn-resource-icon" }, r.type === "video" ? "▶" : "★"));
-      link.appendChild(el("span", { class: "learn-resource-title" }, r.title));
-      resList.appendChild(el("li", null, link));
-    });
-    resBox.appendChild(resList);
+      resBox.appendChild(resList);
+    }
+    // AI explainer button (only when AI is available)
+    if (state.currentQ && aiAvailable()) {
+      const explainBox = el("div", { class: "explainer-box" });
+      const explainBtn = el("button", { class: "explainer-btn" });
+      explainBtn.appendChild(el("span", { class: "explainer-icon" }, "✨"));
+      explainBtn.appendChild(document.createTextNode("Get AI mini-lesson"));
+      explainBtn.addEventListener("click", () => {
+        explainBtn.disabled = true;
+        explainBtn.textContent = "Generating...";
+        requestExplainer(state.currentQ, key, explainBox);
+      });
+      explainBox.appendChild(explainBtn);
+      resBox.appendChild(explainBox);
+    }
     list.appendChild(resBox);
   }
 
@@ -1089,6 +1105,52 @@ function cacheTailoredTips(qid, tipsArr) {
     sessionStorage.setItem(TAILORED_TIPS_CACHE, JSON.stringify(all));
   } catch {
     /* ignore quota */
+  }
+}
+
+function requestExplainer(q, cacheKey, container) {
+  // Check session cache first
+  const memKey = "explainer:" + cacheKey;
+  if (state[memKey]) {
+    renderExplainerInto(container, state[memKey]);
+    return;
+  }
+  postRequest({
+    kind: "explain",
+    test: state.test,
+    section: q.section,
+    type: q.type,
+    type_label: TYPE_NAMES[q.type]?.[0] || q.type,
+  }, (resp) => {
+    if (resp.explainer) {
+      state[memKey] = resp.explainer;
+      renderExplainerInto(container, resp.explainer);
+    } else if (resp.error) {
+      container.appendChild(el("div", { class: "tailored-error" }, "Couldn't generate explainer: " + resp.error));
+    }
+  }, { silent: true });
+}
+
+function renderExplainerInto(container, e) {
+  // Remove the trigger button if still present
+  container.querySelector(".explainer-btn")?.remove();
+  if (e.principle) {
+    container.appendChild(el("div", { class: "explainer-label" }, "Principle"));
+    container.appendChild(el("div", { class: "explainer-body" }, e.principle));
+  }
+  if (Array.isArray(e.approach) && e.approach.length) {
+    container.appendChild(el("div", { class: "explainer-label" }, "Approach"));
+    const ol = el("ol", { class: "explainer-steps" });
+    e.approach.forEach((s) => ol.appendChild(el("li", null, s)));
+    container.appendChild(ol);
+  }
+  if (e.common_mistake) {
+    container.appendChild(el("div", { class: "explainer-label" }, "Common mistake"));
+    container.appendChild(el("div", { class: "explainer-body explainer-mistake" }, e.common_mistake));
+  }
+  if (e.worked_example) {
+    container.appendChild(el("div", { class: "explainer-label" }, "Worked example"));
+    container.appendChild(el("div", { class: "explainer-body explainer-example" }, e.worked_example));
   }
 }
 
@@ -2469,7 +2531,7 @@ async function postRequest(request, handler, opts = {}) {
   const body = await res.json();
 
   // Vercel mode: response contains the full payload synchronously.
-  if (body.question || body.grading || body.tailored_tips || body.analysis || body.coaching || body.score_analysis) {
+  if (body.question || body.grading || body.tailored_tips || body.analysis || body.coaching || body.score_analysis || body.explainer) {
     if (!silent) showBridgeStatus(false);
     handler(body);
     return;
