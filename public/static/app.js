@@ -3802,9 +3802,17 @@ function renderSyncSection(view) {
     }).catch(() => { /* swallow; UI already shows expired state */ });
   }
 
-  if (isIn && u) {
+  if (isIn) {
+    // Signed in. User info (email/name) is OPTIONAL — older tokens granted
+    // before we added openid+email+profile scopes won't have it. In that
+    // case show a generic signed-in message with a one-click re-auth to
+    // upgrade the token's scopes so we can display the account.
     const status = el("div", { class: "settings-status show ok" });
-    status.appendChild(document.createTextNode(`Signed in as ${u.name || u.email}. Your progress is syncing to your Google Drive.`));
+    status.appendChild(document.createTextNode(
+      u
+        ? `Signed in as ${u.name || u.email}. Your progress is syncing to your Google Drive.`
+        : "Signed in. Your progress is syncing to your Google Drive. (Account name unavailable — click 'Re-grant permissions' below to fix this.)"
+    ));
     wrap.appendChild(status);
 
     const actions = el("div", { class: "settings-actions" });
@@ -3843,6 +3851,27 @@ function renderSyncSection(view) {
       renderSettingsView();
     });
     actions.appendChild(syncNowBtn);
+    // If user info is missing (old-scope token), offer a one-click re-auth
+    // that requests the new scopes so name/email show up. Goes before
+    // sign-out so it's the natural next action.
+    if (!u) {
+      const regrantBtn = el("button", { class: "ghost" }, "Re-grant permissions");
+      regrantBtn.addEventListener("click", async () => {
+        regrantBtn.disabled = true;
+        regrantBtn.textContent = "Opening Google...";
+        try {
+          await PteracaiSync.signIn();
+          renderSettingsView();
+        } catch (e) {
+          regrantBtn.disabled = false;
+          regrantBtn.textContent = "Re-grant permissions";
+          await modalAlert("Re-grant failed: " + (e.message || "unknown error"), {
+            title: "Could not re-authenticate",
+          });
+        }
+      });
+      actions.appendChild(regrantBtn);
+    }
     actions.appendChild(signOutBtn);
     wrap.appendChild(actions);
   } else if (PteracaiSync.sessionExpired && PteracaiSync.sessionExpired()) {

@@ -14,7 +14,12 @@
 // `https://www.googleapis.com/auth/drive.appdata` scope.
 // See README → "Google Sign-In setup".
 
-const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+// Scopes requested at sign-in time. drive.appdata is the only one we
+// strictly need for sync; openid+email+profile are required for the
+// userinfo endpoint to return who the user is (without them /oauth2/v3/userinfo
+// returns 401 even with a valid access token). Listing each scope is
+// idempotent — Google merges duplicate requests on the consent screen.
+const SYNC_SCOPE = 'openid email profile https://www.googleapis.com/auth/drive.appdata';
 const DRIVE_FILE_NAME = 'pteracai.json';
 const STORAGE_AUTH_KEY = 'pteracai_google_auth_v1';
 const STORAGE_USER_KEY = 'pteracai_google_user_v1';
@@ -163,17 +168,22 @@ window.PteracaiSync = (function () {
       token: state.accessToken,
       expiry: state.tokenExpiry,
     }));
-    // Fetch user profile (via /oauth2/v3/userinfo — no extra scope needed beyond openid which Google grants implicitly)
+    // Fetch user profile via /oauth2/v3/userinfo. Requires openid+email+profile
+    // scopes — listed explicitly in SYNC_SCOPE. If they're missing (e.g., an
+    // old token from before this fix) this 401s and we silently keep going;
+    // signed-in state still works, just without name/email display.
     try {
       const info = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${state.accessToken}` },
       }).then((r) => (r.ok ? r.json() : null));
-      if (info) {
+      if (info && info.email) {
         state.user = { email: info.email, name: info.name, picture: info.picture };
         localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(state.user));
+      } else {
+        console.warn('[sync] userinfo fetch returned no email — scopes may be stale. Sign in again to grant openid+email+profile.');
       }
-    } catch (_) {
-      // user info is best-effort; not fatal
+    } catch (e) {
+      console.warn('[sync] userinfo fetch failed:', e.message);
     }
     state.onSignInChange({ signedIn: true, user: state.user, source: 'fresh' });
   }
