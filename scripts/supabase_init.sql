@@ -66,3 +66,39 @@ CREATE POLICY "anon can read tailored tips"
 
 COMMENT ON TABLE tailored_tips IS
   'Per-question LLM tips, computed once across all users. Cache hit = instant + zero cost.';
+
+-- ---------------------------------------------------------------------------
+-- Access requests: users who want to sign in with Google but aren't yet
+-- approved as Test Users in the OAuth consent screen. Owner reviews this
+-- table, manually adds approved emails as Test Users in Google Cloud
+-- Console, then emails the requester to let them know.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS access_requests (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  email          text NOT NULL,
+  name           text,
+  message        text,
+  status         text NOT NULL DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected'
+  requested_at   timestamptz NOT NULL DEFAULT now(),
+  reviewed_at    timestamptz,
+  reviewer_note  text
+);
+
+-- One row per (email, pending) — re-request updates rather than duplicates
+CREATE UNIQUE INDEX IF NOT EXISTS access_requests_email_pending_unique
+  ON access_requests (email)
+  WHERE status = 'pending';
+
+CREATE INDEX IF NOT EXISTS access_requests_status_idx
+  ON access_requests (status, requested_at DESC);
+
+-- No public reads. Only the service-role key (used server-side) can read or
+-- write this table. Reviewer accesses rows via the Supabase dashboard.
+ALTER TABLE access_requests ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "no public access to access_requests"
+  ON access_requests;
+-- Intentionally no policies — RLS denies everything; only service-role bypasses.
+
+COMMENT ON TABLE access_requests IS
+  'Sign-in access requests. While the OAuth app is in test mode, users not yet on the Test Users list request access here. Reviewer adds approved emails to Google Cloud Console manually and updates status.';

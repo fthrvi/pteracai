@@ -2309,3 +2309,75 @@ code { font-family: var(--mono); font-size: 0.92em; }
   letter-spacing: -2px;
 }
 .reorder-drag-handle::before { content: "⋮⋮"; }
+
+/* ---------- Landing: alt row (request access + skip) ---------- */
+.landing-alt-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.landing-alt-dot {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* ---------- Request access form (inside modal) ---------- */
+.request-access-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.request-access-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.request-access-field input,
+.request-access-field textarea {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  padding: 9px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.request-access-field input:focus,
+.request-access-field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(44, 95, 78, 0.12);
+}
+.request-access-field textarea {
+  min-height: 70px;
+  resize: vertical;
+  font-family: var(--sans);
+}
+.request-access-status {
+  font-size: 13px;
+  color: var(--muted);
+  min-height: 0;
+  line-height: 1.4;
+}
+.request-access-status.err {
+  color: var(--wrong);
+}
+.request-access-success {
+  background: rgba(47, 122, 82, 0.08);
+  border-left: 3px solid var(--right);
+  border-radius: 6px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 14px;
+}

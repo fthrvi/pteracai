@@ -497,7 +497,30 @@ function bindLanding() {
         localStorage.removeItem(SKIP_LOGIN_KEY);
         // onSignInChange will call showMainApp
       } catch (e) {
-        err.textContent = "Sign-in failed: " + (e.message || "unknown error");
+        const raw = (e && e.message) || "unknown error";
+        // Detect "not a test user" failures — Google returns various error
+        // shapes depending on browser/account. Surface the request-access CTA
+        // when it looks like a verification/test-user block.
+        const looksLikeTestUserBlock = /access[_ ]?denied|not.*test.*user|verification|unauthorized|invalid_grant|consent/i.test(raw);
+        err.replaceChildren();
+        const line = document.createElement("div");
+        line.textContent = "Sign-in failed: " + raw;
+        err.appendChild(line);
+        if (looksLikeTestUserBlock) {
+          const cta = document.createElement("div");
+          cta.style.marginTop = "10px";
+          cta.textContent = "If you don't have access yet, ";
+          const link = document.createElement("a");
+          link.href = "#";
+          link.textContent = "request access here";
+          link.style.color = "inherit";
+          link.style.fontWeight = "600";
+          link.style.textDecoration = "underline";
+          link.addEventListener("click", (e2) => { e2.preventDefault(); openRequestAccess(); });
+          cta.appendChild(link);
+          cta.appendChild(document.createTextNode("."));
+          err.appendChild(cta);
+        }
         err.classList.remove("hidden");
         btn.disabled = false;
         btn.textContent = "Sign in with Google to start";
@@ -512,6 +535,148 @@ function bindLanding() {
       showMainApp();
     });
   }
+  const reqAccess = $("#landing-request-access");
+  if (reqAccess) {
+    reqAccess.addEventListener("click", (e) => {
+      e.preventDefault();
+      openRequestAccess();
+    });
+  }
+}
+
+// ---------- Request access modal (for users not yet on the OAuth Test
+// Users list while the app is still in test mode) ----------
+function openRequestAccess() {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  const card = document.createElement("div");
+  card.className = "modal-card";
+  overlay.appendChild(card);
+
+  card.appendChild(Object.assign(document.createElement("h3"), {
+    className: "modal-title",
+    textContent: "Request access",
+  }));
+
+  const body = document.createElement("div");
+  body.className = "modal-body";
+  body.appendChild(Object.assign(document.createElement("p"), {
+    style: "margin: 0 0 12px;",
+    textContent: "Google sign-in is currently in test mode, so each account needs to be approved manually. Submit your email and you'll be added within a day. You'll get an email when you're in.",
+  }));
+  card.appendChild(body);
+
+  const form = document.createElement("form");
+  form.className = "request-access-form";
+
+  const mkField = (label, id, type, required, placeholder, maxLen) => {
+    const wrap = document.createElement("label");
+    wrap.className = "request-access-field";
+    wrap.textContent = label;
+    const input = type === "textarea"
+      ? document.createElement("textarea")
+      : document.createElement("input");
+    if (type !== "textarea") input.type = type;
+    input.id = id;
+    input.required = !!required;
+    if (placeholder) input.placeholder = placeholder;
+    if (maxLen) input.maxLength = maxLen;
+    wrap.appendChild(input);
+    form.appendChild(wrap);
+    return input;
+  };
+
+  const emailInput = mkField("Email *", "ra-email", "email", true, "you@example.com", 254);
+  const nameInput = mkField("Name (optional)", "ra-name", "text", false, "First name", 120);
+  const msgInput = mkField("Why you want access (optional)", "ra-message", "textarea", false, "e.g. preparing for IELTS in March, found this app via a friend...", 600);
+
+  const status = document.createElement("div");
+  status.className = "request-access-status";
+  form.appendChild(status);
+
+  const actions = document.createElement("div");
+  actions.className = "modal-actions";
+
+  const cancelBtn = document.createElement("button");
+  cancelBtn.type = "button";
+  cancelBtn.className = "ghost";
+  cancelBtn.textContent = "Cancel";
+
+  const submitBtn = document.createElement("button");
+  submitBtn.type = "submit";
+  submitBtn.className = "primary";
+  submitBtn.textContent = "Request access";
+
+  let done = false;
+  const close = () => {
+    if (done) return;
+    done = true;
+    overlay.classList.add("closing");
+    setTimeout(() => overlay.remove(), 140);
+  };
+
+  cancelBtn.addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+  document.addEventListener("keydown", function onKey(e) {
+    if (done) { document.removeEventListener("keydown", onKey); return; }
+    if (e.key === "Escape") close();
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim();
+    if (!email) {
+      status.textContent = "Email is required.";
+      status.className = "request-access-status err";
+      return;
+    }
+    submitBtn.disabled = true;
+    cancelBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+    status.textContent = "";
+    status.className = "request-access-status";
+    try {
+      const resp = await fetch("/api/access-request", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email,
+          name: nameInput.value.trim(),
+          message: msgInput.value.trim(),
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+      // Success — replace form with confirmation
+      form.replaceChildren();
+      const ok = document.createElement("div");
+      ok.className = "request-access-success";
+      ok.textContent = "Request submitted. You'll hear back by email within a day. In the meantime, you can use the app without sign-in by clicking 'Continue without signing in' on the landing page.";
+      form.appendChild(ok);
+      const okBtn = document.createElement("button");
+      okBtn.type = "button";
+      okBtn.className = "primary";
+      okBtn.textContent = "Close";
+      okBtn.addEventListener("click", close);
+      const okActions = document.createElement("div");
+      okActions.className = "modal-actions";
+      okActions.appendChild(okBtn);
+      form.appendChild(okActions);
+    } catch (err) {
+      status.textContent = "Submit failed: " + (err.message || "unknown error");
+      status.className = "request-access-status err";
+      submitBtn.disabled = false;
+      cancelBtn.disabled = false;
+      submitBtn.textContent = "Request access";
+    }
+  });
+
+  actions.appendChild(cancelBtn);
+  actions.appendChild(submitBtn);
+  form.appendChild(actions);
+  card.appendChild(form);
+  document.body.appendChild(overlay);
+  setTimeout(() => emailInput.focus(), 30);
 }
 
 function showAppropriateInitialView() {
