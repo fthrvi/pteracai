@@ -3766,7 +3766,14 @@ function renderSyncSection(view) {
       }, 1500);
     });
     const signOutBtn = el("button", { class: "ghost" }, "Sign out");
-    signOutBtn.addEventListener("click", () => {
+    signOutBtn.addEventListener("click", async () => {
+      const ok = await modalConfirm({
+        title: "Sign out of Google?",
+        body: "Your progress stays in Drive — you can sign back in any time on any device to restore it. This device will fall back to localStorage until you sign in again.",
+        confirmLabel: "Sign out",
+        cancelLabel: "Cancel",
+      });
+      if (!ok) return;
       PteracaiSync.signOut();
       renderSettingsView();
     });
