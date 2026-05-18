@@ -47,17 +47,19 @@
       </li>
     </ul>
     <div class="landing-supported">
-      Supported tests today: <strong>PTE Academic</strong> &middot; <strong>IELTS Academic</strong>. More coming.
+      Supported tests today: <strong>PTE Academic</strong> &middot; <strong>IELTS Academic</strong> &middot; <strong>TOEFL iBT</strong> &middot; <strong>Duolingo English Test</strong>.
     </div>
-    <button id="landing-signin" class="primary landing-signin">Sign in with Google to start</button>
-    <div class="landing-alt-row">
-      <a href="#" id="landing-request-access" class="landing-skip-link">Don't have access? Request it</a>
-      <span class="landing-alt-dot">·</span>
-      <a href="#" id="landing-skip" class="landing-skip-link">Continue without signing in</a>
+    <div class="landing-cta-row">
+      <button id="landing-signin" class="primary landing-signin">Sign in with Google</button>
+      <button id="landing-request-access-btn" class="ghost landing-request-btn">Request access</button>
     </div>
+    <div class="landing-cta-hint">
+      Google blocks emails not yet approved as testers. <strong>First time here? Use Request access.</strong>
+    </div>
+    <a href="#" id="landing-skip" class="landing-skip-link">Continue without signing in</a>
     <div id="landing-error" class="landing-error hidden"></div>
     <div class="landing-small">
-      Google sign-in only requests access to a hidden app folder in your Drive &mdash; not your other files.
+      Approved sign-in syncs progress to a hidden app folder in your own Google Drive &mdash; not the app owner's servers.
       Without sign-in, progress is saved only in this browser.
     </div>
   </div>

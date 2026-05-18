@@ -542,6 +542,13 @@ function bindLanding() {
       openRequestAccess();
     });
   }
+  const reqAccessBtn = $("#landing-request-access-btn");
+  if (reqAccessBtn) {
+    reqAccessBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      openRequestAccess();
+    });
+  }
 }
 
 // ---------- Request access modal (for users not yet on the OAuth Test
