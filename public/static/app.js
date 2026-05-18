@@ -647,11 +647,19 @@ function openRequestAccess() {
       });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
-      // Success — replace form with confirmation
+      // Success — backend tells us whether this was new, already-pending, or
+      // already-approved. Show the right message for each case.
       form.replaceChildren();
       const ok = document.createElement("div");
       ok.className = "request-access-success";
-      ok.textContent = "Request submitted. You'll hear back by email within a day. In the meantime, you can use the app without sign-in by clicking 'Continue without signing in' on the landing page.";
+      if (data.status === "approved") {
+        ok.classList.add("already-approved");
+        ok.textContent = data.message || "You already have access — try signing in with Google.";
+      } else if (data.status === "pending") {
+        ok.textContent = data.message || "Your request is already pending review.";
+      } else {
+        ok.textContent = data.message || "Request submitted. You'll hear back by email within a day. In the meantime, you can use the app without sign-in by clicking 'Continue without signing in' on the landing page.";
+      }
       form.appendChild(ok);
       const okBtn = document.createElement("button");
       okBtn.type = "button";
@@ -3780,13 +3788,64 @@ function renderSyncSection(view) {
     actions.appendChild(syncNowBtn);
     actions.appendChild(signOutBtn);
     wrap.appendChild(actions);
+  } else if (PteracaiSync.sessionExpired && PteracaiSync.sessionExpired()) {
+    // Cached user but expired/missing token — show resume UI rather than
+    // a generic sign-in that implies they were never signed in.
+    const cachedUser = PteracaiSync.user();
+    const status = el("div", { class: "settings-status show info" });
+    status.appendChild(document.createTextNode(
+      `Your sync session expired. You're still signed in as ${cachedUser?.name || cachedUser?.email || "this account"} — click below to resume syncing to Drive.`
+    ));
+    wrap.appendChild(status);
+
+    const actions = el("div", { class: "settings-actions" });
+    const resumeBtn = el("button", { class: "primary" }, "Resume sync");
+    resumeBtn.addEventListener("click", async () => {
+      resumeBtn.disabled = true;
+      resumeBtn.textContent = "Reconnecting...";
+      try {
+        // Silent first — if Google still has them logged in, this is invisible
+        await PteracaiSync.refreshSilent();
+        renderSettingsView();
+      } catch (_) {
+        // Fall back to interactive sign-in
+        try {
+          await PteracaiSync.signIn();
+          renderSettingsView();
+        } catch (e) {
+          resumeBtn.disabled = false;
+          resumeBtn.textContent = "Resume sync";
+          await modalAlert("Could not resume sync: " + (e.message || "unknown error"), {
+            title: "Sync reconnect failed",
+          });
+        }
+      }
+    });
+    const signOutBtn = el("button", { class: "ghost" }, "Sign out");
+    signOutBtn.addEventListener("click", async () => {
+      const ok = await modalConfirm({
+        title: "Sign out fully?",
+        body: "This will forget your cached account and stop showing your name in the header. Your synced progress in Drive is unaffected.",
+        confirmLabel: "Sign out",
+        cancelLabel: "Cancel",
+      });
+      if (!ok) return;
+      PteracaiSync.signOut();
+      renderSettingsView();
+    });
+    actions.appendChild(resumeBtn);
+    actions.appendChild(signOutBtn);
+    wrap.appendChild(actions);
   } else {
     const signInBtn = el("button", { class: "primary" }, "Sign in with Google");
     signInBtn.addEventListener("click", async () => {
       try {
         await PteracaiSync.signIn();
+        renderSettingsView();
       } catch (e) {
-        alert("Google sign-in failed: " + e.message);
+        await modalAlert("Google sign-in failed: " + (e.message || "unknown error"), {
+          title: "Sign-in failed",
+        });
       }
     });
     wrap.appendChild(signInBtn);

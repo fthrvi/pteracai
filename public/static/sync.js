@@ -69,6 +69,19 @@ window.PteracaiSync = (function () {
           state.tokenExpiry = cached.expiry;
           state.user = cachedUser;
           state.onSignInChange({ signedIn: true, user: state.user, source: 'cached' });
+        } else if (cachedUser) {
+          // Token expired but we know who they were — keep user info around so
+          // UI can show "session expired, click to resume" instead of falling
+          // all the way back to the unsigned landing page. Try a silent refresh
+          // first; if Google still has them logged in elsewhere this is invisible.
+          state.user = cachedUser;
+          refreshSilent()
+            .then(() => {
+              // handleTokenResponse already fired onSignInChange with signedIn:true
+            })
+            .catch(() => {
+              state.onSignInChange({ signedIn: false, expired: true, user: cachedUser });
+            });
         } else {
           state.onSignInChange({ signedIn: false });
         }
@@ -101,6 +114,27 @@ window.PteracaiSync = (function () {
       };
       state.tokenClient.requestAccessToken({ prompt: 'consent' });
     });
+  }
+
+  // Silent token refresh — no popup, no consent. Works when the user has
+  // already granted consent and Google still has a valid session for them.
+  // Resolves with the new token; rejects if interaction is required.
+  async function refreshSilent() {
+    if (!state.tokenClient) throw new Error('Sign-in not initialized.');
+    return new Promise((resolve, reject) => {
+      state.tokenClient.callback = (resp) => {
+        if (resp.error) return reject(new Error(resp.error_description || resp.error));
+        handleTokenResponse(resp).then(resolve).catch(reject);
+      };
+      // Empty prompt = no UI, fails fast if user must interact
+      state.tokenClient.requestAccessToken({ prompt: '' });
+    });
+  }
+
+  // "Was signed in but token expired" — distinguishes from never-signed-in.
+  // True when we have a cached user but no valid token.
+  function sessionExpired() {
+    return !!state.user && (!state.accessToken || Date.now() >= state.tokenExpiry);
   }
 
   async function handleTokenResponse(resp) {
@@ -232,6 +266,8 @@ window.PteracaiSync = (function () {
     push,
     schedulePush,
     signedIn,
+    sessionExpired,
+    refreshSilent,
     user,
     configured,
   };
