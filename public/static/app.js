@@ -635,14 +635,27 @@ function renderPicker() {
   clear(picker);
 
   const sectionLabel = state.section.charAt(0).toUpperCase() + state.section.slice(1);
-  picker.appendChild(el("h2", { id: "picker-title" }, `Pick a ${state.section} task type`));
+  const testLabel = TEST_LABELS[state.test]?.short || "PTE";
+  const stats = computeStats();
+  const secStats = stats.bySection[state.section];
 
-  // Per-section tips (top 3 from any category, plus link to full Tips)
+  // Hero — tight breadcrumb, title, current-section accuracy
+  const hero = el("div", { class: "picker-hero" });
+  hero.appendChild(el("div", { class: "picker-breadcrumb" }, `${testLabel} · ${sectionLabel}`));
+  hero.appendChild(el("h2", { class: "picker-title" }, `${sectionLabel} practice`));
+  if (secStats && secStats.total > 0) {
+    const acc = Math.round((secStats.correct / secStats.total) * 100);
+    hero.appendChild(el("div", { class: "picker-hero-meta" },
+      `${secStats.total} attempts · ${acc}% accuracy`));
+  }
+  picker.appendChild(hero);
+
+  // Compact strategy reminders
   const sectionTips = collectSectionTips(state.section);
   if (sectionTips.length) {
     const tipsBox = el("div", { class: "section-tips" });
     tipsBox.appendChild(el("div", { class: "section-tips-header" },
-      el("span", null, `${sectionLabel} strategy notes`),
+      el("span", null, "Quick strategy"),
       el("a", {
         href: "#",
         class: "section-tips-link",
@@ -650,53 +663,103 @@ function renderPicker() {
       }, "See all tips →"),
     ));
     const ul = el("ul", null);
-    sectionTips.slice(0, 4).forEach((t) => ul.appendChild(el("li", null, t)));
+    sectionTips.slice(0, 3).forEach((t) => ul.appendChild(el("li", null, t)));
     tipsBox.appendChild(ul);
     picker.appendChild(tipsBox);
   }
 
-  // Task type grid
+  // Task type cards with icon + accuracy
   const types = new Set(
     currentQuestions().filter((q) => q.section === state.section).map((q) => q.type)
   );
-  // Indicate that community questions blend in
-  const communityNote = el(
-    "div",
-    { class: "picker-community-note" },
-    "Questions from the seed bank are mixed with AI-generated questions contributed by other learners."
-  );
-  picker.appendChild(communityNote);
-
   const list = el("div", { id: "picker-list", class: "picker-list" });
   if (types.size === 0) {
     list.appendChild(el("div", { class: "picker-empty" },
       el("div", { class: "picker-empty-mark" }, "—"),
-      el("div", { class: "picker-empty-title" }, `No ${state.section} questions yet for ${TEST_LABELS[state.test]?.short || "this test"}`),
+      el("div", { class: "picker-empty-title" }, `No ${state.section} questions yet for ${testLabel}`),
       el("div", { class: "picker-empty-sub" }, "Content for this section is coming soon. Try a different section or switch tests via the pill in the top-left.")
     ));
   } else {
     for (const t of types) {
       const [name, desc] = TYPE_NAMES[t] || [t, ""];
       const count = currentQuestions().filter((q) => q.section === state.section && q.type === t).length;
-      list.appendChild(
-        el(
-          "div",
-          { class: "picker-item", onclick: () => pickByType(t) },
-          el("div", { class: "picker-item-row" },
-            el("div", { class: "pname" }, name),
-            el("div", { class: "picker-count" }, `${count}`),
+      const tStats = stats.byType[t];
+      const item = el("div", { class: "picker-item", onclick: () => pickByType(t) });
+      const head = el("div", { class: "picker-item-head" });
+      head.appendChild(typeIcon(t));
+      head.appendChild(el("div", { class: "picker-item-title" },
+        el("div", { class: "pname" }, name),
+        el("div", { class: "pdesc" }, desc),
+      ));
+      head.appendChild(el("div", { class: "picker-count" }, `${count}`));
+      item.appendChild(head);
+      if (tStats && tStats.total > 0) {
+        const acc = Math.round((tStats.correct / tStats.total) * 100);
+        const tone = acc >= 80 ? "good" : acc >= 60 ? "ok" : "weak";
+        const meta = el("div", { class: "picker-item-meta" },
+          el("div", { class: "picker-meta-text" }, `${tStats.total} attempts · ${acc}%`),
+          el("div", { class: "picker-meta-bar" },
+            el("div", { class: `picker-meta-fill ${tone}`, style: `width: ${acc}%` })
           ),
-          el("div", { class: "pdesc" }, desc)
-        )
-      );
+        );
+        item.appendChild(meta);
+      }
+      list.appendChild(item);
     }
   }
   picker.appendChild(list);
 
   if (types.size > 0) {
-    const randomBtn = el("button", { id: "random-btn", class: "primary", onclick: () => pickRandom() }, "Random question");
-    picker.appendChild(randomBtn);
+    const footer = el("div", { class: "picker-footer" });
+    footer.appendChild(el("button", {
+      id: "random-btn",
+      class: "primary",
+      onclick: () => pickRandom(),
+    }, `Random ${state.section} question`));
+    footer.appendChild(el(
+      "div",
+      { class: "picker-community-note" },
+      "Questions blend the static bank with AI-generated contributions from the community."
+    ));
+    picker.appendChild(footer);
   }
+}
+
+// Build an inline SVG icon node for a task type. Uses DOMParser so we never
+// touch innerHTML with string content (security hygiene — even though all
+// strings here are hardcoded under our control).
+const TYPE_ICON_SVGS = {
+  mcq_single: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="5" r="2"/><circle cx="5" cy="10" r="2"/><circle cx="5" cy="15" r="2"/><path d="M4 5l1 1 1.5-2"/><line x1="9" y1="5" x2="17" y2="5"/><line x1="9" y1="10" x2="17" y2="10"/><line x1="9" y1="15" x2="17" y2="15"/></svg>',
+  reorder: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="4" x2="16" y2="4"/><line x1="6" y1="10" x2="16" y2="10"/><line x1="6" y1="16" x2="16" y2="16"/><path d="M3 6l-1-2 1-2"/><path d="M3 12l-1-2 1-2"/><path d="M3 18l-1-2 1-2"/></svg>',
+  fib: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="6" y2="6"/><rect x="7" y="3" width="5" height="6" rx="1"/><line x1="13" y1="6" x2="17" y2="6"/><line x1="3" y1="14" x2="8" y2="14"/><rect x="9" y="11" width="5" height="6" rx="1"/><line x1="15" y1="14" x2="17" y2="14"/></svg>',
+  wfd: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8v4l3 1V7z"/><path d="M6 7l4-3v12l-4-3"/><path d="M13 7c1.5 1 1.5 5 0 6"/><path d="M15.5 5c2.5 2 2.5 8 0 10"/></svg>',
+  tfng: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h4"/><line x1="5" y1="5" x2="5" y2="11"/><path d="M10 5v6h3l-3-3"/><path d="M14 5h3v3"/></svg>',
+  matching_headings: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="3" rx="0.5"/><rect x="2" y="9" width="6" height="3" rx="0.5"/><rect x="2" y="15" width="6" height="3" rx="0.5"/><path d="M9 4.5h2c1 0 1 1.5 1 2v0c0 0.5 0 2 1 2h3"/><path d="M9 10.5h6"/><path d="M9 16.5h2c1 0 1-1.5 1-2v0c0-0.5 0-2 1-2h3"/></svg>',
+  swt: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="4" x2="17" y2="4"/><line x1="3" y1="7" x2="17" y2="7"/><line x1="3" y1="10" x2="13" y2="10"/><path d="M5 14h10"/><path d="M3 14l2-2v4z"/><path d="M17 14l-2-2v4z"/></svg>',
+  essay: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="12" height="16" rx="1"/><line x1="6" y1="6" x2="14" y2="6"/><line x1="6" y1="9" x2="14" y2="9"/><line x1="6" y1="12" x2="14" y2="12"/><line x1="6" y1="15" x2="10" y2="15"/></svg>',
+  task1: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h14"/><path d="M3 17V3"/><polyline points="6 13 10 9 13 11 17 6"/></svg>',
+  read_aloud: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h14v10H10l-3 3v-3H3z"/><line x1="6" y1="7" x2="14" y2="7"/><line x1="6" y1="10" x2="12" y2="10"/></svg>',
+  repeat_sentence: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="4" height="9" rx="2"/><path d="M5 9c0 3 2 5 5 5s5-2 5-5"/><line x1="10" y1="14" x2="10" y2="17"/><line x1="7" y1="17" x2="13" y2="17"/></svg>',
+  describe_image: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="16" height="14" rx="1"/><circle cx="7" cy="8" r="1.5"/><path d="M2 14l4-4 4 4 5-5 3 3"/></svg>',
+  retell_lecture: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="5" r="2"/><path d="M5 17v-2c0-3 2-5 5-5s5 2 5 5v2"/><rect x="3" y="17" width="14" height="1"/></svg>',
+  answer_short: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7"/><path d="M8 8c0-1 1-2 2-2s2 1 2 2-1 1.5-2 2v1"/><circle cx="10" cy="14" r="0.5" fill="currentColor"/></svg>',
+  ielts_part1: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><text x="10" y="13.5" font-family="sans-serif" font-size="8" font-weight="600" text-anchor="middle" stroke="none" fill="currentColor">1</text></svg>',
+  ielts_part2: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><text x="10" y="13.5" font-family="sans-serif" font-size="8" font-weight="600" text-anchor="middle" stroke="none" fill="currentColor">2</text></svg>',
+  ielts_part3: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7"/><text x="10" y="13.5" font-family="sans-serif" font-size="8" font-weight="600" text-anchor="middle" stroke="none" fill="currentColor">3</text></svg>',
+  lst_mcq: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8v4l3 1V7z"/><path d="M6 7l4-3v12l-4-3"/><line x1="13" y1="6" x2="17" y2="6"/><line x1="13" y1="10" x2="17" y2="10"/><line x1="13" y1="14" x2="17" y2="14"/></svg>',
+  lst_summary: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l3 1V7z"/><path d="M5 7l3-3v12l-3-3"/><line x1="11" y1="6" x2="18" y2="6"/><line x1="11" y1="9" x2="18" y2="9"/><line x1="11" y1="12" x2="16" y2="12"/></svg>',
+  lst_sc: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l3 1V7z"/><path d="M5 7l3-3v12l-3-3"/><line x1="11" y1="10" x2="13" y2="10"/><rect x="14" y="7.5" width="4" height="5" rx="0.5"/></svg>',
+};
+
+function typeIcon(type) {
+  const svgString = TYPE_ICON_SVGS[type] ||
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="6"/></svg>';
+  const wrap = document.createElement("span");
+  wrap.className = "picker-item-icon";
+  // Parse the trusted SVG string into a real DOM node — no innerHTML.
+  const parsed = new DOMParser().parseFromString(svgString, "image/svg+xml").documentElement;
+  wrap.appendChild(parsed);
+  return wrap;
 }
 
 // Collect top per-section tips (best-of-section from the tips structure).
