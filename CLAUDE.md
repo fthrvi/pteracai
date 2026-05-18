@@ -76,11 +76,20 @@ Response shape (append to `data/responses.jsonl`):
 The `question` object must follow the schema for its `type` in `data/bank.json`:
 
 - `mcq_single`: `passage`, `question`, `options[]`, `answer` (index), `explanation`, `trap`
+- `mcq_multi`: `passage`, `question` (stem must say "Select TWO" or similar), `options[]` (4-5 items), `answer[]` (sorted indices of correct picks), `explanation`, `trap`. Reading section. Negative marking — wrong distractors should be a true-but-on-wrong-side fact or an extremity-word inversion of an actual claim.
 - `reorder`: `paragraphs[]` (in jumbled order as displayed), `answer[]` (indices in correct order), `explanation`, `trap`
-- `fib`: `text_parts[]` (N+1 strings around N blanks), `options[][]` (N arrays of choices), `answer[]` (N indices), `explanation`, `trap`
+- `fib`: `text_parts[]` (N+1 strings around N blanks), `options[][]` (N arrays of choices), `answer[]` (N indices), `explanation`, `trap`. This is the **R&W Fill in the Blanks** style (dropdown per blank).
+- `r_fib`: `text_parts[]` (N+1 strings around N blanks), `word_bank[]` (shared list, typically 2*N items so half are distractors), `answer[]` (N indices INTO `word_bank`), `explanation`, `trap`. This is the **drag-and-drop Reading FIB** — a single shared word bank, with distractors. Distractors should share a root or related meaning with correct answers (e.g. `confirmed` vs. `challenged`).
 - `wfd`: `audio_text` (the sentence to dictate), `answer` (same text), `explanation`
+- `lst_fib`: `audio_text` (full lecture text for TTS), `text_parts[]` (N+1 strings around N blanks in a printed transcript that is a SUBSET of the audio), `answer[]` (N strings, exact case-insensitive match required), `explanation`, `trap`. PTE Listening Fill in the Blanks.
+- `lst_mcq`: `audio_text`, `question`, `options[]`, `answer` (index), `explanation`, `trap`
+- `lst_mcq_multi`: `audio_text`, `question` (stem must say "Select TWO" or similar), `options[]` (4-5 items), `answer[]` (sorted indices), `explanation`, `trap`. Listening section. Negative marking. Distractors often lift vocabulary directly from the audio but attach it to the wrong claim.
+- `lst_hcs` (Highlight Correct Summary): `audio_text`, `question` (optional, otherwise a default prompt is used), `options[]` (4 paragraph-length summaries, ~30-60 words each — only ONE is faithful to the lecture), `answer` (single index), `explanation`, `trap`. The wrong summaries should: (a) overstate with "always/never/entirely", (b) take a side-detail and inflate it, (c) reverse the main argument while reusing surface vocabulary.
+- `lst_smw` (Select Missing Word): `audio_text` (the spoken passage, cut off before the final word — write it as a sentence that trails off naturally), `question`, `options[]` (4 short words/phrases — all must be grammatically valid, only one is the natural semantic completion), `answer` (single index), `explanation`, `trap`.
+- `lst_hiw` (Highlight Incorrect Words): `audio_text` (the original, correct spoken text used for TTS), `transcript_text` (the printed transcript with intentional substitutions of words/phrases), `errors[]` (0-based indices into `transcript_text.split(/\s+/)` marking which tokens differ from the audio), `explanation`, `trap`. Aim for 3-6 substitutions per item; classic patterns: polarity flips (rising/falling, East/West), date drift (1990s/1980s), and noun swaps that change meaning.
 - `swt`: `passage`, `rubric`, `sample`, `grading_notes`
 - `essay`: `prompt`, `rubric`, `grading_notes`
+- `describe_image`: `image_svg` (inline SVG markup, self-contained — author the chart/map directly as SVG), `prompt`, `rubric`, `grading_notes`. The browser parses `image_svg` and renders it above the prompt. Older items without `image_svg` still work but should be upgraded.
 
 **Quality bar for follow-ups:**
 - Same `type` and same `topic` as the original

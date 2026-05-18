@@ -70,6 +70,10 @@ function saveMockState() {
     elapsedSec,
     _beforeAttempts: m._beforeAttempts,
     savedAt: Date.now(),
+    // Full-mock-only extras (omitted from per-section mocks).
+    fullMock: !!m.fullMock,
+    phases: m.fullMock ? m.phases : undefined,
+    phaseIdx: m.fullMock ? m.phaseIdx : undefined,
   };
   try {
     localStorage.setItem(MOCK_STATE_KEY, JSON.stringify(snapshot));
@@ -102,6 +106,91 @@ const MOCK_CONFIGS = {
     listening: { label: "Listening", durationSec: 30 * 60, count: 10 },
     writing: { label: "Writing", durationSec: 60 * 60, count: 2 },
     speaking: { label: "Speaking", durationSec: 14 * 60, count: 5 },
+  },
+};
+
+// Per-item time budgets mirroring real PTE Academic. Active only in mock mode.
+//   prep    — seconds the user has to read/look before recording starts
+//   record  — seconds of recording before auto-submit (speaking items)
+//   write   — seconds to type before auto-submit (writing items, SWT in listening)
+// On timeout, the renderer's primary action button is auto-clicked.
+const ITEM_TIMERS = {
+  // Speaking — prep then record
+  read_aloud:      { prep: 35, record: 40 },
+  repeat_sentence: { prep: 0,  record: 15 },
+  describe_image:  { prep: 25, record: 40 },
+  retell_lecture:  { prep: 10, record: 40 },
+  answer_short:    { prep: 0,  record: 10 },
+  // Writing — single deadline
+  swt:             { write: 10 * 60 },
+  essay:           { write: 20 * 60 },
+  // Listening — SST has its own typing window after audio
+  lst_summary:     { write: 10 * 60 },
+};
+
+// Full end-to-end mock that follows the real PTE Academic structure:
+// Part 1 (Speaking + Writing combined timer) → Part 2 (Reading) → optional
+// 10-min break → Part 3 (Listening). Item quotas per task type mirror the
+// official Pearson task distribution, scaled down for practice (real PTE
+// is ~2-3 hours; this is ~70-90 min). The Listening phase enables
+// `audioOnce` which hides the replay buttons in renderers to simulate the
+// real test (audio plays exactly once).
+const FULL_MOCK_CONFIGS = {
+  pte: {
+    label: "PTE Academic — Full Mock",
+    blurb:
+      "Faithful end-to-end simulation: Speaking & Writing combined, then Reading, optional break, then Listening. Audio plays once in the Listening phase.",
+    phases: [
+      {
+        key: "speaking_writing",
+        label: "Part 1 — Speaking & Writing",
+        durationSec: 60 * 60,
+        quotas: [
+          { type: "read_aloud", count: 3 },
+          { type: "repeat_sentence", count: 4 },
+          { type: "describe_image", count: 2 },
+          { type: "retell_lecture", count: 1 },
+          { type: "answer_short", count: 3 },
+          { type: "swt", count: 1 },
+          { type: "essay", count: 1 },
+        ],
+        audioOnce: true,
+      },
+      {
+        key: "reading",
+        label: "Part 2 — Reading",
+        durationSec: 30 * 60,
+        quotas: [
+          { type: "fib", count: 3 },
+          { type: "mcq_multi", count: 1 },
+          { type: "reorder", count: 2 },
+          { type: "r_fib", count: 2 },
+          { type: "mcq_single", count: 2 },
+        ],
+      },
+      {
+        key: "break",
+        label: "Optional 10-minute break",
+        durationSec: 10 * 60,
+        isBreak: true,
+      },
+      {
+        key: "listening",
+        label: "Part 3 — Listening",
+        durationSec: 35 * 60,
+        quotas: [
+          { type: "lst_summary", count: 1 },
+          { type: "lst_mcq_multi", count: 1 },
+          { type: "lst_fib", count: 2 },
+          { type: "lst_hcs", count: 1 },
+          { type: "lst_mcq", count: 1 },
+          { type: "lst_smw", count: 1 },
+          { type: "lst_hiw", count: 2 },
+          { type: "wfd", count: 3 },
+        ],
+        audioOnce: true,
+      },
+    ],
   },
 };
 
@@ -1142,6 +1231,15 @@ const TYPE_NAMES = {
   lst_mcq: ["Listening Multiple Choice", "Listen to a passage, answer one MCQ"],
   lst_summary: ["Summarize Spoken Text", "Listen to a lecture, write a 50-70 word summary"],
   lst_sc: ["Listening Sentence Completion", "Listen and fill in the blanks in a printed sentence"],
+  // PTE Reading expansions
+  r_fib: ["Reading Fill in the Blanks", "Drag from a shared word bank into each blank"],
+  mcq_multi: ["Reading MCQ — Multiple Answer", "Pick all correct answers (negative marking!)"],
+  // PTE Listening expansions
+  lst_mcq_multi: ["Listening MCQ — Multiple Answer", "Listen, pick all correct (negative marking!)"],
+  lst_fib: ["Listening Fill in the Blanks", "Listen and type the missing words exactly"],
+  lst_hcs: ["Highlight Correct Summary", "Listen, then pick the summary that best captures it"],
+  lst_smw: ["Select Missing Word", "Audio cuts out before the last word — pick what fits"],
+  lst_hiw: ["Highlight Incorrect Words", "Click every transcript word that differs from the audio"],
 };
 
 function renderPicker() {
@@ -1271,6 +1369,13 @@ const TYPE_ICON_SVGS = {
   lst_mcq: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8v4l3 1V7z"/><path d="M6 7l4-3v12l-4-3"/><line x1="13" y1="6" x2="17" y2="6"/><line x1="13" y1="10" x2="17" y2="10"/><line x1="13" y1="14" x2="17" y2="14"/></svg>',
   lst_summary: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l3 1V7z"/><path d="M5 7l3-3v12l-3-3"/><line x1="11" y1="6" x2="18" y2="6"/><line x1="11" y1="9" x2="18" y2="9"/><line x1="11" y1="12" x2="16" y2="12"/></svg>',
   lst_sc: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l3 1V7z"/><path d="M5 7l3-3v12l-3-3"/><line x1="11" y1="10" x2="13" y2="10"/><rect x="14" y="7.5" width="4" height="5" rx="0.5"/></svg>',
+  r_fib: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="5" x2="6" y2="5"/><rect x="7" y="3" width="5" height="4" rx="0.5" fill="currentColor" fill-opacity="0.15"/><line x1="13" y1="5" x2="17" y2="5"/><line x1="3" y1="12" x2="8" y2="12"/><rect x="9" y="10" width="5" height="4" rx="0.5" fill="currentColor" fill-opacity="0.15"/><line x1="15" y1="12" x2="17" y2="12"/><path d="M5 17l2 1 3-2"/></svg>',
+  mcq_multi: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4" height="4"/><path d="M3.5 5l1 1 1.5-2"/><rect x="3" y="9" width="4" height="4"/><path d="M3.5 11l1 1 1.5-2"/><rect x="3" y="15" width="4" height="4"/><line x1="9" y1="5" x2="17" y2="5"/><line x1="9" y1="11" x2="17" y2="11"/><line x1="9" y1="17" x2="14" y2="17"/></svg>',
+  lst_mcq_multi: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l2 1V7z"/><path d="M4 7l3-3v12l-3-3"/><rect x="9" y="4" width="3" height="3"/><path d="M9.3 5.5l0.7 0.7 1-1.2"/><rect x="9" y="9" width="3" height="3"/><path d="M9.3 10.5l0.7 0.7 1-1.2"/><rect x="9" y="14" width="3" height="3"/><line x1="13" y1="5.5" x2="18" y2="5.5"/><line x1="13" y1="10.5" x2="18" y2="10.5"/><line x1="13" y1="15.5" x2="17" y2="15.5"/></svg>',
+  lst_fib: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l2 1V7z"/><path d="M4 7l3-3v12l-3-3"/><line x1="9" y1="6" x2="11" y2="6"/><rect x="12" y="4" width="6" height="4" rx="0.5"/><line x1="9" y1="13" x2="13" y2="13"/><rect x="14" y="11" width="4" height="4" rx="0.5"/></svg>',
+  lst_hcs: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l2 1V7z"/><path d="M4 7l3-3v12l-3-3"/><rect x="9" y="4" width="9" height="3.5" rx="0.5"/><rect x="9" y="9" width="9" height="3.5" rx="0.5" fill="currentColor" fill-opacity="0.25"/><path d="M11 10.75l1 1 2-2" stroke-width="1.2"/><rect x="9" y="14" width="9" height="3.5" rx="0.5"/></svg>',
+  lst_smw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l2 1V7z"/><path d="M4 7l3-3v12l-3-3"/><line x1="9" y1="10" x2="13" y2="10"/><rect x="14" y="7.5" width="4" height="5" rx="0.5" stroke-dasharray="2 1.5"/><text x="16" y="11.2" font-family="sans-serif" font-size="5" stroke="none" fill="currentColor" text-anchor="middle">?</text></svg>',
+  lst_hiw: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8v4l2 1V7z"/><path d="M4 7l3-3v12l-3-3"/><line x1="9" y1="6" x2="12" y2="6"/><line x1="13" y1="6" x2="17" y2="6" stroke-dasharray="2 1"/><line x1="9" y1="11" x2="13" y2="11" stroke-dasharray="2 1"/><line x1="14" y1="11" x2="17" y2="11"/><line x1="9" y1="16" x2="13" y2="16"/><line x1="14" y1="16" x2="17" y2="16" stroke-dasharray="2 1"/></svg>',
 };
 
 function typeIcon(type) {
@@ -2429,6 +2534,20 @@ const RENDERERS = {
   },
 
   describe_image(card, q) {
+    // Render the inline SVG visual via DOMParser — the SVG string in the bank is
+    // trusted (we author it), but we still avoid innerHTML for hygiene.
+    if (q.image_svg) {
+      const wrap = el("div", { class: "di-image-wrap" });
+      try {
+        const parsed = new DOMParser().parseFromString(q.image_svg, "image/svg+xml").documentElement;
+        if (parsed && parsed.nodeName === "svg") {
+          wrap.appendChild(parsed);
+          card.appendChild(wrap);
+        }
+      } catch (e) {
+        // Silent fallback: prompt text alone is still useful.
+      }
+    }
     card.appendChild(el("div", { class: "qprompt" }, q.prompt));
     const ui = buildSpeakingUI({
       card,
@@ -2532,6 +2651,360 @@ const RENDERERS = {
       submitForLLMGrading(q, input.value.trim());
     }));
   },
+
+  // ------------------- PTE Reading expansions -------------------
+
+  // Reading Fill in the Blanks (drag-and-drop with shared word bank).
+  // UX: click a word in the bank to "pick it up", then click a blank to drop.
+  // Click a filled blank to send the word back to the bank.
+  r_fib(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Fill each blank by clicking a word, then clicking the blank. Click a filled blank to release the word."));
+    const placed = new Array(q.answer.length).fill(-1);
+    let picked = -1; // index into word_bank
+
+    const textWrap = el("div", { class: "fib-text r-fib-text" });
+    const blanks = [];
+    q.text_parts.forEach((part, i) => {
+      textWrap.appendChild(document.createTextNode(part));
+      if (i < q.answer.length) {
+        const slot = el("span", { class: "r-fib-slot", "data-idx": String(i) }, " ");
+        blanks.push(slot);
+        textWrap.appendChild(slot);
+      }
+    });
+    card.appendChild(textWrap);
+
+    const bank = el("div", { class: "r-fib-bank" });
+    const chips = q.word_bank.map((w, idx) => {
+      const chip = el("div", { class: "r-fib-chip", "data-idx": String(idx) }, w);
+      chip.addEventListener("click", () => {
+        if (submitted) return;
+        if (chip.classList.contains("used")) return;
+        // toggle pick
+        bank.querySelectorAll(".r-fib-chip").forEach((c) => c.classList.remove("picked"));
+        if (picked === idx) {
+          picked = -1;
+        } else {
+          chip.classList.add("picked");
+          picked = idx;
+        }
+      });
+      bank.appendChild(chip);
+      return chip;
+    });
+    card.appendChild(bank);
+
+    blanks.forEach((slot, bi) => {
+      slot.addEventListener("click", () => {
+        if (submitted) return;
+        // If slot is filled, release the word
+        if (placed[bi] >= 0) {
+          const releasedIdx = placed[bi];
+          chips[releasedIdx].classList.remove("used");
+          placed[bi] = -1;
+          slot.textContent = " ";
+          slot.classList.remove("filled");
+          return;
+        }
+        // Otherwise, if a word is picked, place it
+        if (picked < 0) return;
+        chips[picked].classList.add("used");
+        chips[picked].classList.remove("picked");
+        slot.textContent = q.word_bank[picked];
+        slot.classList.add("filled");
+        placed[bi] = picked;
+        picked = -1;
+      });
+    });
+
+    let submitted = false;
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      if (placed.some((v) => v < 0)) return alert("Fill every blank first.");
+      submitted = true;
+      const correct = JSON.stringify(placed) === JSON.stringify(q.answer);
+      recordAttempt(q, placed, correct);
+      // Mark each blank with correct/wrong + correction
+      blanks.forEach((slot, i) => {
+        const isRight = placed[i] === q.answer[i];
+        slot.classList.add(isRight ? "fib-correct" : "fib-wrong");
+        if (!isRight) {
+          slot.insertAdjacentElement("afterend",
+            el("span", { class: "fib-correction" }, ` → ${q.word_bank[q.answer[i]]}`));
+        }
+      });
+      showInlineFeedback(card, q, placed, correct);
+    }));
+  },
+
+  // Reading MCQ — Multiple Answer (negative marking).
+  mcq_multi(card, q) {
+    card.appendChild(el("div", { class: "passage" }, q.passage));
+    card.appendChild(el("div", { class: "qprompt" }, q.question));
+    card.appendChild(el("div", { class: "tfng-hint negative-marking" },
+      "Negative marking applies — every wrong tick costs a point. Only check options you're sure of."));
+    const opts = el("div", { class: "options mcq-multi-options" });
+    const selected = new Set();
+    let submitted = false;
+    q.options.forEach((opt, idx) => {
+      const cb = el("input", { type: "checkbox", "data-idx": String(idx) });
+      cb.addEventListener("change", () => {
+        if (submitted) { cb.checked = !cb.checked; return; }
+        if (cb.checked) selected.add(idx); else selected.delete(idx);
+      });
+      const o = el("label", { class: "option mcq-multi-option" }, cb, el("span", { class: "mcq-multi-text" }, opt));
+      opts.appendChild(o);
+    });
+    card.appendChild(opts);
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      if (selected.size === 0) return alert("Select at least one option.");
+      submitted = true;
+      const ans = Array.from(selected).sort((a, b) => a - b);
+      const correct = JSON.stringify(ans) === JSON.stringify([...q.answer].sort((a, b) => a - b));
+      recordAttempt(q, ans, correct);
+      // Mark options: correct = green, user-picked-wrong = red, missed-correct = green outline
+      opts.querySelectorAll(".mcq-multi-option").forEach((node, idx) => {
+        const isAnswer = q.answer.includes(idx);
+        const isPicked = selected.has(idx);
+        node.querySelector("input").disabled = true;
+        if (isAnswer && isPicked) node.classList.add("correct");
+        else if (isAnswer && !isPicked) node.classList.add("missed");
+        else if (!isAnswer && isPicked) node.classList.add("wrong");
+      });
+      showInlineFeedback(card, q, ans, correct);
+    }));
+  },
+
+  // ------------------- PTE Listening expansions -------------------
+
+  // Listening MCQ — Multiple Answer (negative marking).
+  lst_mcq_multi(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen, then select all correct answers:"));
+    const controls = el("div", { class: "wfd-controls" });
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text) }, "▶  Play"));
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(q.audio_text), 300);
+
+    card.appendChild(el("div", { class: "qprompt", style: "margin-top: 18px;" }, q.question));
+    card.appendChild(el("div", { class: "tfng-hint negative-marking" },
+      "Negative marking applies — every wrong tick costs a point."));
+    const opts = el("div", { class: "options mcq-multi-options" });
+    const selected = new Set();
+    let submitted = false;
+    q.options.forEach((opt, idx) => {
+      const cb = el("input", { type: "checkbox" });
+      cb.addEventListener("change", () => {
+        if (submitted) { cb.checked = !cb.checked; return; }
+        if (cb.checked) selected.add(idx); else selected.delete(idx);
+      });
+      opts.appendChild(el("label", { class: "option mcq-multi-option" }, cb, el("span", { class: "mcq-multi-text" }, opt)));
+    });
+    card.appendChild(opts);
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      if (selected.size === 0) return alert("Select at least one option.");
+      submitted = true;
+      const ans = Array.from(selected).sort((a, b) => a - b);
+      const correct = JSON.stringify(ans) === JSON.stringify([...q.answer].sort((a, b) => a - b));
+      recordAttempt(q, ans, correct);
+      opts.querySelectorAll(".mcq-multi-option").forEach((node, idx) => {
+        const isAnswer = q.answer.includes(idx);
+        const isPicked = selected.has(idx);
+        node.querySelector("input").disabled = true;
+        if (isAnswer && isPicked) node.classList.add("correct");
+        else if (isAnswer && !isPicked) node.classList.add("missed");
+        else if (!isAnswer && isPicked) node.classList.add("wrong");
+      });
+      showInlineFeedback(card, q, ans, correct);
+    }));
+  },
+
+  // Listening Fill in the Blanks (typed words in transcript). Same shape as
+  // lst_sc but rendered with PTE-style framing.
+  lst_fib(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen, then type the missing words in the transcript below."));
+    const controls = el("div", { class: "wfd-controls" });
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text) }, "▶  Play"));
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(q.audio_text), 300);
+
+    const wrap = el("div", { class: "fib-text", style: "margin-top: 16px;" });
+    const inputs = [];
+    q.text_parts.forEach((part, i) => {
+      wrap.appendChild(document.createTextNode(part));
+      if (i < q.answer.length) {
+        const input = el("input", { type: "text", class: "lst-sc-input", autocomplete: "off", spellcheck: "true" });
+        wrap.appendChild(input);
+        inputs.push(input);
+      }
+    });
+    card.appendChild(wrap);
+    let submitted = false;
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      const userAns = inputs.map((i) => i.value.trim());
+      if (userAns.some((v) => !v)) return alert("Fill in every blank.");
+      submitted = true;
+      const norm = (s) => s.toLowerCase().replace(/[.,!?;:]/g, "").trim();
+      const blankResults = userAns.map((v, idx) => norm(v) === norm(q.answer[idx]));
+      const correct = blankResults.every(Boolean);
+      recordAttempt(q, userAns, correct);
+      inputs.forEach((input, i) => {
+        input.disabled = true;
+        input.classList.add(blankResults[i] ? "fib-correct" : "fib-wrong");
+        if (!blankResults[i]) {
+          input.insertAdjacentElement("afterend", el("span", { class: "fib-correction" }, ` → ${q.answer[i]}`));
+        }
+      });
+      showInlineFeedback(card, q, userAns, correct);
+    }));
+  },
+
+  // Highlight Correct Summary — listen, then pick the summary that captures it.
+  lst_hcs(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen, then pick the summary that best captures the lecture:"));
+    const controls = el("div", { class: "wfd-controls" });
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text) }, "▶  Play lecture"));
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(q.audio_text), 300);
+
+    if (q.question) {
+      card.appendChild(el("div", { class: "qprompt", style: "margin-top: 18px;" }, q.question));
+    }
+    const opts = el("div", { class: "options hcs-options" });
+    let selected = -1;
+    q.options.forEach((opt, idx) => {
+      const o = el("div", { class: "option hcs-option" }, opt);
+      o.addEventListener("click", () => {
+        opts.querySelectorAll(".option").forEach((x) => x.classList.remove("selected"));
+        o.classList.add("selected");
+        selected = idx;
+      });
+      opts.appendChild(o);
+    });
+    card.appendChild(opts);
+    let submitted = false;
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      if (selected < 0) return alert("Pick one summary first.");
+      submitted = true;
+      const correct = selected === q.answer;
+      recordAttempt(q, selected, correct);
+      opts.querySelectorAll(".option").forEach((o, idx) => {
+        o.classList.remove("selected");
+        if (idx === q.answer) o.classList.add("correct");
+        if (idx === selected && selected !== q.answer) o.classList.add("wrong");
+      });
+      showInlineFeedback(card, q, selected, correct);
+    }));
+  },
+
+  // Select Missing Word — audio cuts off mid-sentence; pick the natural completion.
+  lst_smw(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen carefully — the recording cuts out before the final word. Pick the word or phrase that best completes it."));
+    const controls = el("div", { class: "wfd-controls" });
+    // Append an unmistakable cutoff cue at the end so listeners hear where the audio stops.
+    const cutoffText = q.audio_text + " ... [beep]";
+    controls.appendChild(el("button", { onclick: () => speak(cutoffText) }, "▶  Play"));
+    controls.appendChild(el("button", { onclick: () => speak(cutoffText, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(cutoffText), 300);
+
+    if (q.question) {
+      card.appendChild(el("div", { class: "qprompt", style: "margin-top: 18px;" }, q.question));
+    }
+    const opts = el("div", { class: "options" });
+    let selected = -1;
+    q.options.forEach((opt, idx) => {
+      const o = el("div", { class: "option" }, opt);
+      o.addEventListener("click", () => {
+        opts.querySelectorAll(".option").forEach((x) => x.classList.remove("selected"));
+        o.classList.add("selected");
+        selected = idx;
+      });
+      opts.appendChild(o);
+    });
+    card.appendChild(opts);
+    let submitted = false;
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      if (selected < 0) return alert("Pick one option first.");
+      submitted = true;
+      const correct = selected === q.answer;
+      recordAttempt(q, selected, correct);
+      opts.querySelectorAll(".option").forEach((o, idx) => {
+        o.classList.remove("selected");
+        if (idx === q.answer) o.classList.add("correct");
+        if (idx === selected && selected !== q.answer) o.classList.add("wrong");
+      });
+      showInlineFeedback(card, q, selected, correct);
+    }));
+  },
+
+  // Highlight Incorrect Words — display transcript_text tokenised; user clicks
+  // words that differ from the spoken audio_text.
+  lst_hiw(card, q) {
+    card.appendChild(el("div", { class: "qprompt" }, "Listen to the audio. Click every word in the transcript below that differs from what you hear."));
+    const controls = el("div", { class: "wfd-controls" });
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text) }, "▶  Play audio"));
+    controls.appendChild(el("button", { onclick: () => speak(q.audio_text, 0.85) }, "▶  Play slow"));
+    card.appendChild(controls);
+    setTimeout(() => speak(q.audio_text), 600);
+    card.appendChild(el("div", { class: "tfng-hint negative-marking" },
+      "Negative marking applies — each wrong word you click costs a point."));
+
+    const transcript = el("div", { class: "hiw-transcript" });
+    const tokens = q.transcript_text.split(/(\s+)/); // keep whitespace
+    const clicked = new Set(); // word-token indices (in errorable space)
+    const errorSet = new Set(q.errors);
+    let wordIdx = 0;
+    const wordSpans = [];
+    tokens.forEach((tok) => {
+      if (/^\s+$/.test(tok) || tok === "") {
+        transcript.appendChild(document.createTextNode(tok));
+        return;
+      }
+      const myIdx = wordIdx++;
+      const span = el("span", { class: "hiw-word", "data-idx": String(myIdx) }, tok);
+      span.addEventListener("click", () => {
+        if (submitted) return;
+        if (clicked.has(myIdx)) {
+          clicked.delete(myIdx);
+          span.classList.remove("clicked");
+        } else {
+          clicked.add(myIdx);
+          span.classList.add("clicked");
+        }
+      });
+      wordSpans.push(span);
+      transcript.appendChild(span);
+    });
+    card.appendChild(transcript);
+
+    let submitted = false;
+    card.appendChild(actionsBar(() => {
+      if (submitted) return;
+      submitted = true;
+      // Score: correct iff the clicked set exactly matches errorSet.
+      const correct = clicked.size === errorSet.size
+        && [...errorSet].every((i) => clicked.has(i));
+      recordAttempt(q, [...clicked].sort((a, b) => a - b), correct);
+      // Annotate words: green = correctly-clicked error, red = wrongly-clicked, amber = missed error
+      wordSpans.forEach((span, idx) => {
+        const isError = errorSet.has(idx);
+        const wasClicked = clicked.has(idx);
+        span.classList.remove("clicked");
+        if (isError && wasClicked) span.classList.add("hiw-correct");
+        else if (!isError && wasClicked) span.classList.add("hiw-wrong");
+        else if (isError && !wasClicked) span.classList.add("hiw-missed");
+      });
+      showInlineFeedback(card, q, [...clicked], correct);
+    }));
+  },
 };
 
 function actionsBar(onSubmit) {
@@ -2567,7 +3040,7 @@ function buildSpeakingUI({ card, onTranscript, hintText, allowAudioReplay, audio
 
   if (allowAudioReplay && audioText) {
     const audioBtn = el("button", {
-      class: "ghost",
+      class: "ghost audio-replay-btn",
       style: "margin-bottom: 14px;",
       onclick: () => speak(audioText),
     }, "▶  Play sentence");
@@ -2617,21 +3090,85 @@ function buildSpeakingUI({ card, onTranscript, hintText, allowAudioReplay, audio
   });
   wrap.appendChild(micBtn);
 
+  // Silence indicator — small hint that the mic will auto-stop after 3 sec
+  // of detected silence (matches real PTE behavior).
+  const silenceHint = el("div", { class: "speak-silence-hint" },
+    "Auto-stops after 3 seconds of silence");
+  wrap.appendChild(silenceHint);
+
+  // ---- Silence detection ----
+  // Real PTE auto-stops the recording once the test-taker has begun speaking
+  // and then falls silent for ~3 seconds. We approximate this by tracking the
+  // timestamp of the last non-empty onresult event and stopping the recognizer
+  // once that timestamp is more than SILENCE_STOP_MS in the past.
+  const SILENCE_STOP_MS = 3000;
+  let hasStartedSpeaking = false;
+  let lastSpeechTs = null;
+  let silenceWatcher = null;
+
+  function armSilenceWatcher() {
+    if (silenceWatcher) clearInterval(silenceWatcher);
+    silenceWatcher = setInterval(() => {
+      if (!recording) {
+        clearInterval(silenceWatcher);
+        silenceWatcher = null;
+        return;
+      }
+      if (!hasStartedSpeaking || !lastSpeechTs) return;
+      const sinceLastMs = Date.now() - lastSpeechTs;
+      // Visual countdown on the silence hint once the user has paused mid-stream.
+      const remainSec = Math.max(0, Math.ceil((SILENCE_STOP_MS - sinceLastMs) / 1000));
+      if (sinceLastMs > 500) {
+        silenceHint.textContent = `Silence detected — auto-stop in ${remainSec}s`;
+        silenceHint.classList.add("counting");
+      } else {
+        silenceHint.textContent = "Speaking…  (3-second silence will end recording)";
+        silenceHint.classList.remove("counting");
+      }
+      if (sinceLastMs > SILENCE_STOP_MS) {
+        try { recognizer.stop(); } catch (_) {}
+      }
+    }, 250);
+  }
+
   recognizer.onstart = () => {
     recording = true;
+    hasStartedSpeaking = false;
+    lastSpeechTs = null;
     status.textContent = "Listening… speak naturally.";
+    silenceHint.textContent = "Auto-stops after 3 seconds of silence (once you start)";
+    silenceHint.classList.add("armed");
+    silenceHint.classList.remove("counting");
     renderMic();
+    armSilenceWatcher();
   };
   recognizer.onerror = (e) => {
     status.textContent = "Recognition error: " + e.error + (e.error === "not-allowed" ? " (microphone permission denied)" : "");
     recording = false;
+    if (silenceWatcher) clearInterval(silenceWatcher);
+    silenceWatcher = null;
+    silenceHint.classList.remove("armed", "counting");
     renderMic();
   };
   recognizer.onend = () => {
     recording = false;
+    if (silenceWatcher) clearInterval(silenceWatcher);
+    silenceWatcher = null;
+    silenceHint.classList.remove("armed", "counting");
+    silenceHint.textContent = "Auto-stops after 3 seconds of silence";
     status.textContent = finalText ? "Recording stopped. Submit when ready." : "Recording stopped — nothing captured.";
     renderMic();
     onTranscript?.(finalText);
+    // In mock mode the test feels artificial if the user is forced to click
+    // Submit after a natural-silence stop — real PTE auto-advances. Wait a
+    // beat so the transcript display settles, then click Submit if there's
+    // something to submit.
+    if (state.mockExam?.active && finalText.trim().length > 0) {
+      setTimeout(() => {
+        const submit = card.querySelector(".actions .primary");
+        if (submit) submit.click();
+      }, 400);
+    }
   };
   recognizer.onresult = (e) => {
     let interim = "";
@@ -2640,7 +3177,12 @@ function buildSpeakingUI({ card, onTranscript, hintText, allowAudioReplay, audio
       if (r.isFinal) finalText += r[0].transcript + " ";
       else interim += r[0].transcript;
     }
-    transcript.textContent = (finalText + interim).trim();
+    const captured = (finalText + interim).trim();
+    if (captured.length > 0) {
+      hasStartedSpeaking = true;
+      lastSpeechTs = Date.now();
+    }
+    transcript.textContent = captured;
   };
 
   return { wrap, getTranscript: () => finalText.trim() };
@@ -2676,6 +3218,8 @@ function gradeAuto(q, userAnswer) {
 // Renders inline feedback into the question card (below the options/widgets).
 // Replaces the actions bar at the bottom of the card with feedback + new actions.
 function showInlineFeedback(card, q, userAnswer, correct) {
+  // User has submitted — kill any pending per-item timer.
+  clearItemTimer();
   // Remove the original actions bar
   card.querySelectorAll('.actions').forEach((a) => a.remove());
 
@@ -2774,6 +3318,13 @@ function checkAnswer(q, ans) {
   if (q.type === "matching_headings") {
     return JSON.stringify(ans) === JSON.stringify(q.answer);
   }
+  if (q.type === "r_fib") return JSON.stringify(ans) === JSON.stringify(q.answer);
+  if (q.type === "mcq_multi" || q.type === "lst_mcq_multi") {
+    const a = [...(Array.isArray(ans) ? ans : [])].sort((x, y) => x - y);
+    const b = [...q.answer].sort((x, y) => x - y);
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  if (q.type === "lst_hcs" || q.type === "lst_smw") return ans === q.answer;
   return false;
 }
 
@@ -3020,8 +3571,24 @@ function answerDisplay(q) {
       ol.appendChild(el("li", null, `Paragraph ${paraIdx + 1} → ${String.fromCharCode(65 + headingIdx)}. ${q.headings[headingIdx]}`));
     });
     wrap.appendChild(ol);
-  } else if (q.type === "lst_sc_display" || q.type === "lst_sc") {
+  } else if (q.type === "lst_sc_display" || q.type === "lst_sc" || q.type === "lst_fib") {
     wrap.appendChild(el("div", null, q.answer.join("  /  ")));
+  } else if (q.type === "r_fib") {
+    wrap.appendChild(el("div", null, q.answer.map((idx) => q.word_bank[idx]).join("  /  ")));
+  } else if (q.type === "mcq_multi" || q.type === "lst_mcq_multi") {
+    const ol = el("ol", null);
+    q.answer.forEach((idx) => ol.appendChild(el("li", null, q.options[idx])));
+    wrap.appendChild(ol);
+  } else if (q.type === "lst_hcs" || q.type === "lst_smw") {
+    wrap.appendChild(el("div", null, q.options[q.answer]));
+  } else if (q.type === "lst_hiw") {
+    const tokens = (q.transcript_text || "").split(/\s+/);
+    const errWords = (q.errors || []).map((idx) => tokens[idx]).filter(Boolean);
+    if (errWords.length) {
+      wrap.appendChild(el("div", null, `Words that differed from the audio: ${errWords.join(", ")}`));
+    } else {
+      wrap.appendChild(el("div", null, JSON.stringify(q.answer)));
+    }
   } else {
     wrap.appendChild(el("div", null, JSON.stringify(q.answer)));
   }
@@ -3050,6 +3617,17 @@ function requestFollowup(q) {
 }
 
 function submitForLLMGrading(q, userAnswer) {
+  // User has submitted — kill any per-item timer that's still ticking.
+  clearItemTimer();
+  // In mock mode, skip the round-trip to the LLM grader and just advance.
+  // Mock mode is meant to feel like the real test where you don't see grading
+  // until the end. We record an attempt as "pending speaking grade" — counted
+  // as incorrect for the live tally but flagged for review.
+  if (state.mockExam?.active) {
+    recordAttempt(q, userAnswer, false);
+    advanceMock();
+    return;
+  }
   const request = {
     kind: "grade",
     qid: q.id,
@@ -4284,6 +4862,31 @@ function _renderDashboardViewInner() {
   mockCard.appendChild(el("div", { class: "dash-mock-text" },
     `Take a timed simulation of one section. No AI hints, no tips — just you and the clock, like the real ${TEST_LABELS[state.test]?.short || "PTE"}.`
   ));
+  // Featured full-mock entry, when configured for this test.
+  const fullSpecDash = FULL_MOCK_CONFIGS[state.test];
+  if (fullSpecDash) {
+    const fullMins = Math.round(
+      fullSpecDash.phases.reduce((s, p) => s + p.durationSec, 0) / 60
+    );
+    const fullBtn = el("button", {
+      class: "primary dash-full-mock-btn",
+      onclick: async () => {
+        const ok = await modalConfirm({
+          title: fullSpecDash.label,
+          body: [
+            "Real-PTE structure: Speaking + Writing → Reading → break → Listening",
+            "Each phase has its own timer; running out advances to the next phase",
+            "Per-item timers for prep + recording (3-second silence auto-stops the mic)",
+            "Listening audio plays ONCE — no replay during the mock",
+          ],
+          confirmLabel: "Start full mock",
+          cancelLabel: "Not yet",
+        });
+        if (ok) startFullMockExam(state.test);
+      },
+    }, `Start full mock · ~${fullMins} min →`);
+    mockCard.appendChild(fullBtn);
+  }
   const mockBtns = el("div", { class: "dash-mock-btns" });
   const cfg = MOCK_CONFIGS[state.test] || {};
   for (const [section, sectionCfg] of Object.entries(cfg)) {
@@ -4550,10 +5153,220 @@ function startMockExam(test, section) {
   nextMockQuestion();
 }
 
+// ---- Full PTE Academic mock (multi-phase, real-test structure) ----
+
+// Pick `count` questions of a given type from the test's pool, biased by
+// weakness like `curatedMockQueue` but flat-per-type so quotas are exact.
+function pickByTypeForMock(test, type, count) {
+  const pool = currentQuestions().filter((q) => q.type === type);
+  if (pool.length === 0) return [];
+  // Shuffle then take min(count, pool.length). If the pool is too small,
+  // we cap at what's available rather than failing the mock outright.
+  const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, pool.length));
+}
+
+function buildFullMockPhases(test) {
+  const spec = FULL_MOCK_CONFIGS[test];
+  if (!spec) return null;
+  const phases = spec.phases.map((p) => {
+    if (p.isBreak) {
+      return {
+        key: p.key,
+        label: p.label,
+        durationSec: p.durationSec,
+        isBreak: true,
+        queue: [],
+        audioOnce: false,
+      };
+    }
+    const queue = [];
+    for (const { type, count } of p.quotas) {
+      queue.push(...pickByTypeForMock(test, type, count));
+    }
+    return {
+      key: p.key,
+      label: p.label,
+      durationSec: p.durationSec,
+      quotas: p.quotas,
+      queue,
+      audioOnce: !!p.audioOnce,
+      isBreak: false,
+    };
+  });
+  return phases;
+}
+
+function startFullMockExam(test) {
+  const spec = FULL_MOCK_CONFIGS[test];
+  if (!spec) return alert("Full mock isn't configured for this test yet.");
+  const phases = buildFullMockPhases(test);
+  // Sanity check — at least one non-break phase must have items.
+  const itemCount = phases.reduce((n, p) => n + (p.isBreak ? 0 : p.queue.length), 0);
+  if (itemCount === 0) return alert("No questions available to build the full mock.");
+
+  // Verify each scoring phase hit its quotas — warn the user about shortfalls
+  // so they understand why one of the task types is missing.
+  const shortfalls = [];
+  for (const p of phases) {
+    if (p.isBreak) continue;
+    for (const q of p.quotas) {
+      const got = p.queue.filter((x) => x.type === q.type).length;
+      if (got < q.count) shortfalls.push(`${q.type}: ${got}/${q.count}`);
+    }
+  }
+  if (shortfalls.length) {
+    console.warn("[full mock] task-type shortfalls:", shortfalls.join(", "));
+  }
+
+  state.mockExam = {
+    active: true,
+    fullMock: true,
+    test,
+    label: spec.label,
+    phases,
+    phaseIdx: 0,
+    index: 0,            // within current phase
+    phaseStartTs: Date.now(),
+    durationSec: phases[0].durationSec, // mirrors phases[phaseIdx].durationSec for the live timer
+    startTs: Date.now(), // alias of phaseStartTs (existing timer code reads .startTs)
+    results: [],
+    timerInterval: null,
+    // For attempt-diffing inside advanceMock — captured per phase as we go.
+    _beforeAttempts: null,
+  };
+  saveMockState();
+  // Show the intro screen for phase 0.
+  renderFullMockPhaseIntro();
+}
+
+// Render an intro / "press Start" screen for the active phase. Lets the user
+// settle in before the timer starts. Also used to render the optional break.
+function renderFullMockPhaseIntro() {
+  const m = state.mockExam;
+  if (!m || !m.fullMock) return;
+  const phase = m.phases[m.phaseIdx];
+
+  $("#picker").classList.add("hidden");
+  $("#feedback").classList.add("hidden");
+  $("#bridge-status").classList.add("hidden");
+  $("#tips-view").classList.add("hidden");
+  $("#settings-view").classList.add("hidden");
+  $("#dashboard-view").classList.add("hidden");
+
+  const card = $("#card");
+  card.classList.remove("hidden");
+  clear(card);
+
+  if (phase.isBreak) {
+    card.appendChild(el("div", { class: "mock-phase-intro" },
+      el("div", { class: "mock-phase-eyebrow" }, "Mock exam"),
+      el("h2", null, "Optional 10-minute break"),
+      el("p", null,
+        "The real PTE Academic offers a 10-minute break between Reading and Listening. Use it — get water, stretch, reset. Or skip ahead if you want to push through."),
+      el("div", { class: "mock-phase-meta" },
+        `Break clock will auto-advance after 10 minutes if you don't tap Continue.`),
+      el("div", { class: "actions" },
+        el("button", { class: "primary", onclick: () => advanceFullMockPhase() },
+          "Continue to Listening →"),
+        el("button", { class: "ghost", onclick: () => finishMockExam() },
+          "End mock early"),
+      ),
+    ));
+    // Auto-advance after 10 min — but the user can hit Continue earlier.
+    if (m.timerInterval) clearInterval(m.timerInterval);
+    const breakStart = Date.now();
+    m.timerInterval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - breakStart) / 1000);
+      const remain = phase.durationSec - elapsed;
+      const counter = card.querySelector(".mock-phase-meta");
+      if (counter) {
+        const mm = Math.max(0, Math.floor(remain / 60));
+        const ss = Math.max(0, remain % 60);
+        counter.textContent = `Break clock: ${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")} remaining (Continue any time).`;
+      }
+      if (remain <= 0) {
+        clearInterval(m.timerInterval);
+        m.timerInterval = null;
+        advanceFullMockPhase();
+      }
+    }, 1000);
+    return;
+  }
+
+  // Real phase intro — show what's coming and let the user press Start.
+  const itemSummary = phase.quotas
+    .map((q) => `${q.count}× ${TYPE_NAMES[q.type]?.[0] || q.type}`)
+    .join(" · ");
+  const mins = Math.round(phase.durationSec / 60);
+  card.appendChild(el("div", { class: "mock-phase-intro" },
+    el("div", { class: "mock-phase-eyebrow" }, `Mock exam · phase ${m.phaseIdx + 1} of ${m.phases.length}`),
+    el("h2", null, phase.label),
+    el("div", { class: "mock-phase-meta" }, `${phase.queue.length} questions · ${mins} minute timer`),
+    el("div", { class: "mock-phase-items" }, itemSummary),
+    phase.audioOnce
+      ? el("div", { class: "mock-phase-warning" },
+          "Audio plays ONCE — there's no replay button. Lock in before you press Start.")
+      : null,
+    el("div", { class: "actions" },
+      el("button", { class: "primary", onclick: () => beginFullMockPhase() },
+        "Start phase"),
+      el("button", { class: "ghost", onclick: () => finishMockExam() },
+        "End mock early"),
+    ),
+  ));
+}
+
+function beginFullMockPhase() {
+  const m = state.mockExam;
+  if (!m || !m.fullMock) return;
+  const phase = m.phases[m.phaseIdx];
+  // (Re)initialise phase-local state — index, timer, attempt baseline.
+  m.index = 0;
+  m.phaseStartTs = Date.now();
+  m.startTs = m.phaseStartTs;
+  m.durationSec = phase.durationSec;
+  m._beforeAttempts = (loadProgress().attempts || []).length;
+  saveMockState();
+  nextMockQuestion();
+}
+
+function advanceFullMockPhase() {
+  const m = state.mockExam;
+  if (!m || !m.fullMock) return;
+  if (m.timerInterval) clearInterval(m.timerInterval);
+  m.timerInterval = null;
+  m.phaseIdx += 1;
+  if (m.phaseIdx >= m.phases.length) {
+    return finishMockExam();
+  }
+  saveMockState();
+  renderFullMockPhaseIntro();
+}
+
 // Resume an in-progress mock loaded from localStorage. The timer continues
 // from where it left off — elapsedSec captured at save time + any wall-clock
 // time spent in the saved state is accounted for via durationSec - elapsedSec.
 function resumeMockExam(snapshot) {
+  if (snapshot.fullMock) {
+    state.mockExam = {
+      active: true,
+      fullMock: true,
+      test: snapshot.test,
+      label: snapshot.label,
+      phases: snapshot.phases,
+      phaseIdx: snapshot.phaseIdx || 0,
+      index: snapshot.index || 0,
+      phaseStartTs: Date.now() - (snapshot.elapsedSec * 1000),
+      startTs: Date.now() - (snapshot.elapsedSec * 1000),
+      durationSec: snapshot.durationSec,
+      results: snapshot.results || [],
+      timerInterval: null,
+      _beforeAttempts: snapshot._beforeAttempts,
+    };
+    nextMockQuestion();
+    return;
+  }
   state.mockExam = {
     active: true,
     test: snapshot.test,
@@ -4644,6 +5457,26 @@ function curatedMockQueue(pool, section, count) {
 function nextMockQuestion() {
   const m = state.mockExam;
   if (!m) return;
+  clearItemTimer();
+  // Full-mock: queue is per-phase; running off the end advances the phase.
+  if (m.fullMock) {
+    const phase = m.phases[m.phaseIdx];
+    if (!phase || phase.isBreak || m.index >= phase.queue.length) {
+      return advanceFullMockPhase();
+    }
+    if (m._beforeAttempts == null) {
+      m._beforeAttempts = (loadProgress().attempts || []).length;
+    }
+    const q = phase.queue[m.index];
+    renderQuestion(q);
+    setTimeout(() => {
+      decorateMockBanner();
+      startItemTimer(q);
+    }, 0);
+    startMockTimer();
+    saveMockState();
+    return;
+  }
   if (m.index >= m.queue.length) {
     return finishMockExam();
   }
@@ -4653,9 +5486,153 @@ function nextMockQuestion() {
     m._beforeAttempts = (loadProgress().attempts || []).length;
   }
   renderQuestion(q);
-  setTimeout(() => decorateMockBanner(), 0);
+  setTimeout(() => {
+    decorateMockBanner();
+    startItemTimer(q);
+  }, 0);
   startMockTimer();
   saveMockState();
+}
+
+// ---- Per-item timer engine ----
+//
+// Mock mode only. Reads ITEM_TIMERS[q.type] and, if present, drives the
+// question's own time budget: prep countdown → record countdown → auto-submit
+// for speaking, or a single typing window → auto-submit for writing/SST.
+// The auto-submit clicks the renderer's primary action button so each
+// renderer's existing on-submit logic runs unchanged.
+function clearItemTimer() {
+  if (state.itemTimer?.interval) clearInterval(state.itemTimer.interval);
+  state.itemTimer = null;
+  document.querySelectorAll(".item-timer").forEach((n) => n.remove());
+}
+
+function startItemTimer(q) {
+  clearItemTimer();
+  if (!state.mockExam?.active) return;
+  const spec = ITEM_TIMERS[q.type];
+  if (!spec) return;
+
+  const card = $("#card");
+  if (!card) return;
+
+  // Build the timer banner. Sits as a separate strip below the mock banner.
+  const banner = el("div", { class: "item-timer" },
+    el("span", { class: "item-timer-label", id: "item-timer-label" }, "—"),
+    el("span", { class: "item-timer-value", id: "item-timer-value" }, "—:—"),
+    el("div", { class: "item-timer-bar" },
+      el("div", { class: "item-timer-fill", id: "item-timer-fill" })
+    ),
+  );
+  const mb = card.querySelector(".mock-banner");
+  if (mb) mb.insertAdjacentElement("afterend", banner);
+  else card.insertBefore(banner, card.firstChild);
+
+  // ---- Speaking items: prep → record → auto-submit ----
+  if (spec.prep != null && spec.record != null) {
+    runSpeakingTimer(card, spec.prep, spec.record);
+    return;
+  }
+  // ---- Writing items: single deadline → auto-submit ----
+  if (spec.write != null) {
+    runWriteTimer(card, spec.write);
+    return;
+  }
+}
+
+function runSpeakingTimer(card, prepSec, recordSec) {
+  const label = $("#item-timer-label");
+  const value = $("#item-timer-value");
+  const fill = $("#item-timer-fill");
+  let phase = prepSec > 0 ? "prep" : "record";
+  let remain = phase === "prep" ? prepSec : recordSec;
+  let totalForPhase = remain;
+
+  function paint() {
+    label.textContent = phase === "prep" ? "Preparation" : "Recording";
+    label.className = "item-timer-label " + phase;
+    value.textContent = `${Math.floor(remain / 60)}:${String(remain % 60).padStart(2, "0")}`;
+    const pct = totalForPhase > 0 ? Math.max(0, (remain / totalForPhase) * 100) : 0;
+    fill.style.width = pct + "%";
+    fill.className = "item-timer-fill " + phase;
+  }
+  paint();
+
+  // If we start in "record" phase (no prep), kick off recording immediately.
+  if (phase === "record") {
+    setTimeout(() => clickStartRecording(card), 50);
+  }
+
+  state.itemTimer = {
+    interval: setInterval(() => {
+      remain -= 1;
+      if (remain <= 0) {
+        if (phase === "prep") {
+          // Switch to record phase: programmatically start recording.
+          phase = "record";
+          remain = recordSec;
+          totalForPhase = recordSec;
+          clickStartRecording(card);
+          paint();
+        } else {
+          // Record phase done — stop recording (if mic is up) and auto-submit.
+          clickStopRecording(card);
+          autoSubmit(card);
+          clearItemTimer();
+          return;
+        }
+      } else {
+        paint();
+      }
+    }, 1000),
+  };
+}
+
+function runWriteTimer(card, writeSec) {
+  const label = $("#item-timer-label");
+  const value = $("#item-timer-value");
+  const fill = $("#item-timer-fill");
+  let remain = writeSec;
+  const total = writeSec;
+
+  function paint() {
+    label.textContent = "Time to write";
+    label.className = "item-timer-label write";
+    value.textContent = `${Math.floor(remain / 60)}:${String(remain % 60).padStart(2, "0")}`;
+    const pct = (remain / total) * 100;
+    fill.style.width = pct + "%";
+    fill.className = "item-timer-fill write" + (remain <= 30 ? " urgent" : "");
+  }
+  paint();
+
+  state.itemTimer = {
+    interval: setInterval(() => {
+      remain -= 1;
+      if (remain <= 0) {
+        autoSubmit(card);
+        clearItemTimer();
+        return;
+      }
+      paint();
+    }, 1000),
+  };
+}
+
+function clickStartRecording(card) {
+  const mic = card.querySelector(".speak-mic");
+  if (mic && !mic.classList.contains("recording")) mic.click();
+}
+
+function clickStopRecording(card) {
+  const mic = card.querySelector(".speak-mic.recording");
+  if (mic) mic.click();
+}
+
+function autoSubmit(card) {
+  // The renderer's primary action button. If it has been replaced already
+  // (e.g. user submitted manually a moment before the timer fired), do nothing.
+  const submit = card.querySelector(".actions .primary");
+  if (submit) submit.click();
 }
 
 function decorateMockBanner() {
@@ -4665,14 +5642,25 @@ function decorateMockBanner() {
   if (!card) return;
   // Remove any prior mock banner
   card.querySelectorAll(".mock-banner").forEach((b) => b.remove());
-  const banner = el("div", { class: "mock-banner" },
+
+  const isFull = !!m.fullMock;
+  const phase = isFull ? m.phases[m.phaseIdx] : null;
+  const queueLen = isFull ? phase.queue.length : m.queue.length;
+  const phasePill = isFull
+    ? `${m.label.toUpperCase()} · ${phase.label.toUpperCase()}`
+    : `MOCK EXAM · ${m.label.toUpperCase()}`;
+
+  const banner = el("div", { class: "mock-banner" + (phase?.audioOnce ? " audio-once" : "") },
     el("div", { class: "mock-banner-left" },
-      el("span", { class: "mock-pill" }, `MOCK EXAM · ${m.label.toUpperCase()}`),
-      el("span", { class: "mock-progress" }, `Question ${m.index + 1} of ${m.queue.length}`),
+      el("span", { class: "mock-pill" }, phasePill),
+      el("span", { class: "mock-progress" }, `Question ${m.index + 1} of ${queueLen}`),
     ),
     el("div", { class: "mock-timer", id: "mock-timer" }, "—:—"),
   );
   card.insertBefore(banner, card.firstChild);
+
+  // Tag the card so audio renderers can hide replay controls via CSS.
+  card.classList.toggle("mock-audio-once", !!phase?.audioOnce);
   updateMockTimerDisplay();
 }
 
@@ -4685,7 +5673,12 @@ function startMockTimer() {
     if (remain <= 0) {
       clearInterval(m.timerInterval);
       m.timerInterval = null;
-      finishMockExam(/*timeout=*/ true);
+      // Full-mock: phase timeout advances to the next phase, not exit.
+      if (m.fullMock) {
+        advanceFullMockPhase();
+      } else {
+        finishMockExam(/*timeout=*/ true);
+      }
       return;
     }
     updateMockTimerDisplay();
@@ -4710,6 +5703,9 @@ function advanceMock() {
   saveMockState();
   const after = loadProgress().attempts || [];
   const justAttempted = after.slice(m._beforeAttempts || after.length);
+  // Resolve the current queue (per-phase for full-mock, top-level otherwise).
+  const activeQueue = m.fullMock ? m.phases[m.phaseIdx].queue : m.queue;
+  const activeQ = activeQueue[m.index];
   // Record per-question result + capture user's answer for later review
   if (justAttempted.length) {
     const last = justAttempted[justAttempted.length - 1];
@@ -4719,9 +5715,15 @@ function advanceMock() {
       topic: last.topic,
       type: last.type,
       user_answer: last.user_answer,
+      phase: m.fullMock ? m.phases[m.phaseIdx].key : undefined,
     });
   } else {
-    m.results.push({ qid: m.queue[m.index].id, correct: false, type: m.queue[m.index].type });
+    m.results.push({
+      qid: activeQ?.id,
+      correct: false,
+      type: activeQ?.type,
+      phase: m.fullMock ? m.phases[m.phaseIdx].key : undefined,
+    });
   }
   m.index += 1;
   nextMockQuestion();
@@ -4731,6 +5733,7 @@ function finishMockExam(timeout = false) {
   const m = state.mockExam;
   if (!m) return;
   if (m.timerInterval) clearInterval(m.timerInterval);
+  clearItemTimer();
   clearSavedMockState();
   // Pull any final attempt we may have missed
   const after = loadProgress().attempts || [];
@@ -4738,6 +5741,18 @@ function finishMockExam(timeout = false) {
   if (justAttempted.length && (!m.results.length || m.results[m.results.length - 1]?.qid !== justAttempted[justAttempted.length - 1].qid)) {
     const last = justAttempted[justAttempted.length - 1];
     m.results.push({ qid: last.qid, correct: last.correct, topic: last.topic, type: last.type });
+  }
+  // For full-mock, flatten phase queues into a single queue for the results
+  // view (which expects m.queue). Track phase boundaries so the breakdown can
+  // group them.
+  if (m.fullMock) {
+    m.queue = [];
+    m.phaseBoundaries = [];
+    for (const p of m.phases) {
+      if (p.isBreak) continue;
+      m.phaseBoundaries.push({ start: m.queue.length, label: p.label });
+      m.queue = m.queue.concat(p.queue);
+    }
   }
   state.mockExam = null;
   renderMockResults(m, timeout);
@@ -4927,15 +5942,22 @@ function renderMockHubView() {
 
   // Resume card (if there's a saved in-progress mock)
   const saved = loadSavedMockState();
-  if (saved && saved.queue && saved.queue.length > 0 && saved.index < saved.queue.length) {
-    const cfg = MOCK_CONFIGS[saved.test]?.[saved.section];
+  // For full mocks the per-section queue lives inside phases[]; we still want
+  // to show a resume card as long as we haven't finished the last phase.
+  const savedHasWork = saved && (
+    saved.fullMock
+      ? (saved.phases && saved.phaseIdx < saved.phases.length)
+      : (saved.queue && saved.queue.length > 0 && saved.index < saved.queue.length)
+  );
+  if (savedHasWork) {
     const remainingSec = Math.max(0, (saved.durationSec || 0) - (saved.elapsedSec || 0));
     const remainMin = Math.round(remainingSec / 60);
     const resumeCard = el("div", { class: "dash-card dash-mock dash-resume" });
     resumeCard.appendChild(el("div", { class: "dash-card-label" }, "In progress"));
-    resumeCard.appendChild(el("div", { class: "dash-mock-text" },
-      `You have a mock in progress: ${TEST_LABELS[saved.test]?.short || saved.test} ${saved.label} — question ${saved.index + 1} of ${saved.queue.length}, ~${remainMin} minute(s) left on the clock.`
-    ));
+    const progressText = saved.fullMock
+      ? `${TEST_LABELS[saved.test]?.short || saved.test} ${saved.label} — phase ${(saved.phaseIdx || 0) + 1} of ${saved.phases.length}, ~${remainMin} minute(s) left on the phase clock.`
+      : `${TEST_LABELS[saved.test]?.short || saved.test} ${saved.label} — question ${saved.index + 1} of ${saved.queue.length}, ~${remainMin} minute(s) left on the clock.`;
+    resumeCard.appendChild(el("div", { class: "dash-mock-text" }, progressText));
     const actions = el("div", { class: "dash-actions-row" });
     actions.appendChild(el("button", {
       class: "primary",
@@ -4964,9 +5986,59 @@ function renderMockHubView() {
     view.appendChild(resumeCard);
   }
 
+  // Full-test mock (real-PTE structure) — show first if configured for this test.
+  const fullSpec = FULL_MOCK_CONFIGS[state.test];
+  if (fullSpec) {
+    const totalMins = Math.round(
+      fullSpec.phases.reduce((s, p) => s + p.durationSec, 0) / 60
+    );
+    const totalItems = fullSpec.phases
+      .filter((p) => !p.isBreak)
+      .reduce((s, p) => s + p.quotas.reduce((n, q) => n + q.count, 0), 0);
+
+    const fullCard = el("div", { class: "dash-card dash-mock dash-full-mock" });
+    fullCard.appendChild(el("div", { class: "dash-card-label" }, "Full end-to-end mock"));
+    fullCard.appendChild(el("div", { class: "dash-mock-text" }, fullSpec.blurb));
+    fullCard.appendChild(el("div", { class: "dash-mock-text" },
+      `${totalItems} questions across ${fullSpec.phases.filter((p) => !p.isBreak).length} phases · ~${totalMins} minutes total (including the 10-minute break).`
+    ));
+    const fullActions = el("div", { class: "dash-actions-row" });
+    fullActions.appendChild(el("button", {
+      class: "primary",
+      onclick: async () => {
+        if (saved) {
+          const ok = await modalConfirm({
+            title: "Discard in-progress mock?",
+            body: "Starting the full mock will discard your in-progress one.",
+            confirmLabel: "Discard & start full mock",
+            cancelLabel: "Cancel",
+            destructive: true,
+          });
+          if (!ok) return;
+        }
+        const ok = await modalConfirm({
+          title: fullSpec.label,
+          body: [
+            "Real-PTE structure: Speaking + Writing → Reading → break → Listening",
+            "Each phase has its own timer; running out advances to the next phase",
+            "Listening audio plays ONCE — no replay during the mock",
+            "No tips or AI hints; results & breakdown at the end",
+          ],
+          confirmLabel: "Start full mock",
+          cancelLabel: "Not yet",
+        });
+        if (!ok) return;
+        clearSavedMockState();
+        startFullMockExam(state.test);
+      },
+    }, "Start full mock"));
+    fullCard.appendChild(fullActions);
+    view.appendChild(fullCard);
+  }
+
   // Start fresh by section
   const fresh = el("div", { class: "dash-card dash-mock" });
-  fresh.appendChild(el("div", { class: "dash-card-label" }, "Start a new mock"));
+  fresh.appendChild(el("div", { class: "dash-card-label" }, "Or a single-section mock"));
   const cfg = MOCK_CONFIGS[state.test] || {};
   const btns = el("div", { class: "dash-mock-btns" });
   for (const [section, sectionCfg] of Object.entries(cfg)) {

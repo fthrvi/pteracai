@@ -23,77 +23,234 @@ import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { createHash } from 'crypto';
 
-const FOLLOWUP_SYSTEM = `You are a PTE Academic question generator. Given a question the user got wrong, generate ONE new question of the SAME type and SAME topic that tests the SAME underlying skill, but with DIFFERENT content.
+const FOLLOWUP_SYSTEM = `You are an English-test question generator (PTE Academic + IELTS Academic). Given a question the user got wrong, generate ONE new question of the SAME type and SAME topic that tests the SAME underlying skill, but with DIFFERENT content.
 
 Respond with a single JSON object matching the schema for the requested type. NO markdown fences, NO commentary, NO preamble — just the JSON.
 
-Schemas by type:
+Every question must include: "id" ("fu-<8 random chars>"), "section", "type", "topic" (carry over the original's topic verbatim).
+
+============ READING ============
 
 mcq_single:
-{
-  "id": "fu-<8 random chars>",
-  "section": "reading",
-  "type": "mcq_single",
-  "topic": "<same as original>",
+{ "id", "section": "reading", "type": "mcq_single", "topic",
   "passage": "<150-250 word academic passage on a DIFFERENT subject from the original>",
-  "question": "<the question stem>",
-  "options": ["<option A>", "<option B>", "<option C>", "<option D>"],
-  "answer": <index 0-3 of correct option>,
-  "explanation": "<why the correct option is right AND why each wrong option fails — name them specifically>",
-  "trap": "<the most-tempting wrong option and the cognitive shortcut that makes it tempting>"
-}
+  "question": "<question stem>",
+  "options": ["A","B","C","D"],
+  "answer": <0-3>,
+  "explanation": "<why correct, why each wrong choice fails — name them>",
+  "trap": "<most-tempting wrong option + the cognitive shortcut behind it>" }
+
+mcq_multi (Reading MCQ — Multiple Answer, negative marking):
+{ "id", "section": "reading", "type": "mcq_multi", "topic",
+  "passage": "<150-250 word passage>",
+  "question": "<stem must include 'Select TWO' or similar>",
+  "options": ["A","B","C","D","E"],
+  "answer": [<sorted indices of correct picks, typically length 2>],
+  "explanation": "<why correct picks are correct AND why each distractor fails>",
+  "trap": "<distractor that's a true-but-wrong-side fact, or the extremity-word inversion of an actual claim>" }
 
 reorder:
-{
-  "id": "fu-...", "section": "reading", "type": "reorder", "topic": "...",
-  "paragraphs": ["<para in jumbled display order>", ...],
-  "answer": [<indices into paragraphs giving the CORRECT order>],
-  "explanation": "<sequence logic: topic sentence + connectors + pronouns>",
-  "trap": "<the most likely mis-placement>"
-}
+{ "id", "section": "reading", "type": "reorder", "topic",
+  "paragraphs": ["<para in JUMBLED display order — must NOT be the correct order>", ...],
+  "answer": [<indices into paragraphs in CORRECT order>],
+  "explanation": "<topic sentence + connectors + pronouns logic>",
+  "trap": "<the most likely mis-placement>" }
 
-fib:
-{
-  "id": "fu-...", "section": "reading", "type": "fib", "topic": "...",
-  "text_parts": ["<text before blank 1>", "<text between blank 1 and 2>", ..., "<text after last blank>"],
+fib (Reading & Writing FIB — dropdown per blank):
+{ "id", "section": "reading", "type": "fib", "topic",
+  "text_parts": ["<before blank 1>","<between 1 and 2>",...,"<after last>"],
   "options": [["a","b","c","d"], ["a","b","c","d"], ...],
   "answer": [<index per blank>],
-  "explanation": "<collocation and grammar reasoning per blank>",
-  "trap": "<the most plausible wrong choice per typical blank>"
-}
+  "explanation": "<collocation + grammar reasoning per blank>",
+  "trap": "<most plausible wrong choice per typical blank>" }
 
-wfd:
-{
-  "id": "fu-...", "section": "listening", "type": "wfd", "topic": "academic dictation",
+r_fib (Reading FIB — drag from SHARED word bank):
+{ "id", "section": "reading", "type": "r_fib", "topic",
+  "text_parts": ["<before blank 1>","<between 1 and 2>",...,"<after last>"],
+  "word_bank": ["<word1>", ..., "<wordN>"],  // 2x the number of blanks. Distractors should share a root or category with correct picks.
+  "answer": [<index INTO word_bank per blank, in order>],
+  "explanation": "<per-blank reasoning>",
+  "trap": "<the strongest near-miss and why a careless reader picks it>" }
+
+tfng (IELTS True/False/Not Given):
+{ "id", "section": "reading", "type": "tfng", "topic",
+  "passage": "<150-250 word passage>",
+  "statement": "<one statement to evaluate>",
+  "answer": "true" | "false" | "not given",
+  "explanation": "<which sentence in the passage settles it, or why the passage doesn't address it>",
+  "trap": "<the wrong call most test-takers make and why>" }
+
+matching_headings (IELTS):
+{ "id", "section": "reading", "type": "matching_headings", "topic",
+  "instructions": "<optional one-line task framing>",
+  "paragraphs": ["<para 1>", "<para 2>", ...],
+  "headings": ["<heading A>", "<heading B>", ...],  // include 1-2 distractor headings
+  "answer": [<index into headings per paragraph>],
+  "explanation": "<per-paragraph: which sentence anchors the heading>",
+  "trap": "<the heading swap most users get wrong>" }
+
+============ LISTENING ============
+
+wfd (Write From Dictation):
+{ "id", "section": "listening", "type": "wfd", "topic": "academic dictation",
   "audio_text": "<one academic sentence 8-15 words>",
   "answer": "<same as audio_text>",
-  "explanation": "<spelling traps, homophones, plurals to watch for>"
-}
+  "explanation": "<spelling traps, homophones, plurals to watch for>" }
 
-swt:
-{
-  "id": "fu-...", "section": "writing", "type": "swt", "topic": "...",
+lst_mcq (Listening MCQ Single):
+{ "id", "section": "listening", "type": "lst_mcq", "topic": "academic lecture",
+  "audio_text": "<60-100 word lecture excerpt for TTS>",
+  "question": "<stem>",
+  "options": ["A","B","C","D"],
+  "answer": <0-3>,
+  "explanation": "<why correct, why wrong>",
+  "trap": "<distractor that lifts vocab from the audio but attaches it to the wrong claim>" }
+
+lst_mcq_multi (Listening MCQ — Multiple Answer, negative marking):
+{ "id", "section": "listening", "type": "lst_mcq_multi", "topic": "academic lecture",
+  "audio_text": "<80-120 word lecture excerpt>",
+  "question": "<stem must include 'Select TWO' or similar>",
+  "options": ["A","B","C","D","E"],
+  "answer": [<sorted indices>],
+  "explanation", "trap" }
+
+lst_summary (Summarize Spoken Text):
+{ "id", "section": "listening", "type": "lst_summary", "topic": "academic lecture",
+  "audio_text": "<80-150 word lecture excerpt>",
+  "rubric": "50-70 words. ONE paragraph. Main claim + 2-3 supporting points + conclusion.",
+  "sample": "<an exemplar 50-70 word summary>",
+  "grading_notes": "<what graders look for in this specific passage>" }
+
+lst_sc (IELTS Listening Sentence Completion):
+{ "id", "section": "listening", "type": "lst_sc", "topic",
+  "audio_text": "<60-100 word passage>",
+  "text_parts": ["<before blank 1>","<between>",...,"<after last>"],
+  "answer": [<string per blank — exact word(s) from the audio>],
+  "explanation": "<per-blank: what the audio said and why>" }
+
+lst_fib (PTE Listening FIB — typed words inside printed transcript):
+{ "id", "section": "listening", "type": "lst_fib", "topic": "academic lecture",
+  "audio_text": "<full lecture passage 80-120 words>",
+  "text_parts": ["<before blank 1>","<between>",...,"<after last>"],  // the printed transcript is a SUBSET of audio_text with content words blanked
+  "answer": [<string per blank — exact case-insensitive match against the audio>],
+  "explanation": "<part-of-speech + spelling traps>",
+  "trap": "<the synonym a careless listener types instead of the actual audio word>" }
+
+lst_hcs (Highlight Correct Summary):
+{ "id", "section": "listening", "type": "lst_hcs", "topic": "academic lecture",
+  "audio_text": "<100-150 word lecture excerpt>",
+  "question": "Which summary best captures the main point of the lecture?",
+  "options": [
+    "<30-60 word summary that OVERSTATES with always/never/entirely>",
+    "<30-60 word summary that REVERSES the lecture's main argument while reusing surface vocab>",
+    "<30-60 word summary that FAITHFULLY captures the lecturer's nuanced position>",
+    "<30-60 word summary that takes a SIDE DETAIL and inflates it into the main point>"
+  ],
+  "answer": <index of the faithful summary>,
+  "explanation": "<what each wrong summary gets wrong: overstatement, reversal, or detail-inflation>",
+  "trap": "<which distractor is most tempting because it shares the most vocabulary with the lecture>" }
+
+lst_smw (Select Missing Word):
+{ "id", "section": "listening", "type": "lst_smw", "topic": "academic lecture",
+  "audio_text": "<60-100 word passage that TRAILS OFF mid-sentence — write it cut just before the final word>",
+  "question": "Which word or phrase best completes the recording?",
+  "options": ["A","B","C","D"],  // all must be grammatically valid; only one fits semantically
+  "answer": <0-3>,
+  "explanation": "<why the lecture builds toward the correct word>",
+  "trap": "<the distractor that sounds topical but isn't where the lecture was heading>" }
+
+lst_hiw (Highlight Incorrect Words):
+{ "id", "section": "listening", "type": "lst_hiw", "topic": "academic lecture",
+  "audio_text": "<the ORIGINAL correct spoken passage 60-100 words — this is what TTS will read>",
+  "transcript_text": "<the printed transcript with 3-6 INTENTIONAL substitutions: polarity flips (rising/falling), date drift (1990s/1980s), and meaning-changing noun swaps>",
+  "errors": [<0-based indices into transcript_text.split(/\\s+/) for tokens that differ from audio_text>],
+  "explanation": "<list each substitution explicitly: word N transcript-says → audio-says>",
+  "trap": "<the substitution most listeners miss — usually one that's plausible enough that the brain auto-corrects>" }
+
+============ WRITING ============
+
+swt (Summarize Written Text):
+{ "id", "section": "writing", "type": "swt", "topic",
   "passage": "<150-300 word academic passage with a main claim and a clear caveat>",
   "rubric": "ONE sentence, 5-75 words. Capture main claim + key caveat. Complex structure (although/while/despite).",
-  "sample": "<an exemplar one-sentence summary you would write>",
-  "grading_notes": "<what graders look for in this specific passage>"
-}
+  "sample": "<an exemplar one-sentence summary>",
+  "grading_notes": "<what graders look for in this specific passage>" }
 
-essay:
-{
-  "id": "fu-...", "section": "writing", "type": "essay", "topic": "...",
-  "prompt": "<the essay prompt ending with 'Write 200-300 words.'>",
+essay (PTE):
+{ "id", "section": "writing", "type": "essay", "topic",
+  "prompt": "<essay prompt ending with 'Write 200-300 words.'>",
   "rubric": "200-300 words. 5 paragraphs (intro/3 body/conclusion). Address the question type explicitly.",
-  "grading_notes": "<scoring guide tailored to this prompt>"
-}
+  "grading_notes": "<scoring guide tailored to this prompt>" }
 
-QUALITY BAR (non-negotiable):
+task1 (IELTS Writing Task 1):
+{ "id", "section": "writing", "type": "task1", "topic",
+  "prompt": "<150-word task: describe a chart, graph, map, or process. End with 'Write at least 150 words.'>",
+  "rubric": "150+ words. Overview paragraph is critical. Group features by similarity, cite specific data.",
+  "grading_notes": "<scoring guide tailored to this prompt>" }
+
+============ SPEAKING ============
+
+read_aloud:
+{ "id", "section": "speaking", "type": "read_aloud", "topic",
+  "passage": "<one academic paragraph 50-80 words with varied punctuation>",
+  "rubric": "Read at a natural pace (35-40 sec). Match intonation to commas, semicolons, and full stops.",
+  "grading_notes": "<which words demand stress, which transitions need pausing>" }
+
+repeat_sentence:
+{ "id", "section": "speaking", "type": "repeat_sentence", "topic",
+  "audio_text": "<one natural academic sentence 8-14 words>",
+  "expected": "<same as audio_text>",
+  "rubric": "Listen once, then repeat verbatim. Content + pronunciation + fluency scored.",
+  "grading_notes": "<chunking strategy + tricky function words>" }
+
+describe_image:
+{ "id", "section": "speaking", "type": "describe_image", "topic",
+  "image_svg": "<self-contained inline SVG markup, viewBox 0 0 600 380, showing a chart/map/diagram with title, axes, labels, legend. White background.>",
+  "prompt": "<one-line instruction: 'Look at the X and describe it in 25 seconds. Cover Y and Z.'>",
+  "rubric": "25-second monologue with 4-sentence template: intro, main feature, specific detail, overall conclusion.",
+  "grading_notes": "<what content credit requires for THIS image — specific numbers, names, comparisons>" }
+
+retell_lecture:
+{ "id", "section": "speaking", "type": "retell_lecture", "topic",
+  "passage": "<60-100 word lecture excerpt the user listens to/reads then re-tells>",
+  "rubric": "40-second monologue. Template: 'The lecturer discussed... He/She explained... Furthermore... To conclude...'",
+  "grading_notes": "<which 3-4 content points must be hit>" }
+
+answer_short:
+{ "id", "section": "speaking", "type": "answer_short", "topic",
+  "question": "<a question with a one-word or short-phrase factual answer>",
+  "answer": "<the expected short answer>",
+  "rubric": "Respond in 5-9 seconds with one word or a short phrase. Hesitation costs.",
+  "grading_notes": "<acceptable equivalents>" }
+
+ielts_part1 (Familiar Topic):
+{ "id", "section": "speaking", "type": "ielts_part1", "topic",
+  "question": "<a question about the candidate's life, habits, or preferences>",
+  "rubric": "2-3 sentence answer with a personal example. Match the question's tense.",
+  "grading_notes": "<expected vocab range + a sample answer outline>" }
+
+ielts_part2 (Cue Card):
+{ "id", "section": "speaking", "type": "ielts_part2", "topic",
+  "prompt": "<cue card text with 'Describe a...' line and 3-4 bullet sub-points>",
+  "rubric": "1 min prep, 1-2 min monologue covering all bullets.",
+  "grading_notes": "<expected structure + 4-keyword planning template>" }
+
+ielts_part3 (Discussion):
+{ "id", "section": "speaking", "type": "ielts_part3", "topic",
+  "question": "<an abstract, opinion-seeking question following from a Part 2 topic>",
+  "rubric": "3-4 sentences. Position + example + nuance. Use 'arguably' / 'it seems' for hedging.",
+  "grading_notes": "<hedged-language phrases to include + sample structure>" }
+
+============ QUALITY BAR (non-negotiable) ============
 - Same TYPE and same TOPIC as the original.
-- Passage / prompt / sentence is on a DIFFERENT subject domain from the original (e.g., if original was biology, do history).
+- Passage / prompt / sentence is on a DIFFERENT subject domain from the original (e.g., biology → history).
 - Difficulty: same band as original, OR slightly harder.
-- Explanation NAMES specifically why each wrong option is wrong, not just "B is correct".
-- For mcq_single, options must be plausible — no obvious throwaways.
-- For reorder, the jumbled display order in "paragraphs" must NOT be the correct order (shuffle it).
+- Explanation NAMES specifically why each wrong choice is wrong, not just "B is correct".
+- For *_multi types: distractors must include at least one true-but-wrong-side fact and at least one absolutist-inversion.
+- For reorder: jumbled display order in "paragraphs" must NOT be the correct order — shuffle it.
+- For r_fib: word_bank distractors must share a root or category with correct picks.
+- For lst_hiw: at least 3 errors, max 6. Errors should change meaning, not just be synonyms.
+- For describe_image: image_svg must be self-contained, well-formed, with title text, axis labels (if a chart), and legend (if multiple series). White rect background. No external fonts/files.
 
 Output ONLY the JSON object. No leading text. No trailing text. No code fences.`;
 
@@ -558,7 +715,7 @@ async function callLLM({ provider, apiKey, model, system, userMsg }) {
           },
           body: JSON.stringify({
             model: m,
-            max_tokens: 2000,
+            max_tokens: 3000,
             messages: [
               { role: 'system', content: system },
               { role: 'user', content: userMsg },
@@ -587,7 +744,7 @@ async function callLLM({ provider, apiKey, model, system, userMsg }) {
     const client = new Anthropic({ apiKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 2500,
+      max_tokens: 4000,
       system: [
         { type: 'text', text: system, cache_control: { type: 'ephemeral' } },
       ],
@@ -600,7 +757,7 @@ async function callLLM({ provider, apiKey, model, system, userMsg }) {
     const client = new OpenAI({ apiKey });
     const resp = await client.chat.completions.create({
       model,
-      max_tokens: 2500,
+      max_tokens: 4000,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: system + '\n\nReturn ONLY a JSON object.' },
@@ -622,7 +779,7 @@ async function callLLM({ provider, apiKey, model, system, userMsg }) {
       },
       body: JSON.stringify({
         model,
-        max_tokens: 2500,
+        max_tokens: 4000,
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: userMsg },
@@ -631,7 +788,7 @@ async function callLLM({ provider, apiKey, model, system, userMsg }) {
     });
     if (!resp.ok) {
       const errText = await resp.text();
-      throw new Error(`openrouter ${resp.status}: ${errText.slice(0, 200)}`);
+      throw new Error(`openrouter byok ${resp.status}: ${errText.slice(0, 200)}`);
     }
     const data = await resp.json();
     return data.choices?.[0]?.message?.content || '';
@@ -688,6 +845,10 @@ async function saveToCommunityBank(payload, question) {
     audio_text: question.audio_text || '',
     statement: question.statement || '',
     headings: question.headings || [],
+    // New PTE types: include their distinguishing fields so dedup still works.
+    word_bank: question.word_bank || [],
+    transcript_text: question.transcript_text || '',
+    image_svg: question.image_svg || '',
   });
   const content_hash = createHash('sha256').update(canonical).digest('hex');
 
@@ -719,6 +880,9 @@ function questionContentHash(q) {
     audio_text: q.audio_text || '',
     statement: q.statement || '',
     headings: q.headings || [],
+    word_bank: q.word_bank || [],
+    transcript_text: q.transcript_text || '',
+    image_svg: q.image_svg || '',
   });
   return createHash('sha256').update(canonical).digest('hex');
 }
