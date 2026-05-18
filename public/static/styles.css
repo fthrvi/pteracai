@@ -1678,6 +1678,114 @@ button.ghost {
 }
 .explainer-steps li { margin-bottom: 4px; }
 
+/* Select-to-explain floating popup */
+.select-explain-popup {
+  position: absolute;
+  z-index: 1000;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.12);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: 360px;
+  min-width: 220px;
+  padding: 10px 12px;
+  animation: select-popup-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes select-popup-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.select-explain-popup.compact {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.select-explain-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(44, 95, 78, 0.3);
+  white-space: nowrap;
+}
+.select-explain-btn:hover { filter: brightness(1.1); }
+.select-explain-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-style: italic;
+}
+.select-explain-loading::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--accent-soft);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+.select-explain-term {
+  font-family: var(--display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 4px;
+  padding-right: 24px; /* leave room for close button */
+}
+.select-explain-meaning {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.select-explain-context {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 6px;
+  line-height: 1.45;
+}
+.select-explain-syns {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 500;
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+  margin-top: 4px;
+}
+.select-explain-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  border-radius: 4px;
+}
+.select-explain-close:hover { background: rgba(0,0,0,0.06); color: var(--ink); }
+.select-explain-error {
+  color: var(--wrong);
+  font-size: 13px;
+  padding-right: 24px;
+}
+
 /* ---------- landing gate ---------- */
 .landing-view {
   min-height: 100vh;

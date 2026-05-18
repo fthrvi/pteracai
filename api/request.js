@@ -185,6 +185,27 @@ Output ONLY this JSON, no markdown, no preamble:
   ]
 }`;
 
+const DEFINE_SYSTEM = `You are a PTE/IELTS coach helping a learner who selected a word or phrase from a question they're practicing. They want a clear, contextual explanation.
+
+You receive: the selected text + the surrounding sentence/passage for context.
+
+Output a single JSON object — NO markdown, NO commentary:
+
+{
+  "term": "<the selected text, cleaned up>",
+  "meaning": "<a 1-2 sentence plain-English definition in the context of this passage. If it's a common word with a special meaning here, explain THAT meaning, not the dictionary one.>",
+  "in_context": "<1 sentence explaining how this term works in the passage they're reading>",
+  "synonyms": ["<near-synonym 1>", "<near-synonym 2>", "<near-synonym 3>"]
+}
+
+STRICT rules:
+- Keep total under 80 words.
+- No jargon — write for someone whose English is intermediate.
+- If the selection is gibberish, multiple sentences, or untranslatable, return {"term": "<text>", "error": "I couldn't find a useful explanation for that selection. Try selecting a single word or short phrase."}.
+- Never include the answer to the question they're working on.
+
+Output ONLY the JSON object.`;
+
 const EXPLAIN_SYSTEM = `You are a PTE/IELTS coach giving a short, clear mini-lesson on a specific task type.
 
 Goal: in ~200 words, teach the user the core technique for this task type. Imagine you're explaining to a student who's failed at it a few times and needs a clear mental model.
@@ -415,6 +436,15 @@ export default async function handler(req, res) {
       });
       const text = await callLLM({ provider, apiKey, model, system: SCORE_ANALYSIS_SYSTEM, userMsg });
       return res.status(200).json({ ok: true, score_analysis: parseJSON(text) });
+    }
+    if (kind === 'define') {
+      const userMsg = JSON.stringify({
+        selected_text: (payload.selected_text || '').slice(0, 300),
+        context: (payload.context || '').slice(0, 1500),
+        instruction: 'Explain the selected text in context. Output ONLY the JSON.',
+      });
+      const text = await callLLM({ provider, apiKey, model, system: DEFINE_SYSTEM, userMsg });
+      return res.status(200).json({ ok: true, definition: parseJSON(text) });
     }
     if (kind === 'explain') {
       // Task-type-level concept explainer. Cached globally per (test, section, type)

@@ -156,6 +156,168 @@ function currentQuestions() { return currentBank().questions || []; }
 function currentTips() { return currentBank().tips || {}; }
 
 // ---------- bootstrap ----------
+// ============================================================================
+// SELECT-TO-EXPLAIN — highlight any word in a passage to get an AI definition
+// ============================================================================
+function initSelectToExplain() {
+  const card = $("#card");
+  if (!card) return;
+  // Use document-level selectionchange so we catch selection both via mouse drag
+  // and double-click (which doesn't fire mouseup in some browsers consistently).
+  let popupEl = null;
+  let lastSelection = null;
+
+  function removePopup() {
+    if (popupEl) {
+      popupEl.remove();
+      popupEl = null;
+    }
+  }
+
+  function isInsideCard(node) {
+    if (!node) return false;
+    const card = $("#card");
+    return card && card.contains(node.nodeType === 1 ? node : node.parentNode);
+  }
+
+  document.addEventListener("mouseup", () => {
+    // Defer slightly so the selection settles
+    setTimeout(() => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) {
+        // Selection collapsed — remove popup unless click was inside it
+        return;
+      }
+      const text = sel.toString().trim();
+      if (text.length < 2 || text.length > 200) return;
+      if (!isInsideCard(sel.anchorNode) || !isInsideCard(sel.focusNode)) return;
+      // Don't trigger inside input/textarea
+      const anchor = sel.anchorNode?.parentElement;
+      if (anchor && (anchor.closest("input, textarea, select, button"))) return;
+      // Skip if we're in a mock exam (no help allowed)
+      if (state.mockExam?.active) return;
+      // Skip if AI not available
+      if (!aiAvailable()) return;
+
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0) return;
+
+      lastSelection = {
+        text,
+        context: getSelectionContext(range),
+      };
+      showExplainButton(rect, lastSelection);
+    }, 10);
+  });
+
+  document.addEventListener("mousedown", (e) => {
+    if (popupEl && !popupEl.contains(e.target)) removePopup();
+  });
+
+  function getSelectionContext(range) {
+    // Walk up to find a reasonable container (paragraph or passage)
+    let node = range.commonAncestorContainer;
+    if (node.nodeType === 3) node = node.parentNode;
+    while (node && node !== document.body) {
+      if (node.classList?.contains("passage") || node.classList?.contains("qprompt")
+          || node.tagName === "P" || node.tagName === "LI") break;
+      node = node.parentNode;
+    }
+    return (node?.textContent || "").slice(0, 1500);
+  }
+
+  function showExplainButton(rect, sel) {
+    removePopup();
+    popupEl = document.createElement("div");
+    popupEl.className = "select-explain-popup compact";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "select-explain-btn";
+    btn.textContent = "✨ Explain \"" + (sel.text.length > 24 ? sel.text.slice(0, 24) + "…" : sel.text) + "\"";
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      fetchDefinition(sel, popupEl);
+    });
+    popupEl.appendChild(btn);
+    document.body.appendChild(popupEl);
+    // Position above the selection
+    const popupRect = popupEl.getBoundingClientRect();
+    const left = Math.min(
+      Math.max(8, rect.left + (rect.width / 2) - (popupRect.width / 2)),
+      window.innerWidth - popupRect.width - 8
+    );
+    const top = Math.max(8, rect.top + window.scrollY - popupRect.height - 8);
+    popupEl.style.left = `${left}px`;
+    popupEl.style.top = `${top}px`;
+  }
+
+  function fetchDefinition(sel, container) {
+    container.classList.remove("compact");
+    container.innerHTML = ""; // clear button
+    const inner = document.createElement("div");
+    inner.className = "select-explain-loading";
+    inner.textContent = "Asking AI...";
+    container.appendChild(inner);
+
+    postRequest({
+      kind: "define",
+      selected_text: sel.text,
+      context: sel.context,
+    }, (resp) => {
+      container.innerHTML = "";
+      if (resp.definition) {
+        renderDefinitionInto(container, resp.definition);
+      } else {
+        const err = document.createElement("div");
+        err.className = "select-explain-error";
+        err.textContent = "Couldn't explain: " + (resp.error || "unknown error");
+        container.appendChild(err);
+      }
+      const close = document.createElement("button");
+      close.className = "select-explain-close";
+      close.type = "button";
+      close.textContent = "×";
+      close.addEventListener("click", removePopup);
+      container.appendChild(close);
+    }, { silent: true });
+  }
+
+  function renderDefinitionInto(container, d) {
+    if (d.error) {
+      const err = document.createElement("div");
+      err.className = "select-explain-error";
+      err.textContent = d.error;
+      container.appendChild(err);
+      return;
+    }
+    if (d.term) {
+      const t = document.createElement("div");
+      t.className = "select-explain-term";
+      t.textContent = d.term;
+      container.appendChild(t);
+    }
+    if (d.meaning) {
+      const m = document.createElement("div");
+      m.className = "select-explain-meaning";
+      m.textContent = d.meaning;
+      container.appendChild(m);
+    }
+    if (d.in_context) {
+      const ic = document.createElement("div");
+      ic.className = "select-explain-context";
+      ic.textContent = d.in_context;
+      container.appendChild(ic);
+    }
+    if (Array.isArray(d.synonyms) && d.synonyms.length) {
+      const s = document.createElement("div");
+      s.className = "select-explain-syns";
+      s.textContent = "Similar: " + d.synonyms.join(", ");
+      container.appendChild(s);
+    }
+  }
+}
+
 async function boot() {
   const res = await fetch("/data/bank.json");
   state.bank = await res.json();
@@ -170,6 +332,7 @@ async function boot() {
   bindLanding();
   startPolling();
   initSync();
+  initSelectToExplain();
   showAppropriateInitialView();
 }
 
@@ -867,6 +1030,8 @@ function renderQuestion(q) {
   $("#tips-view").classList.add("hidden");
   $("#settings-view").classList.add("hidden");
   $("#dashboard-view").classList.add("hidden");
+  // Clean up any leftover select-to-explain popovers from prior questions
+  document.querySelectorAll(".select-explain-popup").forEach((p) => p.remove());
 
   const card = $("#card");
   card.classList.remove("hidden");
@@ -2531,7 +2696,7 @@ async function postRequest(request, handler, opts = {}) {
   const body = await res.json();
 
   // Vercel mode: response contains the full payload synchronously.
-  if (body.question || body.grading || body.tailored_tips || body.analysis || body.coaching || body.score_analysis || body.explainer) {
+  if (body.question || body.grading || body.tailored_tips || body.analysis || body.coaching || body.score_analysis || body.explainer || body.definition) {
     if (!silent) showBridgeStatus(false);
     handler(body);
     return;
@@ -3172,7 +3337,15 @@ function renderDashboardView() {
   // ---- Hero greeting ----
   const hero = el("div", { class: "dash-hero" });
   const u = window.PteracaiSync?.user?.();
-  const profileName = loadScoreProfile()?.analysis?.candidate_name;
+  const greetProfile = loadScoreProfile()?.analysis;
+  // Prefer explicit candidate_name. Fallback: extract first word before "scored"
+  // from the summary text (handles older profiles saved before the
+  // candidate_name field was added to the prompt).
+  let profileName = greetProfile?.candidate_name;
+  if (!profileName && greetProfile?.summary) {
+    const m = greetProfile.summary.match(/^([A-Z][a-zA-Z]+)\s+scored/);
+    if (m) profileName = m[1];
+  }
   const displayName = u?.name?.split(" ")?.[0] || profileName;
   const greet = displayName ? `Welcome back, ${displayName}` : "Welcome back";
   hero.appendChild(el("h1", { class: "dash-greeting" }, greet));
