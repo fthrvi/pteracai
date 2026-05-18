@@ -2202,3 +2202,110 @@ button.ghost {
 
 .muted { color: var(--muted); }
 code { font-family: var(--mono); font-size: 0.92em; }
+
+/* ---------- In-app modal (replaces native confirm/alert) ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 30, 26, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: modalOverlayIn 0.18s ease-out;
+}
+.modal-overlay.closing { animation: modalOverlayOut 0.14s ease-in forwards; }
+@keyframes modalOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalOverlayOut { from { opacity: 1; } to { opacity: 0; } }
+.modal-card {
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 14px;
+  padding: 26px 28px;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 6px 18px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  animation: modalCardIn 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+@keyframes modalCardIn {
+  from { transform: translateY(8px) scale(0.96); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+.modal-title {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+.modal-body {
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+.modal-bullets {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+.modal-bullets li {
+  position: relative;
+  padding: 4px 0;
+}
+.modal-bullets li::before {
+  content: "·";
+  position: absolute;
+  left: -16px;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  top: 6px;
+}
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+}
+.modal-actions button { min-width: 96px; }
+.modal-actions .primary.modal-danger {
+  background: var(--wrong);
+  border-color: var(--wrong);
+}
+.modal-actions .primary.modal-danger:hover { filter: brightness(1.05); }
+
+/* ---------- Drag handles for reorder ---------- */
+.reorder-item {
+  cursor: grab;
+  user-select: none;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.reorder-item:active { cursor: grabbing; }
+.reorder-item.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+.reorder-item.drag-over-top {
+  box-shadow: 0 -3px 0 0 var(--accent);
+}
+.reorder-item.drag-over-bottom {
+  box-shadow: 0 3px 0 0 var(--accent);
+}
+.reorder-drag-handle {
+  display: inline-block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-right: 10px;
+  cursor: grab;
+  user-select: none;
+  letter-spacing: -2px;
+}
+.reorder-drag-handle::before { content: "⋮⋮"; }

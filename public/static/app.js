@@ -16,8 +16,8 @@ const TEST_KEY = "pteracai_test_v1";
 const TEST_LABELS = {
   pte: { label: "PTE Academic", short: "PTE", available: true },
   ielts: { label: "IELTS Academic", short: "IELTS", available: true },
-  toefl: { label: "TOEFL iBT", short: "TOEFL", available: false },
-  duolingo: { label: "Duolingo English Test", short: "Duolingo", available: false },
+  toefl: { label: "TOEFL iBT", short: "TOEFL", available: true },
+  duolingo: { label: "Duolingo English Test", short: "Duolingo", available: true },
 };
 
 function loadCurrentTest() {
@@ -182,6 +182,96 @@ function el(tag, attrs, ...children) {
 }
 
 function clear(node) { node.replaceChildren(); }
+
+// ---------- Styled in-app confirm modal ----------
+// Replacement for window.confirm — Promise-based, supports a title, body
+// (string or list of bullets), and customizable button labels. Returns a
+// Promise<boolean> that resolves true if confirmed, false if cancelled.
+function modalConfirm(opts) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+    const card = document.createElement("div");
+    card.className = "modal-card";
+    overlay.appendChild(card);
+
+    if (opts.title) {
+      const h = document.createElement("h3");
+      h.className = "modal-title";
+      h.textContent = opts.title;
+      card.appendChild(h);
+    }
+
+    if (opts.body) {
+      const body = document.createElement("div");
+      body.className = "modal-body";
+      if (Array.isArray(opts.body)) {
+        const ul = document.createElement("ul");
+        ul.className = "modal-bullets";
+        for (const line of opts.body) {
+          const li = document.createElement("li");
+          li.textContent = line;
+          ul.appendChild(li);
+        }
+        body.appendChild(ul);
+      } else {
+        body.textContent = String(opts.body);
+      }
+      card.appendChild(body);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "modal-actions";
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "ghost";
+    cancelBtn.textContent = opts.cancelLabel || "Cancel";
+
+    const confirmBtn = document.createElement("button");
+    confirmBtn.className = "primary" + (opts.destructive ? " modal-danger" : "");
+    confirmBtn.textContent = opts.confirmLabel || "Confirm";
+
+    let done = false;
+    const finish = (result) => {
+      if (done) return;
+      done = true;
+      overlay.classList.add("closing");
+      setTimeout(() => overlay.remove(), 140);
+      resolve(result);
+    };
+
+    cancelBtn.addEventListener("click", () => finish(false));
+    confirmBtn.addEventListener("click", () => finish(true));
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) finish(false);
+    });
+    document.addEventListener("keydown", function onKey(e) {
+      if (done) {
+        document.removeEventListener("keydown", onKey);
+        return;
+      }
+      if (e.key === "Escape") finish(false);
+      if (e.key === "Enter") finish(true);
+    });
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(confirmBtn);
+    card.appendChild(actions);
+    document.body.appendChild(overlay);
+    setTimeout(() => confirmBtn.focus(), 30);
+  });
+}
+
+// Simple toast-style notification — replacement for alert() where the
+// existing flow is fire-and-forget (no need to await).
+function modalAlert(msg, opts = {}) {
+  return modalConfirm({
+    title: opts.title || "Notice",
+    body: msg,
+    confirmLabel: "OK",
+    cancelLabel: "Dismiss",
+  });
+}
 
 // ---------- multi-test helpers ----------
 function currentBank() {
@@ -1713,41 +1803,79 @@ const RENDERERS = {
     const order = q.paragraphs.map((_, i) => i);
     const zone = el("div", { class: "reorder-zone" });
 
+    function move(from, to) {
+      if (from === to || to < 0 || to >= order.length) return;
+      const [item] = order.splice(from, 1);
+      order.splice(to, 0, item);
+      repaint();
+    }
+
     function repaint() {
       clear(zone);
       order.forEach((origIdx, displayIdx) => {
+        const handle = el("span", { class: "reorder-drag-handle", title: "Drag to reorder" });
         const upBtn = el("button", {
           class: "ghost",
           style: "padding:2px 8px;margin-left:8px;font-size:12px;",
-          onclick: () => {
-            if (displayIdx === 0) return;
-            [order[displayIdx - 1], order[displayIdx]] = [order[displayIdx], order[displayIdx - 1]];
-            repaint();
-          },
+          onclick: () => move(displayIdx, displayIdx - 1),
         }, "↑");
         const downBtn = el("button", {
           class: "ghost",
           style: "padding:2px 8px;margin-left:4px;font-size:12px;",
-          onclick: () => {
-            if (displayIdx === order.length - 1) return;
-            [order[displayIdx + 1], order[displayIdx]] = [order[displayIdx], order[displayIdx + 1]];
-            repaint();
-          },
+          onclick: () => move(displayIdx, displayIdx + 1),
         }, "↓");
         const row = el(
           "div",
-          { class: "reorder-item" },
+          { class: "reorder-item", draggable: "true" },
+          handle,
           el("span", { class: "order-num" }, String(displayIdx + 1)),
           q.paragraphs[origIdx],
           upBtn,
           downBtn
         );
+        row.dataset.displayIdx = String(displayIdx);
+
+        // HTML5 drag-and-drop
+        row.addEventListener("dragstart", (e) => {
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", String(displayIdx));
+          row.classList.add("dragging");
+        });
+        row.addEventListener("dragend", () => {
+          row.classList.remove("dragging");
+          zone.querySelectorAll(".reorder-item").forEach((r) => {
+            r.classList.remove("drag-over-top", "drag-over-bottom");
+          });
+        });
+        row.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          const rect = row.getBoundingClientRect();
+          const midpoint = rect.top + rect.height / 2;
+          row.classList.toggle("drag-over-top", e.clientY < midpoint);
+          row.classList.toggle("drag-over-bottom", e.clientY >= midpoint);
+        });
+        row.addEventListener("dragleave", () => {
+          row.classList.remove("drag-over-top", "drag-over-bottom");
+        });
+        row.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const fromIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
+          if (Number.isNaN(fromIdx) || fromIdx === displayIdx) return;
+          const rect = row.getBoundingClientRect();
+          const midpoint = rect.top + rect.height / 2;
+          const dropBefore = e.clientY < midpoint;
+          let toIdx = displayIdx + (dropBefore ? 0 : 1);
+          if (fromIdx < toIdx) toIdx -= 1;
+          move(fromIdx, toIdx);
+        });
+
         zone.appendChild(row);
       });
     }
     repaint();
 
-    card.appendChild(el("div", { class: "qprompt" }, "Arrange these paragraphs in the correct order:"));
+    card.appendChild(el("div", { class: "qprompt" }, "Arrange these paragraphs in the correct order — drag rows or use the arrow buttons:"));
     card.appendChild(zone);
     let submitted = false;
     card.appendChild(actionsBar(() => {
@@ -3123,8 +3251,15 @@ function renderSettingsView() {
     }
   });
 
-  clearBtn.addEventListener("click", () => {
-    if (!confirm("Clear your stored API key from this browser?")) return;
+  clearBtn.addEventListener("click", async () => {
+    const ok = await modalConfirm({
+      title: "Clear stored API key?",
+      body: "This removes your saved key from this browser. You'll need to re-enter it to use AI features.",
+      confirmLabel: "Clear key",
+      cancelLabel: "Cancel",
+      destructive: true,
+    });
+    if (!ok) return;
     clearSettings();
     keyInput.value = "";
     setStatus("info", "Cleared. The site won't make any LLM calls until you save a new key.");
@@ -3223,8 +3358,15 @@ function renderTestDateSection(view) {
   if (existing) {
     actions.appendChild(el("button", {
       class: "ghost",
-      onclick: () => {
-        if (!confirm("Clear your saved test date?")) return;
+      onclick: async () => {
+        const ok = await modalConfirm({
+          title: "Clear saved test date?",
+          body: "Your countdown will be removed from the dashboard.",
+          confirmLabel: "Clear",
+          cancelLabel: "Cancel",
+          destructive: true,
+        });
+        if (!ok) return;
         clearTestDate();
         renderSettingsView();
       },
@@ -3249,8 +3391,15 @@ function renderScoreProfileSection(view) {
     const actions = el("div", { class: "settings-actions" });
     actions.appendChild(el("button", {
       class: "ghost",
-      onclick: () => {
-        if (confirm("Clear your saved score profile?")) {
+      onclick: async () => {
+        const ok = await modalConfirm({
+          title: "Clear saved score profile?",
+          body: "Your tailored improvement plan and weak-area bias will be removed.",
+          confirmLabel: "Clear profile",
+          cancelLabel: "Cancel",
+          destructive: true,
+        });
+        if (ok) {
           clearScoreProfile();
           renderSettingsView();
         }
@@ -3740,10 +3889,19 @@ function _renderDashboardViewInner() {
     const mins = Math.round(sectionCfg.durationSec / 60);
     const btn = el("button", {
       class: "ghost dash-mock-btn",
-      onclick: () => {
-        if (confirm(`Start ${TEST_LABELS[state.test]?.short || "PTE"} ${sectionCfg.label} mock?\n\n• ${sectionCfg.count} questions\n• ${mins} minute time limit\n• No tips or AI hints during the test\n• Score breakdown at the end`)) {
-          startMockExam(state.test, section);
-        }
+      onclick: async () => {
+        const ok = await modalConfirm({
+          title: `Start ${TEST_LABELS[state.test]?.short || "PTE"} ${sectionCfg.label} mock?`,
+          body: [
+            `${sectionCfg.count} questions`,
+            `${mins} minute time limit`,
+            `No tips or AI hints during the test`,
+            `Score breakdown at the end`,
+          ],
+          confirmLabel: "Start mock",
+          cancelLabel: "Not yet",
+        });
+        if (ok) startMockExam(state.test, section);
       },
     },
       el("div", { class: "dash-mock-btn-title" }, sectionCfg.label),
@@ -4388,8 +4546,15 @@ function renderMockHubView() {
     }, "Resume mock"));
     actions.appendChild(el("button", {
       class: "ghost",
-      onclick: () => {
-        if (!confirm("Abandon the in-progress mock and remove the saved state?")) return;
+      onclick: async () => {
+        const ok = await modalConfirm({
+          title: "Discard in-progress mock?",
+          body: "This will permanently delete the saved state for your in-progress mock. You can't recover it.",
+          confirmLabel: "Discard",
+          cancelLabel: "Keep it",
+          destructive: true,
+        });
+        if (!ok) return;
         clearSavedMockState();
         renderMockHubView();
       },
@@ -4407,12 +4572,30 @@ function renderMockHubView() {
     const mins = Math.round(sectionCfg.durationSec / 60);
     const btn = el("button", {
       class: "ghost dash-mock-btn",
-      onclick: () => {
-        if (saved && !confirm("Starting a new mock will discard your in-progress mock. Continue?")) return;
-        clearSavedMockState();
-        if (confirm(`Start ${TEST_LABELS[state.test]?.short || "PTE"} ${sectionCfg.label} mock?\n\n• ${sectionCfg.count} questions (curated toward your weak areas)\n• ${mins} minute time limit\n• No tips or AI hints during the test\n• Closing the tab will save your progress for later`)) {
-          startMockExam(state.test, section);
+      onclick: async () => {
+        if (saved) {
+          const overwriteOk = await modalConfirm({
+            title: "Discard in-progress mock?",
+            body: "Starting a new mock will discard your in-progress one. Continue?",
+            confirmLabel: "Discard & start new",
+            cancelLabel: "Cancel",
+            destructive: true,
+          });
+          if (!overwriteOk) return;
         }
+        clearSavedMockState();
+        const ok = await modalConfirm({
+          title: `Start ${TEST_LABELS[state.test]?.short || "PTE"} ${sectionCfg.label} mock?`,
+          body: [
+            `${sectionCfg.count} questions (curated toward your weak areas)`,
+            `${mins} minute time limit`,
+            `No tips or AI hints during the test`,
+            `Closing the tab will save your progress for later`,
+          ],
+          confirmLabel: "Start mock",
+          cancelLabel: "Not yet",
+        });
+        if (ok) startMockExam(state.test, section);
       },
     },
       el("div", { class: "dash-mock-btn-title" }, sectionCfg.label),
