@@ -3489,6 +3489,31 @@ function renderSyncSection(view) {
 // PROGRESS DASHBOARD — the new home screen
 // ============================================================================
 function renderDashboardView() {
+  try {
+    return _renderDashboardViewInner();
+  } catch (e) {
+    console.error("Dashboard render failed:", e);
+    const view = $("#dashboard-view");
+    if (view) {
+      view.classList.remove("hidden");
+      clear(view);
+      view.appendChild(el("div", { class: "dash-hero" },
+        el("h1", { class: "dash-greeting", style: "color: var(--wrong);" }, "Something broke loading your dashboard"),
+        el("div", { class: "dash-subtext" }, String(e?.message || e)),
+      ));
+      view.appendChild(el("div", { class: "dash-card" },
+        el("div", { class: "dash-card-label" }, "What you can try"),
+        el("ul", null,
+          el("li", null, "Hard refresh (Cmd+Shift+R)"),
+          el("li", null, "Pick a section in the top nav (Reading / Listening / Writing / Speaking) — those still work"),
+          el("li", null, "Open Settings to verify your AI key + profile state"),
+        ),
+      ));
+    }
+  }
+}
+
+function _renderDashboardViewInner() {
   $("#picker").classList.add("hidden");
   $("#card").classList.add("hidden");
   $("#feedback").classList.add("hidden");
@@ -3983,47 +4008,73 @@ function resumeMockExam(snapshot) {
   nextMockQuestion();
 }
 
-// Curate the question queue by biasing toward weak areas. Uses two signals:
-//   1. Per-type accuracy from attempt history (types with <70% get extra weight)
-//   2. Score profile's weakest_skill (if it matches the current section, weight up)
-// Falls back to pure shuffle when no signals are available.
+// Curate the mock queue: balance VARIETY (coverage of every available task
+// type) with TARGETED bias toward weak areas. Pure weak-area drilling hurts
+// overall score; pure random misses the point of curation.
+//
+// Algorithm:
+//   1. Guarantee one question from EACH task type the pool contains
+//      (variety first — every mock covers the full breadth of the section)
+//   2. Fill remaining slots with weighted sampling — softer bias than before
+//      (2x max instead of 3x, so weak types appear ~1.5-2x as often as
+//       strong types, but not dominantly)
+//   3. Shuffle the final queue so weak-type questions don't cluster at the
+//      end and the test feels naturally varied
 function curatedMockQueue(pool, section, count) {
+  if (!pool || pool.length === 0) return [];
   const stats = computeStats();
-  const profile = loadScoreProfile()?.analysis;
-  const weakestSkill = (profile?.weakest_skill || "").toLowerCase();
-  const sectionIsWeak = weakestSkill.includes(section);
 
-  // Weight each question
-  const weighted = pool.map((q) => {
-    let w = 1;
-    const ts = stats.byType[q.type];
-    if (ts && ts.total >= 3) {
-      const acc = ts.correct / ts.total;
-      if (acc < 0.5) w *= 3;
-      else if (acc < 0.7) w *= 2;
-      else if (acc < 0.85) w *= 1.4;
-    }
-    if (sectionIsWeak) w *= 1.5;
-    return { q, w };
-  });
+  // Group remaining questions by type
+  const byType = {};
+  for (const q of pool) {
+    if (!byType[q.type]) byType[q.type] = [];
+    byType[q.type].push(q);
+  }
+  // Shuffle each type's pool so the "first from each type" pick is random
+  for (const arr of Object.values(byType)) {
+    arr.sort(() => Math.random() - 0.5);
+  }
 
-  // Weighted sample without replacement
   const chosen = [];
-  const total = weighted.length;
-  for (let i = 0; i < Math.min(count, total); i++) {
-    const sumW = weighted.reduce((s, x) => s + x.w, 0);
+  // Pass 1: variety — one from each type up to `count`
+  for (const t of Object.keys(byType)) {
+    if (chosen.length >= count) break;
+    const arr = byType[t];
+    if (arr.length > 0) chosen.push(arr.shift());
+  }
+
+  // Pass 2: fill remaining slots with weighted sampling
+  let remaining = [];
+  for (const arr of Object.values(byType)) remaining = remaining.concat(arr);
+  while (chosen.length < count && remaining.length > 0) {
+    const weighted = remaining.map((q) => {
+      let w = 1;
+      const ts = stats.byType[q.type];
+      if (ts && ts.total >= 3) {
+        const acc = ts.correct / ts.total;
+        // Softer bias than before — weak types appear ~1.5-2x as often
+        // as strong types, not 3x. Variety > drilling.
+        if (acc < 0.5) w *= 2;
+        else if (acc < 0.7) w *= 1.5;
+        else if (acc < 0.85) w *= 1.2;
+      }
+      return w;
+    });
+    const sumW = weighted.reduce((s, x) => s + x, 0);
     if (sumW <= 0) break;
     let r = Math.random() * sumW;
     let idx = 0;
     for (; idx < weighted.length; idx++) {
-      r -= weighted[idx].w;
+      r -= weighted[idx];
       if (r <= 0) break;
     }
     idx = Math.min(idx, weighted.length - 1);
-    chosen.push(weighted[idx].q);
-    weighted.splice(idx, 1);
+    chosen.push(remaining[idx]);
+    remaining.splice(idx, 1);
   }
-  return chosen;
+
+  // Shuffle final queue so weak-type clusters don't appear at one end
+  return chosen.sort(() => Math.random() - 0.5);
 }
 
 function nextMockQuestion() {
