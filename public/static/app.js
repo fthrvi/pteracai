@@ -367,8 +367,31 @@ function refreshMockNavIndicator() {
 }
 
 async function boot() {
-  const res = await fetch("/data/bank.json");
-  state.bank = await res.json();
+  const dbg = (msg) => {
+    // Temporary on-page diagnostic for the dashboard-blank issue
+    let panel = document.getElementById("boot-diag");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "boot-diag";
+      panel.style.cssText = "position:fixed;bottom:8px;left:8px;right:8px;background:white;border:1px solid #ddd;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:11px;color:#333;z-index:9999;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08);";
+      panel.innerHTML = '<div style="font-weight:600;margin-bottom:4px;display:flex;justify-content:space-between;">boot diagnostic <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;font-size:14px;">×</button></div>';
+      document.body.appendChild(panel);
+    }
+    const line = document.createElement("div");
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    panel.appendChild(line);
+  };
+  window._dbg = dbg;
+  try {
+    dbg("boot start");
+    const res = await fetch("/data/bank.json");
+    state.bank = await res.json();
+    dbg("bank loaded: " + (state.bank?.tests?.[state.test]?.questions?.length ?? "?") + " questions for " + state.test);
+  } catch (e) {
+    dbg("BANK FAILED: " + e.message);
+    throw e;
+  }
+  const _origRes = state.bank; // keep reference
   // Probe the API endpoint to learn whether the shared free tier is configured.
   try {
     const probe = await fetch("/api/request").then((r) => r.json()).catch(() => null);
@@ -376,13 +399,23 @@ async function boot() {
   } catch (_) {
     /* offline / local dev — no problem */
   }
-  bindSectionButtons();
-  bindLanding();
-  startPolling();
-  initSync();
-  initSelectToExplain();
-  refreshMockNavIndicator();
-  showAppropriateInitialView();
+  try {
+    window._dbg?.("binding nav");
+    bindSectionButtons();
+    bindLanding();
+    startPolling();
+    window._dbg?.("init sync");
+    initSync();
+    window._dbg?.("init select-to-explain");
+    initSelectToExplain();
+    refreshMockNavIndicator();
+    window._dbg?.("showing appropriate view (signed in or skipped)");
+    showAppropriateInitialView();
+    window._dbg?.("boot complete");
+  } catch (e) {
+    window._dbg?.("BOOT FAILED: " + e.message);
+    throw e;
+  }
 }
 
 const SKIP_LOGIN_KEY = "pteracai_skip_login_v1";
@@ -3514,6 +3547,7 @@ function renderDashboardView() {
 }
 
 function _renderDashboardViewInner() {
+  window._dbg?.("dashboard render: enter");
   $("#picker").classList.add("hidden");
   $("#card").classList.add("hidden");
   $("#feedback").classList.add("hidden");
